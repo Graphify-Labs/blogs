@@ -1,0 +1,87 @@
+---
+title: "Claude Code context window: what fills it, how to trim it"
+description: "What fills the Claude Code context window, how to read it with /context, and how a code knowledge graph keeps file searches out of it."
+date: "2026-04-13"
+keyword: claude code context window
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - claude-code
+  - context
+  - tokens
+---
+
+The Claude Code context window is everything the model can see on a turn. That includes the system prompt, your CLAUDE.md files, tool definitions, the conversation so far, and every file or search result a tool returned. When it fills, Claude Code compacts or forgets. Keeping it lean means putting less raw search output into it.
+
+## What fills the Claude Code context window?
+
+Four things fill the Claude Code context window: fixed setup, memory files, conversation, and tool output. Setup and memory load on every turn. Conversation grows with each message. Tool output is the part that swings most, because one broad search or one large file read can add thousands of tokens at once.
+
+Anthropic's [Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code/costs) lists the same levers. Clear between unrelated tasks, compact long sessions, and keep instructions short. The docs also note that CLAUDE.md is loaded at the start of every session. A long CLAUDE.md is paid for on every task, not once.
+
+The parts are not equal. Here is how each one behaves across a session.
+
+| Part | When it loads | What makes it grow |
+|---|---|---|
+| System prompt and tools | Every turn | More MCP servers and tools |
+| CLAUDE.md files | Session start | Long instructions and pasted docs |
+| Conversation | Accumulates | Long sessions, repeated corrections |
+| Tool results | Each tool call | Broad grep, globbed reads, big files |
+
+## How do you see what is in the context window?
+
+Run `/context` inside Claude Code to see how the window is split between categories. Run `/cost` to see token use for the session. Use `/clear` when you switch to an unrelated task. Use `/compact` with a short instruction when you want to keep a summary and drop the detail.
+
+These commands show where the space went. They do not stop the next broad search from refilling it. That part depends on how the agent finds code.
+
+## Why do file searches fill the window so fast?
+
+An agent that does not know where something lives searches for it. It greps a name, reads the matching files, then greps again for what those files mention. Each step returns raw text into the conversation. Most of that text is never used in the answer, but it stays in the window until a clear or compact.
+
+This is the cost a map removes. If the agent already knows which file defines a function and who calls it, it can read three files instead of thirty.
+
+## How does a code knowledge graph keep the window lean?
+
+A code knowledge graph is a map of a repository's functions, classes, files, and the calls and imports between them. Graphify is an open-source CLI that builds one. It parses code locally with tree-sitter, so building the code graph does not send source to a model.
+
+The output lands in `graphify-out/`. `GRAPH_REPORT.md` is a short summary of the most connected nodes and clusters. `graph.json` is the full graph. The agent can read the summary first and query the graph for a specific path, instead of reading files to discover structure.
+
+`graphify claude install` wires this into Claude Code. It adds a section to CLAUDE.md that points Claude at `GRAPH_REPORT.md`. It also installs a PreToolUse hook. Before a search, the hook reminds Claude that a graph exists, so it checks the map before grepping.
+
+A query returns a small, bounded answer. `graphify query "what connects auth to the database?"` walks the graph and prints the relevant nodes and edges. The `--budget` flag caps the output at a token count, so the answer cannot balloon.
+
+## What should stay out of CLAUDE.md?
+
+Keep CLAUDE.md to rules a model cannot infer: build commands, test commands, conventions, and things never to do. Do not paste architecture descriptions into it. They go stale and load on every turn. Structure is better kept in a graph that is rebuilt from the code.
+
+## What are the limits of this approach?
+
+A graph helps most on repositories too large to read in one pass. On a small project, the whole codebase may fit in the window, and a map adds little. The graph also reflects the code when it was built. `graphify hook install` rebuilds it on each commit so it does not drift.
+
+## FAQ
+
+### How large is the Claude Code context window?
+
+It depends on the model you run. Check the model's documentation and run `/context` to see current use. Plan around the space left after setup, not the headline size.
+
+### Does /compact lose information?
+
+Yes, by design. It replaces the detailed history with a summary. Give it a short instruction about what to keep, such as the current task and the files you changed.
+
+### Does Graphify send my code to a model?
+
+No. The code graph is built locally with tree-sitter. Docs, PDFs, and images are different: those go through your assistant's model for extraction.
+
+### Do I need an MCP server to use the graph?
+
+No. Claude Code can read `GRAPH_REPORT.md` and call `graphify query` from the shell. An optional MCP server exposes the same graph as tools.
+
+### Will the hook block Claude from searching?
+
+No. It adds a reminder that a graph exists. Claude can still grep when the graph does not answer the question.
+
+## Try it on your repository
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`, run `graphify install`, then type `/graphify .` in Claude Code. The [Claude Code integration page](https://graphify.com/integrations/claude-code) and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) cover the rest.
