@@ -60,6 +60,12 @@ Keep CLAUDE.md to rules a model cannot infer: build commands, test commands, con
 
 A graph helps most on repositories too large to read in one pass. On a small project, the whole codebase may fit in the window, and a map adds little. The graph also reflects the code when it was built. `graphify hook install` rebuilds it on each commit so it does not drift.
 
+## How do subagents keep the main window lean?
+
+A subagent runs research in its own separate context window. It can read many files, but only its summary returns to your main session. That keeps large reads out of the window you keep working in. It pairs well with a graph: the subagent queries the graph and hands back a short answer, not raw file contents.
+
+Use a subagent for broad exploration, such as "find every caller of this function and summarize them". Keep the main session for the edit itself.
+
 ## FAQ
 
 ### How large is the Claude Code context window?
@@ -84,4 +90,4 @@ No. It adds a reminder that a graph exists. Claude can still grep when the graph
 
 ## Try it on your repository
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`, run `graphify install`, then type `/graphify .` in Claude Code. The [Claude Code integration page](https://graphify.com/integrations/claude-code) and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) cover the rest.
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`, run `graphify install`, then type `/graphify .` in Claude Code. The [Claude Code integration page](https://graphify.com/integrations/claude-code) covers the rest. The [token reduction glossary entry](https://graphify.com/glossary/token-reduction) defines the term. Setup details are in the [installation docs](https://docs.graphify.com/open-source/installation).
