@@ -57,6 +57,12 @@ Run `graphify hook install` once. It adds git hooks that rebuild the code graph 
 
 Imagine a service with a payments module. CLAUDE.md says: run tests with `make test`, never call the payments API from tests, and use the shared logger. The graph answers: what calls `charge_card`, and what does it import? The first set is policy. The second is fact, and it changes every week.
 
+## Should you use nested CLAUDE.md files?
+
+Yes, in larger repositories. Claude Code reads the CLAUDE.md in the folder you start from and its parents. A CLAUDE.md inside a subdirectory loads when Claude works on files in that folder. Put repository-wide rules at the root and package-specific commands in each package.
+
+Nested files keep each one short. They still describe rules, not structure. Callers, imports and dependencies stay in the graph, where they are read on demand instead of loaded every session.
+
 ## FAQ
 
 ### How long should CLAUDE.md be?
@@ -81,4 +87,4 @@ No. A code graph stores explicit relationships parsed from the code. RAG retriev
 
 ## Get started
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`, then run `graphify install` and `graphify claude install` in your project. For the context side of this, read [what fills the Claude Code context window](/blog/claude-code-context-window-what-fills-it-and-how-to-keep-it-lean). The [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) covers the concept.
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`, then run `graphify install` and `graphify claude install` in your project. For the context side of this, read [what fills the Claude Code context window](/blog/claude-code-context-window-what-fills-it-and-how-to-keep-it-lean). Setup details are in the [installation docs](https://docs.graphify.com/open-source/installation).
