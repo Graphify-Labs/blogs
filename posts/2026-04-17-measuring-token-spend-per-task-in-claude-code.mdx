@@ -52,6 +52,12 @@ Graphify builds a code knowledge graph of the repository, parsed locally with tr
 
 Measure it with your own tasks. Run the task set without the graph, build the graph with `/graphify .`, then run the set again. Building the graph has its own cost the first time, from model calls for docs and images. Code-only rebuilds after that run locally. Count both in your comparison.
 
+## Where does Claude Code store token data?
+
+Claude Code writes each session as JSONL files under `~/.claude/projects/`. Each assistant message in those files records its token usage. Tools such as ccusage read those files locally, so no API key or upload is needed. That makes the logs the most detailed source for per-task measurement.
+
+To isolate one task, note the session file it ran in. Then sum input, output and cache tokens for just that session.
+
 ## FAQ
 
 ### Is /cost exact?
@@ -76,4 +82,4 @@ The task list, model, date, median tokens per task before and after, and success
 
 ## Next steps
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy` and run `graphify install`. Read [what fills the Claude Code context window](/blog/claude-code-context-window-what-fills-it-and-how-to-keep-it-lean) and [CLAUDE.md best practices](/blog/claude-md-vs-a-code-graph-what-belongs-where). The [token reduction glossary entry](https://graphify.com/glossary/token-reduction) and the [Claude Code integration page](https://graphify.com/integrations/claude-code) explain the terms.
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy` and run `graphify install`. Read [what fills the Claude Code context window](/blog/claude-code-context-window-what-fills-it-and-how-to-keep-it-lean) and [CLAUDE.md best practices](/blog/claude-md-vs-a-code-graph-what-belongs-where). The [token reduction glossary entry](https://graphify.com/glossary/token-reduction) and the [Claude Code integration page](https://graphify.com/integrations/claude-code) explain the terms. Setup details are in the [installation docs](https://docs.graphify.com/open-source/installation).
