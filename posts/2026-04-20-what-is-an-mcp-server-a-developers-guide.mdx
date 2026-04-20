@@ -60,6 +60,12 @@ To register it, add the command to your host's MCP configuration. Each host docu
 
 An MCP server can do whatever its code allows. Run servers you trust, from sources you can read. Prefer read-only tools where possible. Check what a server sends over the network. The Graphify server reads a local `graph.json` and has no telemetry.
 
+## What is the difference between an MCP host, client and server?
+
+The host is the AI application, such as Claude Code or an IDE. Inside the host, one MCP client keeps a connection to each server. The server is the program that exposes tools, resources and prompts. One host can run many clients, each talking to a different server.
+
+The server can run locally over stdio or remotely over HTTP. The host decides which servers to start and which tools the model may call.
+
 ## FAQ
 
 ### Is MCP only for Claude?
@@ -84,4 +90,4 @@ No. The host starts it as a child process and talks over standard input and outp
 
 ## Try it
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`, run `graphify install`, and build your first graph. The [MCP server glossary entry](https://graphify.com/glossary/mcp-server) and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) go further. For keeping tool output small, see [what fills the Claude Code context window](/blog/claude-code-context-window-what-fills-it-and-how-to-keep-it-lean). See also [measuring token spend per task](/blog/measuring-token-spend-per-task-in-claude-code).
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`, run `graphify install`, and build your first graph. The [MCP server glossary entry](https://graphify.com/glossary/mcp-server) goes further. For keeping tool output small, see [what fills the Claude Code context window](/blog/claude-code-context-window-what-fills-it-and-how-to-keep-it-lean). See also [measuring token spend per task](/blog/measuring-token-spend-per-task-in-claude-code). Setup details are in the [installation docs](https://docs.graphify.com/open-source/installation).
