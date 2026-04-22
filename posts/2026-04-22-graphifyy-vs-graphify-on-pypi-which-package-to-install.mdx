@@ -34,7 +34,7 @@ The split is common in Python. The name you install and the command you run do n
 
 ## How do you install graphifyy?
 
-Graphify needs Python 3.10 or newer. The recommended way is a tool installer, which puts the CLI in its own environment and on your PATH:
+Graphify needs Python 3.10 or newer. The recommended way is a tool installer such as uv or pipx. A tool installer puts the CLI in its own isolated environment and adds the `graphify` command to your PATH. That keeps its dependencies away from your project's own packages and makes upgrades a single command:
 
 ```bash
 uv tool install graphifyy
@@ -47,7 +47,7 @@ graphify install
 
 ## How do you add optional extras?
 
-Some features need extra dependencies. Install them with the extra name in brackets, quoted so your shell does not expand it:
+Some features need extra dependencies that the base package leaves out to stay small. Examples include reading PDFs, Office files, or video, or connecting to a database. Install them by adding the extra name in square brackets after `graphifyy`. Quote the whole name so your shell does not try to expand the brackets:
 
 ```bash
 uv tool install "graphifyy[mcp]"     # MCP server
@@ -57,7 +57,7 @@ uv tool install "graphifyy[video]"   # local audio and video transcription
 
 ## How do you check you have the right package?
 
-Run `pip show graphifyy` or `uv tool list`. You should see `graphifyy` and the version. Then run `graphify --help`. The help text lists commands such as `install`, `query`, `path`, `explain`, and `benchmark`.
+Run `pip show graphifyy` or `uv tool list`. You should see `graphifyy` and its version number. Then run `graphify --help`. The help text lists commands such as `install`, `query`, `path`, `explain`, and `benchmark`. If you see none of these, you may have installed the unrelated single-y package by mistake.
 
 If `graphify` is not found after a pip install, your scripts folder is not on PATH. The README lists the common locations. A tool installer avoids this, and so does `python -m graphify`.
 
