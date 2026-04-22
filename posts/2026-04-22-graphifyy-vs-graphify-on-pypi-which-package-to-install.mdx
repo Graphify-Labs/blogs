@@ -1,0 +1,92 @@
+---
+title: "graphifyy pip package vs graphify: which to install"
+description: "The Graphify CLI ships on PyPI as graphifyy, with two y's. How to install it with uv, pipx, or pip, and how to check you have the right package."
+date: "2026-04-22"
+keyword: graphifyy pip
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - cli
+  - install
+  - pypi
+---
+
+The Graphify CLI is published on PyPI as `graphifyy`, spelled with two y's. Install it with `uv tool install graphifyy`, `pipx install graphifyy`, or `pip install graphifyy`. The command you run afterwards is still `graphify`. A PyPI package with the single-y name is a different project and is not affiliated with Graphify.
+
+## Which package do you install with pip: graphifyy or graphify?
+
+Install `graphifyy`. That is the only official package for the open-source Graphify CLI. The project README says so in an "Official package" note. It also says other packages whose names start with `graphify` are not affiliated. If you typed the single-y name, uninstall it and install `graphifyy`.
+
+| | `graphifyy` | Single-y name on PyPI |
+|---|---|---|
+| Project | Open-source Graphify CLI | Unrelated project |
+| Command it installs | `graphify` | Not the Graphify CLI |
+| Source | [Graphify on GitHub](https://github.com/Graphify-Labs/graphify) | Not this repository |
+| PyPI page | [pypi.org/project/graphifyy](https://pypi.org/project/graphifyy/) | Not this project |
+
+## Why is the package called graphifyy?
+
+The single-y name belongs to a different project on PyPI. PyPI compares project names after normalizing them, as the [Python Packaging User Guide](https://packaging.python.org/en/latest/specifications/name-normalization/) explains, and each normalized name maps to one project. So the Graphify package carries a second y, and the command keeps the short name.
+
+The split is common in Python. The name you install and the command you run do not have to match.
+
+## How do you install graphifyy?
+
+Graphify needs Python 3.10 or newer. The recommended way is a tool installer, which puts the CLI in its own environment and on your PATH:
+
+```bash
+uv tool install graphifyy
+graphify install
+```
+
+`uv tool install` comes from [uv](https://docs.astral.sh/uv/guides/tools/). `pipx install graphifyy` does the same job if you use [pipx](https://pipx.pypa.io/). Plain `pip install graphifyy` works too, inside a virtual environment.
+
+`graphify install` copies the Graphify skill into your coding assistant. For an assistant other than Claude Code, pass `--platform`, for example `graphify install --platform codex`.
+
+## How do you add optional extras?
+
+Some features need extra dependencies. Install them with the extra name in brackets, quoted so your shell does not expand it:
+
+```bash
+uv tool install "graphifyy[mcp]"     # MCP server
+uv tool install "graphifyy[office]"  # .docx and .xlsx
+uv tool install "graphifyy[video]"   # local audio and video transcription
+```
+
+## How do you check you have the right package?
+
+Run `pip show graphifyy` or `uv tool list`. You should see `graphifyy` and the version. Then run `graphify --help`. The help text lists commands such as `install`, `query`, `path`, `explain`, and `benchmark`.
+
+If `graphify` is not found after a pip install, your scripts folder is not on PATH. The README lists the common locations. A tool installer avoids this, and so does `python -m graphify`.
+
+## Why does this matter for security?
+
+Installing a package runs code from its author. A near-miss name is the classic setup for typosquatting, where a look-alike package catches mistyped installs. Check the package name, the PyPI project links, and the repository before you install any tool. Pin versions in CI.
+
+## FAQ
+
+### Is graphifyy the official Graphify package?
+
+Yes. The README and the PyPI project page both point to the Graphify repository.
+
+### Why does the command say graphify, not graphifyy?
+
+The package name and the command name are separate. The package declares a `graphify` command when it installs.
+
+### Can I install graphifyy with uv?
+
+Yes. `uv tool install graphifyy` installs it as an isolated tool and adds it to PATH.
+
+### What Python version does graphifyy need?
+
+Python 3.10 or newer.
+
+### I installed the wrong package. What now?
+
+Uninstall the single-y package, then install `graphifyy`. Run `graphify --help` to confirm.
+
+## Next steps
+
+The code is on [GitHub](https://github.com/Graphify-Labs/graphify). Install with `uv tool install graphifyy` and follow the [installation docs](https://docs.graphify.com/open-source/installation). Once installed, read [what an MCP server is](/blog/what-is-an-mcp-server-a-developers-guide) to serve your graph to an agent. The [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) and the [Claude Code integration page](https://graphify.com/integrations/claude-code) cover what to do next. See also [measuring token spend per task](/blog/measuring-token-spend-per-task-in-claude-code).
