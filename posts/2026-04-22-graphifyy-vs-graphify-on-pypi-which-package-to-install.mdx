@@ -65,6 +65,12 @@ If `graphify` is not found after a pip install, your scripts folder is not on PA
 
 Installing a package runs code from its author. A near-miss name is the classic setup for typosquatting, where a look-alike package catches mistyped installs. Check the package name, the PyPI project links, and the repository before you install any tool. Pin versions in CI.
 
+## What if the graphify command is not found?
+
+The package installed, but its folder is not on your PATH. With uv, run `uv tool update-shell` and open a new terminal. With pipx, run `pipx ensurepath`. With plain pip, add your Python scripts folder to PATH yourself. The command is always `graphify`, even though the package is `graphifyy`.
+
+Check with `graphify --help`. If it prints the command list, the install worked.
+
 ## FAQ
 
 ### Is graphifyy the official Graphify package?
@@ -89,4 +95,4 @@ Uninstall the single-y package, then install `graphifyy`. Run `graphify --help` 
 
 ## Next steps
 
-The code is on [GitHub](https://github.com/Graphify-Labs/graphify). Install with `uv tool install graphifyy` and follow the [installation docs](https://docs.graphify.com/open-source/installation). Once installed, read [what an MCP server is](/blog/what-is-an-mcp-server-a-developers-guide) to serve your graph to an agent. The [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) and the [Claude Code integration page](https://graphify.com/integrations/claude-code) cover what to do next. See also [measuring token spend per task](/blog/measuring-token-spend-per-task-in-claude-code).
+The code is on [GitHub](https://github.com/Graphify-Labs/graphify). Install with `uv tool install graphifyy` and follow the [installation docs](https://docs.graphify.com/open-source/installation). Once installed, read [what an MCP server is](/blog/what-is-an-mcp-server-a-developers-guide) to serve your graph to an agent. The [Claude Code integration page](https://graphify.com/integrations/claude-code) covers what to do next. See also [measuring token spend per task](/blog/measuring-token-spend-per-task-in-claude-code).
