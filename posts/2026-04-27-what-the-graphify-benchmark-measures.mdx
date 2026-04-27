@@ -23,7 +23,7 @@ It measures size, not quality. `graphify benchmark` estimates how many tokens it
 
 ## How does the benchmark work, step by step?
 
-We read `graphify/benchmark.py` in the [open-source repository](https://github.com/Graphify-Labs/graphify). It does four things.
+We read `graphify/benchmark.py` in the [open-source repository](https://github.com/Graphify-Labs/graphify). Its graph walk is a breadth-first search, the traversal described in the [NetworkX docs](https://networkx.org/documentation/stable/reference/algorithms/traversal.html). Its token sizes are estimates, close to [OpenAI's rule of thumb](https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them) of about four characters per token. It does four things.
 
 1. **Estimate the corpus.** It reads the word count saved by the detection step. It converts 100 words to about 133 tokens. With no saved word count, it assumes 50 words per graph node.
 2. **Ask five questions.** They cover authentication, the main entry point, error handling, what connects the data layer to the API, and the core abstractions.
