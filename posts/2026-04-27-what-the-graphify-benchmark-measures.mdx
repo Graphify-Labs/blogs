@@ -66,6 +66,12 @@ Results vary by codebase. A ratio from one repository says little about another,
 
 Run the benchmark for scale, then test what matters. Pick five real questions your team asks. Run `graphify query "your question"` and compare the answer with what you find by hand. Open the cited files. Then track whether your agent needs fewer searches on tasks you repeat. Our guide to [Claude Code token tracking](/blog/measuring-token-spend-per-task-in-claude-code) shows how to measure that fairly.
 
+## Does the benchmark call a model?
+
+No. `graphify benchmark` estimates tokens from text length. It compares the size of the full corpus with the size of what a graph query returns. No model is called and no answers are graded. That makes it fast, free and repeatable, but it says nothing about answer quality.
+
+To judge quality, run real tasks with and without the graph and compare the results yourself.
+
 ## FAQ
 
 ### Does graphify benchmark call an LLM?
@@ -90,4 +96,4 @@ From the detection step of a `/graphify` run. Without it, the benchmark estimate
 
 ## Try it
 
-Install the CLI with `uv tool install graphifyy`, build a graph, and run `graphify benchmark` on your own repository. The [token reduction glossary entry](https://graphify.com/glossary/token-reduction) defines the term. The [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) covers what the graph contains. See also [the Claude Code context window](/blog/claude-code-context-window-what-fills-it-and-how-to-keep-it-lean).
+Install the CLI with `uv tool install graphifyy`, build a graph, and run `graphify benchmark` on your own repository. The [token reduction glossary entry](https://graphify.com/glossary/token-reduction) defines the term. See also [the Claude Code context window](/blog/claude-code-context-window-what-fills-it-and-how-to-keep-it-lean). Code is parsed with [tree-sitter](https://tree-sitter.github.io/tree-sitter/).
