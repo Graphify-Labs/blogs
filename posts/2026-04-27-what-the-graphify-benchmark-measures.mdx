@@ -1,0 +1,93 @@
+---
+title: "What the graphify benchmark measures"
+description: "What the graphify benchmark measures: estimated corpus tokens against graph answer tokens for five sample questions. The method and its limits."
+date: "2026-04-27"
+keyword: graphify benchmark
+authors:
+  - fahad
+categories:
+  - engineering
+tags:
+  - benchmarks
+  - cli
+  - graph
+---
+
+The graphify benchmark is a command in the open-source Graphify CLI that compares two token counts. One is an estimate of your whole corpus. The other is the average size of the graph's answers to five sample questions. The ratio shows how focused graph answers are. It says nothing about whether those answers are correct.
+
+This post walks through the method from the source code and explains how to read the number.
+
+## What does the graphify benchmark measure?
+
+It measures size, not quality. `graphify benchmark` estimates how many tokens it would take to send your whole corpus to a model. Then it sizes the subgraph Graphify returns for five fixed questions. The reduction ratio is the first number divided by the average of the second. It makes no model calls and runs offline.
+
+## How does the benchmark work, step by step?
+
+We read `graphify/benchmark.py` in the [open-source repository](https://github.com/Graphify-Labs/graphify). It does four things.
+
+1. **Estimate the corpus.** It reads the word count saved by the detection step. It converts 100 words to about 133 tokens. With no saved word count, it assumes 50 words per graph node.
+2. **Ask five questions.** They cover authentication, the main entry point, error handling, what connects the data layer to the API, and the core abstractions.
+3. **Walk the graph.** For each question, it finds up to three nodes whose labels match the question's words. It runs a breadth-first search three hops out and writes the nodes and edges as text.
+4. **Divide.** It sizes each answer at about four characters per token. Questions with no matching nodes are skipped. The ratio is corpus tokens divided by the average answer.
+
+The [token benchmark docs](https://docs.graphify.com/open-source/features/token-benchmark) describe the same idea.
+
+## How do you run it?
+
+Build a graph first, then run the command in the same folder:
+
+```bash
+graphify update .      # code-only graph, parsed locally
+graphify benchmark
+```
+
+`graphify update` rebuilds the code graph with tree-sitter and no model calls. A full `/graphify .` run in your assistant adds docs, PDFs, and images. Either way, the benchmark reads `graphify-out/graph.json`.
+
+## What does the benchmark not measure?
+
+It does not measure whether answers are correct. It does not measure whether an agent finishes a task faster, or what you pay a provider. The corpus side is an estimate, not a measured prompt. No agent reads a whole corpus in practice, so the ratio is a guide to scale, not a billing figure.
+
+| Question | Does the benchmark answer it? |
+|---|---|
+| How compact are graph answers? | Yes |
+| Are the answers correct? | No |
+| Will my agent use fewer tokens? | Not directly |
+| How much will I save in dollars? | No |
+
+Some practical consequences follow from the method.
+
+- **Small repositories score low.** Graphify warns when a corpus is under about 50,000 words that a graph may not help much. A small project fits in a context window anyway.
+- **Hub nodes inflate answers.** If a few nodes connect to everything, a three-hop walk gets large. Check the most connected nodes in `GRAPH_REPORT.md`.
+- **The questions are fixed.** A repository with no auth code will skip that question.
+
+Results vary by codebase. A ratio from one repository says little about another, so report the repository, the date, the CLI version, and the setup with any number.
+
+## How should you evaluate Graphify on your own code?
+
+Run the benchmark for scale, then test what matters. Pick five real questions your team asks. Run `graphify query "your question"` and compare the answer with what you find by hand. Open the cited files. Then track whether your agent needs fewer searches on tasks you repeat. Our guide to [Claude Code token tracking](/blog/measuring-token-spend-per-task-in-claude-code) shows how to measure that fairly.
+
+## FAQ
+
+### Does graphify benchmark call an LLM?
+
+No. It runs offline against `graph.json`.
+
+### Can I pass my own questions to the benchmark?
+
+Not from the command line. Use `graphify query` to see the size of any single answer.
+
+### Why is one question missing from my results?
+
+Questions with no matching node labels are skipped, for example in a repository with no authentication code.
+
+### Is the ratio the same as cost savings?
+
+No. It compares an estimated corpus with answer size. Real savings depend on how your agent works.
+
+### Where does the corpus word count come from?
+
+From the detection step of a `/graphify` run. Without it, the benchmark estimates 50 words per node.
+
+## Try it
+
+Install the CLI with `uv tool install graphifyy`, build a graph, and run `graphify benchmark` on your own repository. The [token reduction glossary entry](https://graphify.com/glossary/token-reduction) defines the term. The [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) covers what the graph contains. See also [the Claude Code context window](/blog/claude-code-context-window-what-fills-it-and-how-to-keep-it-lean).
