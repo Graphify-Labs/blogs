@@ -64,6 +64,12 @@ Keep the graph current with `graphify hook install`. It rebuilds the code graph 
 
 Measure. Pick five real tasks, run them in fresh sessions, and record tokens from `/status`. Build the graph and run them again with the same prompts and model. The first graph build has its own cost for any docs and images it extracts. Results vary by codebase, so test on yours. Our [guide to measuring token spend per task](/blog/measuring-token-spend-per-task-in-claude-code) covers the method.
 
+## Do reasoning tokens count toward Codex usage?
+
+Yes. Reasoning models produce internal reasoning tokens before they answer. OpenAI bills those as output tokens, even though you do not see them. A higher reasoning effort setting can use more of them on the same task. So usage depends on how hard the model thinks, not only on what it reads.
+
+For routine edits, a lower reasoning effort can cut usage. Keep higher effort for hard design or debugging work.
+
 ## FAQ
 
 ### Why does Codex use $graphify instead of /graphify?
@@ -88,4 +94,4 @@ Less. If the whole project fits in context, a map adds structure but saves littl
 
 ## Get started
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. The [Codex integration page](https://graphify.com/integrations/codex) has setup details, and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) covers the concept. For the Claude Code side, read [what fills the Claude Code context window](/blog/claude-code-context-window-what-fills-it-and-how-to-keep-it-lean).
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. The [Codex integration page](https://graphify.com/integrations/codex) has setup details. For the Claude Code side, read [what fills the Claude Code context window](/blog/claude-code-context-window-what-fills-it-and-how-to-keep-it-lean). Setup details are in the [installation docs](https://docs.graphify.com/open-source/installation).
