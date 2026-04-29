@@ -1,0 +1,91 @@
+---
+title: "How to reduce Codex CLI token usage"
+description: "How to reduce Codex token usage: check it with /status, keep AGENTS.md short, start fresh sessions, and give Codex a code graph instead of grep."
+date: "2026-04-29"
+keyword: codex token usage
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - codex
+  - tokens
+  - context
+---
+
+Codex token usage is the number of input and output tokens the Codex CLI spends on a task. Most of it is input: instructions, conversation history, and the output of shell commands Codex runs to explore your code. You reduce it by keeping instructions short, starting fresh sessions, and giving Codex a map so it runs fewer searches.
+
+## Where does Codex token usage come from?
+
+Codex token usage comes mostly from context, not answers. Each turn sends the system instructions, your AGENTS.md files, the conversation so far, and recent command output. When Codex explores with `rg`, `cat`, or `ls`, that output joins the context. On a large repository, exploration can cost more than the edit itself.
+
+OpenAI's [Codex documentation](https://developers.openai.com/codex/cli) describes the CLI as an agent that reads files and runs commands in your terminal. Every one of those reads is input on a later turn.
+
+## How do you check Codex token usage?
+
+Use the `/status` slash command in the Codex CLI to see the current session's configuration and token use. Check it at the end of a task and write the number down. For a fair comparison, start each task in a new session and compare the same task before and after a change.
+
+## Which habits reduce Codex token usage?
+
+Five habits do most of the work. Each targets a different part of the context.
+
+| Habit | What it cuts |
+|---|---|
+| Start a new session per task | Old history from unrelated work |
+| Use `/compact` in long sessions | Detailed history, kept as a summary |
+| Keep AGENTS.md short | Instructions loaded every session |
+| Name files and symbols in the prompt | Exploratory searches |
+| Give Codex a code map | Repeated grep and file reads |
+
+AGENTS.md is the instruction file Codex reads, described on the [AGENTS.md site](https://agents.md/). Treat it like CLAUDE.md: commands, conventions, and rules. Do not paste architecture into it, because it loads on every session.
+
+## How does a code graph reduce Codex searches?
+
+A code knowledge graph is a map of a repository's functions, classes, files, and the calls and imports between them. Graphify is an open-source CLI that builds one, parsing code locally with tree-sitter. Codex can read the map instead of searching raw files to learn the structure.
+
+Install the skill for Codex, then build the graph:
+
+```bash
+uv tool install graphifyy
+graphify install --platform codex
+```
+
+Codex calls skills with a dollar sign, so you run `$graphify .` in Codex, not the slash form. The README also asks Codex users to set `multi_agent = true` under `[features]` in `~/.codex/config.toml`, for parallel extraction.
+
+## How do you make Codex use the graph every time?
+
+Run `graphify codex install` once in the project. It writes a section to AGENTS.md telling Codex to read `graphify-out/GRAPH_REPORT.md` before answering architecture questions. It also installs a PreToolUse hook in `.codex/hooks.json`. The hook fires before Bash tool calls and reminds Codex that a graph exists.
+
+For a specific question, Codex can run `graphify query "what calls the payment handler?"` and get a bounded answer. The `--budget` flag caps the output at a token count. `graphify path "A" "B"` returns the shortest chain between two names.
+
+Keep the graph current with `graphify hook install`. It rebuilds the code graph after each commit, locally, with no model calls.
+
+## How do you know it worked?
+
+Measure. Pick five real tasks, run them in fresh sessions, and record tokens from `/status`. Build the graph and run them again with the same prompts and model. The first graph build has its own cost for any docs and images it extracts. Results vary by codebase, so test on yours. Our [guide to measuring token spend per task](/blog/measuring-token-spend-per-task-in-claude-code) covers the method.
+
+## FAQ
+
+### Why does Codex use $graphify instead of /graphify?
+
+Codex calls skills with a `$` prefix. Run `$graphify .` in Codex. Other assistants use the slash form.
+
+### Does Graphify send my code to OpenAI?
+
+Not for code. Code is parsed locally with tree-sitter. Docs, PDFs, and images go through your assistant's model for extraction.
+
+### Does /compact reduce cost?
+
+It replaces detailed history with a summary, so later turns send less. Some detail is lost, so give it a short note about what to keep.
+
+### Will the hook stop Codex from running commands?
+
+No. It adds a reminder that the graph exists. Codex can still search when the graph does not answer the question.
+
+### Does a graph help on a small repository?
+
+Less. If the whole project fits in context, a map adds structure but saves little.
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. The [Codex integration page](https://graphify.com/integrations/codex) has setup details, and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) covers the concept. For the Claude Code side, read [what fills the Claude Code context window](/blog/claude-code-context-window-what-fills-it-and-how-to-keep-it-lean).
