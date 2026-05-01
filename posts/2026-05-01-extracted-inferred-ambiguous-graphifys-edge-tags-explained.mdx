@@ -1,0 +1,86 @@
+---
+title: "Graphify edge confidence: EXTRACTED, INFERRED, AMBIGUOUS"
+description: "Graphify edge confidence explained: what EXTRACTED, INFERRED, and AMBIGUOUS mean, where confidence scores come from, and how to check them."
+date: "2026-05-01"
+keyword: graphify edge confidence
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - confidence-tags
+  - graph
+  - cli
+---
+
+Graphify edge confidence is a label on every relationship in a Graphify graph that says how the relationship was found. EXTRACTED means it was read directly from the source. INFERRED means it was a reasonable inference, stored with a confidence score. AMBIGUOUS means it is flagged for review. The label tells you how far to trust a hop.
+
+## What do Graphify's edge confidence tags mean?
+
+Each edge in `graph.json` carries one of three tags in its `confidence` field. The tag describes the evidence, not the importance of the edge.
+
+| Tag | Meaning | Score | How to treat it |
+|---|---|---|---|
+| EXTRACTED | Found directly in the source | Always 1.0 | Fact you can rely on |
+| INFERRED | A reasonable inference | 0.0 to 1.0 | A lead to confirm |
+| AMBIGUOUS | Evidence did not resolve | Flagged | Read the source |
+
+The README states the rule plainly: every INFERRED edge has a `confidence_score`, and EXTRACTED edges are always 1.0.
+
+## Where does an EXTRACTED edge come from?
+
+An EXTRACTED edge comes from the syntax tree. Graphify parses code locally with [tree-sitter](https://tree-sitter.github.io/tree-sitter/). When a function body contains a call to another function in the same file, the parser sees it. That edge is deterministic. Parse the same file again and you get the same edge.
+
+## Where does an INFERRED edge come from?
+
+An INFERRED edge is a connection that needed a judgment. Two sources produce them. The first is your assistant's model, when it links a doc, a PDF, or an image to the code it describes. The second is cross-file resolution, when Graphify matches a call to a definition in another file by name.
+
+Here is a real example. We built a two-file Python project with Graphify CLI 0.6.0, the current release at the time of writing. `app.py` imports `check_token` from `auth.py` and calls it. `auth.py` defines `check_token`, which calls `verify` in the same file. We ran `graphify update .`, then asked for a path:
+
+```text
+$ graphify path "handle" "verify"
+Shortest path (2 hops):
+  handle() --calls [INFERRED]--> check_token() --calls [EXTRACTED]--> verify()
+```
+
+The same-file call is EXTRACTED with a score of 1.0. The cross-file call is INFERRED, and `graph.json` stores it with a `confidence_score` of 0.8. Graphify is telling you which hop it saw directly and which it matched.
+
+## What makes an edge AMBIGUOUS?
+
+AMBIGUOUS edges are relationships Graphify found evidence for but could not resolve. Dynamic code is the usual cause. A call through a variable, a plugin loaded by name, or a model's unsure link between a doc and two possible functions all qualify. The edge stays in the graph with the flag, so the gap is visible instead of hidden.
+
+## How do you see the tags?
+
+The CLI prints them on every hop. `graphify path` shows the tag on each edge, as above. `graphify explain "check_token"` lists a node's connections with their tags. `graphify query` prints nodes and tagged edges for a question. `GRAPH_REPORT.md` also summarizes how much of the graph is EXTRACTED versus INFERRED.
+
+Before you change code based on a path, read the tags. Lean on EXTRACTED hops. Open the files behind INFERRED hops. Treat AMBIGUOUS hops as a place to read the source yourself.
+
+## Why does this matter for AI agents?
+
+An agent that treats every edge as fact will act on a guess as confidently as on a parsed call. Tags let it, and you, weigh the evidence. A similarity search cannot do this. It returns chunks that look alike, with no record of whether a relationship was parsed or proposed. The [Graphify vs RAG page](https://graphify.com/vs/rag) covers that difference.
+
+## FAQ
+
+### Is an INFERRED edge usually wrong?
+
+No. Most inferred edges are right. The tag means the link was matched or judged rather than read directly, so check it before relying on it.
+
+### Can I filter a graph to EXTRACTED edges only?
+
+The `confidence` field is in `graph.json`, so you can filter it with any JSON tool. The report also shows the split.
+
+### Does the model assign the confidence score?
+
+For doc and media edges, yes. For cross-file code matches, Graphify assigns it during resolution.
+
+### Do tags change when I rebuild?
+
+EXTRACTED edges stay stable for unchanged code. INFERRED edges from a model can vary between runs.
+
+### Where are the tags stored?
+
+On each edge in `graphify-out/graph.json`, in the `confidence` and `confidence_score` fields.
+
+## Try it
+
+Install with `uv tool install graphifyy`, run `graphify update .` in a repository, and try `graphify path` between two functions. The code is on [GitHub](https://github.com/Graphify-Labs/graphify). The [confidence tags glossary entry](https://graphify.com/glossary/confidence-tags) and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) go further. To serve tagged edges to an agent, see [what an MCP server is](/blog/what-is-an-mcp-server-a-developers-guide). See also [what the Graphify benchmark measures](/blog/what-the-graphify-benchmark-measures).
