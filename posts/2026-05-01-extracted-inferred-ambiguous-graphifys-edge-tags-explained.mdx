@@ -55,9 +55,19 @@ The CLI prints them on every hop. `graphify path` shows the tag on each edge, as
 
 Before you change code based on a path, read the tags. Lean on EXTRACTED hops. Open the files behind INFERRED hops. Treat AMBIGUOUS hops as a place to read the source yourself.
 
-## Why does this matter for AI agents?
+## How do you audit the tags in graph.json?
 
-An agent that treats every edge as fact will act on a guess as confidently as on a parsed call. Tags let it, and you, weigh the evidence. A similarity search cannot do this. It returns chunks that look alike, with no record of whether a relationship was parsed or proposed. The [Graphify vs RAG page](https://graphify.com/vs/rag) covers that difference.
+Every edge in `graphify-out/graph.json` stores `confidence` and `confidence_score`. A few lines of Python list every edge that was not read directly from source. Run it after each rebuild to see which hops still need a human check. In our two-file project, it printed one edge: the cross-file call, tagged INFERRED at 0.8.
+
+```bash
+python3 -c 'import json; g = json.load(open("graphify-out/graph.json")); [print(e["source"], e["relation"], e["target"], e["confidence"], e["confidence_score"]) for e in g["links"] if e["confidence"] != "EXTRACTED"]'
+```
+
+## How do you read the split in GRAPH_REPORT.md?
+
+The report opens with a one-line summary of the whole graph. On our demo, Graphify 0.6.0 wrote: `Extraction: 80% EXTRACTED · 20% INFERRED · 0% AMBIGUOUS · INFERRED: 1 edges (avg confidence: 0.8)`. Five edges, four parsed, one matched. A falling EXTRACTED share after a big change means more edges need checking.
+
+The same report lists INFERRED edges under its surprising connections, so you can start reviewing there.
 
 ## FAQ
 
@@ -83,4 +93,4 @@ On each edge in `graphify-out/graph.json`, in the `confidence` and `confidence_s
 
 ## Try it
 
-Install with `uv tool install graphifyy`, run `graphify update .` in a repository, and try `graphify path` between two functions. The code is on [GitHub](https://github.com/Graphify-Labs/graphify). The [confidence tags glossary entry](https://graphify.com/glossary/confidence-tags) and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) go further. To serve tagged edges to an agent, see [what an MCP server is](/blog/what-is-an-mcp-server-a-developers-guide). See also [what the Graphify benchmark measures](/blog/what-the-graphify-benchmark-measures).
+Install with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`, run `graphify update .` in a repository, and try `graphify path` between two functions. The code is on [GitHub](https://github.com/Graphify-Labs/graphify). The [confidence tags glossary entry](https://graphify.com/glossary/confidence-tags) goes further. To serve tagged edges to an agent, see [what an MCP server is](/blog/what-is-an-mcp-server-a-developers-guide). See also [what the Graphify benchmark measures](/blog/what-the-graphify-benchmark-measures). Setup details are in the [installation docs](https://docs.graphify.com/open-source/installation).
