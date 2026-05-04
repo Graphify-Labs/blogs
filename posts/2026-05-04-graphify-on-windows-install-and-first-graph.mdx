@@ -80,6 +80,12 @@ Then run `graphify claude install` once, so Claude Code reads the report before 
 
 Most problems are PATH or encoding. If `graphify` is not found, close and reopen the terminal after a uv install, or use `python -m graphify`. If non-English text looks garbled, set `PYTHONUTF8=1` for the session. The [troubleshooting docs](https://docs.graphify.com/open-source/troubleshooting) list more cases. For git hooks, `graphify hook install` writes hooks that Git for Windows runs through its bundled shell.
 
+## How do you fix graphify not found on Windows?
+
+Run `uv tool update-shell` in PowerShell, then close and reopen the terminal. That adds the uv tools folder to your user PATH. If you used pipx, run `pipx ensurepath` instead. Then run `graphify --help` to confirm. A new terminal is required because the old one keeps the old PATH.
+
+If it still fails, run `where.exe graphify` to see whether any copy is on PATH.
+
 ## FAQ
 
 ### Does Graphify work on Windows without WSL?
@@ -104,4 +110,4 @@ To a `graphify-out` folder in the project: `graph.html`, `GRAPH_REPORT.md`, and 
 
 ## Next steps
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. If you are unsure which package to pick, read [graphifyy vs graphify on PyPI](/blog/graphifyy-vs-graphify-on-pypi-which-package-to-install). The [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) covers what you just built, and [Graphify's edge tags](/blog/extracted-inferred-ambiguous-graphifys-edge-tags-explained) explain the labels you will see.
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. If you are unsure which package to pick, read [graphifyy vs graphify on PyPI](/blog/graphifyy-vs-graphify-on-pypi-which-package-to-install). [Graphify's edge tags](/blog/extracted-inferred-ambiguous-graphifys-edge-tags-explained) explain the labels you will see. Code is parsed with [tree-sitter](https://tree-sitter.github.io/tree-sitter/).
