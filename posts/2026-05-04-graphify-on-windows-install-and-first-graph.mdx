@@ -1,0 +1,107 @@
+---
+title: "Graphify Windows install: setup and your first graph"
+description: "Graphify Windows install, step by step: Python 3.10+, uv tool install graphifyy, graphify install, and your first code graph in PowerShell."
+date: "2026-05-04"
+keyword: graphify windows install
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - windows
+  - install
+  - cli
+---
+
+A Graphify Windows install takes three steps: install Python 3.10 or newer, install the `graphifyy` package with uv, and run `graphify install` to add the skill to your coding assistant. On Windows, `graphify install` picks the Windows version of the Claude Code skill by default. Then you build your first graph from PowerShell.
+
+## What do you need before a Graphify Windows install?
+
+You need Python 3.10 or newer, a terminal, and a coding assistant such as Claude Code, Codex, or Cursor. Install Python from python.org or with winget, and tick "Add python.exe to PATH" in the python.org installer. Git is optional, but `graphify hook install` needs it.
+
+Check your version in PowerShell:
+
+```powershell
+python --version
+```
+
+## How do you install Graphify on Windows?
+
+Install uv first, then use it to install Graphify as a tool. The [uv installation guide](https://docs.astral.sh/uv/getting-started/installation/) gives a PowerShell installer and a winget package. A tool install puts the `graphify` command on your PATH in its own environment.
+
+```powershell
+winget install --id=astral-sh.uv -e
+uv tool install graphifyy
+graphify install
+```
+
+The package is `graphifyy`, with two y's. The command is `graphify`. If you prefer pipx, run `pipx install graphifyy`. With plain pip, scripts land in a folder such as `%APPDATA%\Python\PythonXY\Scripts`, which may not be on PATH. `python -m graphify` works in that case.
+
+| Method | Command | PATH handled? |
+|---|---|---|
+| uv | `uv tool install graphifyy` | Yes |
+| pipx | `pipx install graphifyy` | Yes |
+| pip | `pip install graphifyy` | Not always |
+
+## Which platform flag does Windows need?
+
+For Claude Code on Windows, the README lists `graphify install --platform windows`. On a Windows machine, `graphify install` chooses that platform by default, so the plain command works. Other assistants take their own flag:
+
+```powershell
+graphify install --platform codex
+graphify cursor install
+```
+
+## How do you build your first graph on Windows?
+
+Open your project folder in your assistant and run the skill. In Claude Code, type `/graphify .` in the chat. Codex calls skills with a dollar sign, so in Codex you run `$graphify .` instead. The assistant parses code locally with tree-sitter and sends docs and images to its model for extraction.
+
+For a code-only graph without the assistant, run this in PowerShell inside the project:
+
+```powershell
+graphify update .
+```
+
+It parses the code locally and needs no API key. Both routes write a `graphify-out` folder. Open `graphify-out\graph.html` in a browser to explore the graph. Read `GRAPH_REPORT.md` for the most connected nodes and clusters.
+
+## How do you query the graph from PowerShell?
+
+The CLI works the same on Windows as on macOS and Linux. Quote names with double quotes:
+
+```powershell
+graphify query "what connects auth to the database?"
+graphify path "UserService" "DatabasePool"
+graphify explain "RateLimiter"
+```
+
+Then run `graphify claude install` once, so Claude Code reads the report before it searches. The [Claude Code integration page](https://graphify.com/integrations/claude-code) covers the hook it installs.
+
+## What if something goes wrong on Windows?
+
+Most problems are PATH or encoding. If `graphify` is not found, close and reopen the terminal after a uv install, or use `python -m graphify`. If non-English text looks garbled, set `PYTHONUTF8=1` for the session. The [troubleshooting docs](https://docs.graphify.com/open-source/troubleshooting) list more cases. For git hooks, `graphify hook install` writes hooks that Git for Windows runs through its bundled shell.
+
+## FAQ
+
+### Does Graphify work on Windows without WSL?
+
+Yes. The CLI runs in native PowerShell. WSL works too, as a Linux environment.
+
+### Do I need an API key on Windows?
+
+Not for code. Code parsing is local. Docs and images go through your assistant's model.
+
+### Why is graphify not recognized after pip install?
+
+Your Python Scripts folder is not on PATH. Use uv or pipx, or run `python -m graphify`.
+
+### Can I use Graphify with Cursor on Windows?
+
+Yes. Run `graphify cursor install` in the project to add an always-on rule for Cursor.
+
+### Where does Graphify write its output?
+
+To a `graphify-out` folder in the project: `graph.html`, `GRAPH_REPORT.md`, and `graph.json`.
+
+## Next steps
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. If you are unsure which package to pick, read [graphifyy vs graphify on PyPI](/blog/graphifyy-vs-graphify-on-pypi-which-package-to-install). The [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) covers what you just built, and [Graphify's edge tags](/blog/extracted-inferred-ambiguous-graphifys-edge-tags-explained) explain the labels you will see.
