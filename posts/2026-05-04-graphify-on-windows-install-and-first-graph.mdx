@@ -13,7 +13,7 @@ tags:
   - cli
 ---
 
-A Graphify Windows install takes three steps: install Python 3.10 or newer, install the `graphifyy` package with uv, and run `graphify install` to add the skill to your coding assistant. On Windows, `graphify install` picks the Windows version of the Claude Code skill by default. Then you build your first graph from PowerShell.
+A Graphify Windows install is a three-step setup of the open-source Graphify CLI: install Python 3.10 or newer, install the `graphifyy` package with uv, and run `graphify install`. On Windows, `graphify install` picks the Windows version of the Claude Code skill by default. Then you build your first graph from PowerShell.
 
 ## What do you need before a Graphify Windows install?
 
@@ -27,7 +27,7 @@ python --version
 
 ## How do you install Graphify on Windows?
 
-Install uv first, then use it to install Graphify as a tool. The [uv installation guide](https://docs.astral.sh/uv/getting-started/installation/) gives a PowerShell installer and a winget package. A tool install puts the `graphify` command on your PATH in its own environment.
+Install uv first, then use it to install Graphify as a tool. The [uv installation guide](https://docs.astral.sh/uv/getting-started/installation/) gives a PowerShell installer and a winget package. A tool install puts the `graphify` command on your PATH in its own environment. Open a new terminal afterwards so the updated PATH takes effect:
 
 ```powershell
 winget install --id=astral-sh.uv -e
@@ -45,7 +45,7 @@ The package is `graphifyy`, with two y's. The command is `graphify`. If you pref
 
 ## Which platform flag does Windows need?
 
-For Claude Code on Windows, the README lists `graphify install --platform windows`. On a Windows machine, `graphify install` chooses that platform by default, so the plain command works. Other assistants take their own flag:
+For Claude Code on Windows, the README lists `graphify install --platform windows`. On a Windows machine, `graphify install` chooses that platform by default, so the plain command works. You only need the flag when you set up a different assistant or want to be explicit in a script. Other assistants take their own flag:
 
 ```powershell
 graphify install --platform codex
@@ -66,7 +66,7 @@ It parses the code locally and needs no API key. Both routes write a `graphify-o
 
 ## How do you query the graph from PowerShell?
 
-The CLI works the same on Windows as on macOS and Linux. Quote names with double quotes:
+The CLI works the same on Windows as on macOS and Linux, so every query command carries over unchanged. The one difference is quoting. PowerShell treats single and double quotes differently, as its [quoting rules](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_quoting_rules) explain. Wrap symbol names in double quotes so names with parentheses pass through intact:
 
 ```powershell
 graphify query "what connects auth to the database?"
