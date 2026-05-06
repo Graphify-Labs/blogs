@@ -21,7 +21,7 @@ Code says what a system does. Docs say why. When they live in separate tools, an
 
 ## Which files can Graphify read alongside code?
 
-Graphify's README lists the supported types and the extras some need.
+Graphify's README lists the supported file types and the optional extras some of them need. Code is parsed locally with tree-sitter. Markdown, PDFs, Office documents, and images go through the model pass instead. Check the table below before you add a folder, because files of an unsupported type are skipped rather than reported as errors.
 
 | Type | Extensions | Extra needed |
 |---|---|---|
@@ -44,7 +44,7 @@ Comments count too. Notes such as `# WHY:` and `# HACK:`, docstrings, and design
 
 ## How do you build the graph?
 
-Put the docs next to the code, or in a folder inside the project. Then run the skill in your assistant:
+Put the docs next to the code, or in a folder inside the project, so one run covers both. Graphify then reads code locally and sends only the documents to the model your assistant already uses. You do not need a separate API key for this route. Then run the skill in your assistant:
 
 ```text
 /graphify .
@@ -54,7 +54,7 @@ In Claude Code, the docs go to the model your session already uses. To add a pap
 
 ## Can you extract without an IDE?
 
-Yes. `graphify extract` runs the full extraction headless, for CI or scripts. It needs a model backend. The README lists Gemini, Kimi, Claude, OpenAI, and a local Ollama instance:
+Yes. `graphify extract` runs the full extraction headless, which suits CI jobs, scheduled rebuilds, or scripts. It needs a model backend for the documents, because no assistant is present to read them. Code is still parsed locally. The README lists Gemini, Kimi, Claude, OpenAI, and a local Ollama instance:
 
 ```bash
 graphify extract ./docs --backend ollama
