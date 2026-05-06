@@ -1,0 +1,97 @@
+---
+title: "Knowledge graph from PDF and code: one graph for both"
+description: "Build a knowledge graph from PDF and code together: Graphify parses code locally and extracts docs, PDFs, and Office files with a model into one graph."
+date: "2026-05-06"
+keyword: knowledge graph from pdf and code
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - documents
+  - pdf
+  - graph
+---
+
+A knowledge graph from PDF and code is one graph where functions and classes sit next to the design docs, specs, and papers that explain them. Graphify builds it in two passes. Code is parsed locally with tree-sitter. Docs, PDFs, Office files, and images are read by a model that links concepts to the code they describe.
+
+## Why build a knowledge graph from PDF and code together?
+
+Code says what a system does. Docs say why. When they live in separate tools, an agent sees the function but not the decision record behind it. One graph puts both in reach of one query. Asking "what implements the retry policy in the design doc?" returns the doc section and the functions in a single answer.
+
+## Which files can Graphify read alongside code?
+
+Graphify's README lists the supported types and the extras some need.
+
+| Type | Extensions | Extra needed |
+|---|---|---|
+| Code | `.py .ts .go .rs .java` and more | None |
+| Docs | `.md .mdx .html .txt .rst .yaml` | None |
+| PDFs | `.pdf` | None |
+| Office | `.docx .xlsx` | `graphifyy[office]` |
+| Images | `.png .jpg .webp .gif` | None |
+| Audio and video | `.mp4 .mov .mp3 .wav` | `graphifyy[video]` |
+
+Install an extra with quotes around the name, for example `uv tool install "graphifyy[office]"`.
+
+## How does Graphify extract a graph from PDFs and docs?
+
+It treats prose differently from code. Code has a syntax tree, so the parser reads calls and imports directly. A PDF has no tree. Graphify sends docs, PDFs, and images to a model, which returns entities and relationships. Office files are converted to text first. Audio and video are transcribed locally with faster-whisper, then extracted as text.
+
+Edges from that pass are tagged INFERRED, with a confidence score. Edges parsed from code are EXTRACTED. Our post on [Graphify's edge tags](/blog/extracted-inferred-ambiguous-graphifys-edge-tags-explained) explains how to read them.
+
+Comments count too. Notes such as `# WHY:` and `# HACK:`, docstrings, and design rationale from docs become their own nodes, linked to the code they explain.
+
+## How do you build the graph?
+
+Put the docs next to the code, or in a folder inside the project. Then run the skill in your assistant:
+
+```text
+/graphify .
+```
+
+In Claude Code, the docs go to the model your session already uses. To add a paper or a page from the web, run `/graphify add <url>`. The `--mode deep` flag asks for more aggressive relationship extraction.
+
+## Can you extract without an IDE?
+
+Yes. `graphify extract` runs the full extraction headless, for CI or scripts. It needs a model backend. The README lists Gemini, Kimi, Claude, OpenAI, and a local Ollama instance:
+
+```bash
+graphify extract ./docs --backend ollama
+```
+
+With Ollama, set `OLLAMA_BASE_URL` and `OLLAMA_MODEL` to point at your local model. Nothing leaves your machine in that setup. The [Ollama documentation](https://github.com/ollama/ollama) covers running a model locally.
+
+## What leaves your machine?
+
+The README's privacy section is specific. Code files are processed locally. Audio and video are transcribed locally. Docs, PDFs, and images go to your assistant's model for extraction, or to the backend you choose for headless runs. There is no telemetry. Keep sensitive documents out of the corpus with a `.graphifyignore` file, which uses `.gitignore` syntax.
+
+## How does this compare with RAG over documents?
+
+Retrieval-augmented generation, introduced in a [2020 paper by Lewis and colleagues](https://arxiv.org/abs/2005.11401), retrieves text chunks that look similar to a question. A graph stores the relationships themselves: this doc section describes that function. You can follow those links, and each one carries a tag. The [Graphify vs RAG page](https://graphify.com/vs/rag) compares the two.
+
+## FAQ
+
+### Do I need an API key to graph PDFs?
+
+Inside an assistant, no extra key: the assistant's model does the work. Headless `graphify extract` needs a backend key or a local Ollama instance.
+
+### Are scanned PDFs supported?
+
+Graphify extracts from the PDF's text. A scan with no text layer gives the model little to read, so run OCR first.
+
+### Can I graph only the docs folder?
+
+Yes. Pass the folder, for example `/graphify ./docs`, or exclude paths with `.graphifyignore`.
+
+### Do doc edges update when files change?
+
+Run `/graphify . --update` to re-extract only changed files. Code-only changes rebuild locally with `graphify update .`.
+
+### Where do the PDF results end up?
+
+In `graphify-out/graph.json`, next to the code nodes. Each node records the source file it came from.
+
+## Try it
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. The [documents and media docs](https://docs.graphify.com/open-source/features/documents-and-media) cover file types, and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) covers the concept. New to setup on Windows? Read [Graphify on Windows](/blog/graphify-on-windows-install-and-first-graph).
