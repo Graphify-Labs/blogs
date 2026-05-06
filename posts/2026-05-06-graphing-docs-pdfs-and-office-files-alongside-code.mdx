@@ -70,6 +70,12 @@ The README's privacy section is specific. Code files are processed locally. Audi
 
 Retrieval-augmented generation, introduced in a [2020 paper by Lewis and colleagues](https://arxiv.org/abs/2005.11401), retrieves text chunks that look similar to a question. A graph stores the relationships themselves: this doc section describes that function. You can follow those links, and each one carries a tag. The [Graphify vs RAG page](https://graphify.com/vs/rag) compares the two.
 
+## How do you keep document extraction small?
+
+Graph only the documents that explain the code. Put design docs, specs and runbooks in the folder, and leave out exports, scans and archives. Add a `.graphifyignore` file to skip large or irrelevant paths. Code still parses locally with no model, so only the documents cost model tokens.
+
+Start with one folder of docs. Check the result, then widen it.
+
 ## FAQ
 
 ### Do I need an API key to graph PDFs?
@@ -94,4 +100,4 @@ In `graphify-out/graph.json`, next to the code nodes. Each node records the sour
 
 ## Try it
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. The [documents and media docs](https://docs.graphify.com/open-source/features/documents-and-media) cover file types, and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) covers the concept. New to setup on Windows? Read [Graphify on Windows](/blog/graphify-on-windows-install-and-first-graph).
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. The [documents and media docs](https://docs.graphify.com/open-source/features/documents-and-media) cover file types. New to setup on Windows? Read [Graphify on Windows](/blog/graphify-on-windows-install-and-first-graph).
