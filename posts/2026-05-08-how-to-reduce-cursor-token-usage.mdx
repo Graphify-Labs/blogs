@@ -62,6 +62,12 @@ Each answer is a few lines of structure with file and line references. Cursor th
 
 Compare the same tasks. Pick five real requests, run them in new chats, and note usage from your Cursor dashboard. Build the graph and repeat with the same prompts and model. The first graph build costs model calls for any docs and images. Results vary by codebase, so measure on yours. The method is in our post on [measuring token spend per task](/blog/measuring-token-spend-per-task-in-claude-code).
 
+## Should you use .cursorignore and trim MCP servers?
+
+Yes. A `.cursorignore` file keeps build output, vendored code and large generated files out of indexing and agent reads. Each enabled MCP server also adds its tool definitions to the context. Turn off servers you are not using in this project. Both changes cut tokens on every request, not just on one task.
+
+Keep the graph tool on. It replaces many searches with one small answer.
+
 ## FAQ
 
 ### Does the Graphify rule add many tokens?
@@ -86,4 +92,4 @@ Not for code. Docs, PDFs, and images go through the model your Cursor chat uses.
 
 ## Get started
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. The [Cursor integration page](https://graphify.com/integrations/cursor) covers setup, and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph) covers the concept. Using Codex too? Read [how to reduce Codex CLI token usage](/blog/how-to-reduce-codex-cli-token-usage).
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. The [Cursor integration page](https://graphify.com/integrations/cursor) covers setup. Using Codex too? Read [how to reduce Codex CLI token usage](/blog/how-to-reduce-codex-cli-token-usage). Setup details are in the [installation docs](https://docs.graphify.com/open-source/installation).
