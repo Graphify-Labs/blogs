@@ -62,6 +62,12 @@ Aider's `/run` command runs a shell command and can add its output to the chat. 
 
 Load the graph report as read-only context with `/read-only graphify-out/GRAPH_REPORT.md`. Aider's [in-chat command list](https://aider.chat/docs/usage/commands.html) documents both commands.
 
+## Does the repo map grow when no files are added?
+
+Yes. Aider sizes the map with `--map-tokens`, which defaults to 1k tokens. When no files are in the chat, Aider can expand the map well beyond that budget to give the model a wider view. Once you add files, the map shrinks back. So map cost depends on how you use the chat.
+
+Add the files you plan to edit early. That keeps the map near its budget.
+
 ## FAQ
 
 ### Does Graphify replace the Aider repo map?
@@ -86,4 +92,4 @@ Run `graphify update .` after edits, or `graphify hook install` to rebuild on ea
 
 ## Get started
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. See the [Aider integration page](https://graphify.com/integrations/aider), the [querying docs](https://docs.graphify.com/open-source/features/querying), and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph). Related: [how to reduce Cursor token usage](/blog/how-to-reduce-cursor-token-usage). See also [how to reduce Codex CLI token usage](/blog/how-to-reduce-codex-cli-token-usage).
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. See the [Aider integration page](https://graphify.com/integrations/aider) and the [querying docs](https://docs.graphify.com/open-source/features/querying). Related: [how to reduce Cursor token usage](/blog/how-to-reduce-cursor-token-usage). See also [how to reduce Codex CLI token usage](/blog/how-to-reduce-codex-cli-token-usage).
