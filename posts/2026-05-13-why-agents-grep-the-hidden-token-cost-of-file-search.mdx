@@ -1,0 +1,82 @@
+---
+title: "AI agent grep token cost: why agents grep files"
+description: "AI agent grep token cost explained: why search output and file reads fill a coding agent's context, measured on one repo, and how a code graph narrows it."
+date: "2026-05-13"
+keyword: ai agent grep token cost
+authors:
+  - fahad
+categories:
+  - engineering
+tags:
+  - tokens
+  - grep
+  - agents
+---
+
+AI agent grep token cost is the share of a coding agent's context spent on search results and the file reads that follow them. Agents find code by text search, and every match, plus every file opened to check a match, is billed as input. On structural questions, a code graph can return the answer without that loop.
+
+## Why does an AI agent use grep at all?
+
+Grep is cheap, fast, and needs no index. Anthropic's [guide to context engineering for agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) describes this "just in time" approach. The agent keeps light references, such as paths, and loads data with tools like grep and glob when needed. That avoids stale indexes. The cost is that search output lands in context.
+
+## How big is one grep result?
+
+We measured one search. Method: httpx at commit `b5addb6` (23 Feb 2026), about 8,800 lines of Python in the `httpx` package. Command: `rg -n "send" httpx`. Date: 13 May 2026.
+
+The search returned 60 matching lines and 4,814 characters. At a rough 4 characters per token, that is about 1,200 tokens for one search. A narrower `rg -n "def send" httpx` returned 188 characters. Results vary by codebase and by query.
+
+## Where does the rest of the cost come from?
+
+The search is the first step. To answer "what calls `send`?", the agent opens the files behind the matches to read context. Each read adds a file or a large slice of one. If the first search misses, the agent searches again with a new pattern. Those loops repeat, and each one stays in the conversation history.
+
+| Step | What enters context |
+|---|---|
+| Broad search | Every matching line |
+| Narrower search | Fewer lines, still text matches |
+| File reads | Whole files or large ranges |
+| Retry | Another round of all three |
+
+## Why does text search miss structure?
+
+Grep matches strings, not meaning. A search for `send` also hits comments, docstrings, and variable names. It cannot tell a call from a definition, and it cannot follow an import to the file where a symbol lives. The agent rebuilds those links by reading code.
+
+## How does a code graph narrow the search?
+
+A code knowledge graph stores calls and imports as edges. Graphify, an open-source CLI, builds one with tree-sitter, locally and with no model for code:
+
+```bash
+uv tool install graphifyy
+graphify update .
+graphify explain ".send()"
+graphify path "handle" "verify"
+```
+
+`explain` lists a node's connections. On the same httpx checkout, `graphify explain ".send()"` resolved to `.send()` in `httpx/_client.py` at line 879. The full output was 515 characters. Node labels follow the parser, so methods carry a leading dot. `path` returns the chain between two symbols. `graphify query "<question>" --budget 800` caps output at a token budget. The agent opens only the files the answer names.
+
+The graph does not remove grep. Text search still wins for string literals, log messages, and config values.
+
+## How do you measure AI agent grep token cost?
+
+Run five real tasks with your agent and note token usage for each. Then build a graph, add its instructions with `graphify claude install` or the command for your tool, and repeat. Our guide to [measuring token spend per task](/blog/measuring-token-spend-per-task-in-claude-code) covers the method.
+
+## FAQ
+
+### Is grep output always the biggest cost?
+
+No. File reads are often larger. Grep starts the chain that leads to them.
+
+### Does a semantic index fix this?
+
+It helps find relevant text. It does not store who calls whom, so structural questions still need reads.
+
+### Will the graph be stale after edits?
+
+Run `graphify update .` after edits, or install the git hook with `graphify hook install`.
+
+### Does Graphify work with Codex and Cursor?
+
+Yes. See `graphify codex install` and `graphify cursor install`.
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. Read the [querying docs](https://docs.graphify.com/open-source/features/querying), the [token reduction glossary entry](https://graphify.com/glossary/token-reduction), and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph). Related: [Aider repo map vs a code knowledge graph](/blog/aider-a-code-graph-repo-map-vs-knowledge-graph).
