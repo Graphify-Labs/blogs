@@ -59,6 +59,12 @@ The graph does not remove grep. Text search still wins for string literals, log 
 
 Run five real tasks with your agent and note token usage for each. Then build a graph, add its instructions with `graphify claude install` or the command for your tool, and repeat. Our guide to [measuring token spend per task](/blog/measuring-token-spend-per-task-in-claude-code) covers the method.
 
+## How can an agent grep more cheaply?
+
+Search in two steps. First run `rg -l pattern` to list only matching file names. Then search inside the one or two files that matter. Add `-m` to cap matches per file. This keeps each result small. It also keeps later turns cheaper, because every earlier result stays in the conversation.
+
+For questions about callers or impact, skip grep and ask the graph.
+
 ## FAQ
 
 ### Is grep output always the biggest cost?
@@ -79,4 +85,4 @@ Yes. See `graphify codex install` and `graphify cursor install`.
 
 ## Get started
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. Read the [querying docs](https://docs.graphify.com/open-source/features/querying), the [token reduction glossary entry](https://graphify.com/glossary/token-reduction), and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph). Related: [Aider repo map vs a code knowledge graph](/blog/aider-a-code-graph-repo-map-vs-knowledge-graph).
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. Read the [querying docs](https://docs.graphify.com/open-source/features/querying) and the [token reduction glossary entry](https://graphify.com/glossary/token-reduction). Related: [Aider repo map vs a code knowledge graph](/blog/aider-a-code-graph-repo-map-vs-knowledge-graph).
