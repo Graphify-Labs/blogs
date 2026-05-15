@@ -60,6 +60,12 @@ The `--budget` flag caps the answer at a token count. That makes the cost of a l
 
 Measure. Pick real tasks, run them before and after a change, and compare token usage and outcome. Our post on [measuring token spend per task](/blog/measuring-token-spend-per-task-in-claude-code) gives a method. Results vary by codebase and task.
 
+## Where do skills, hooks and subagents fit?
+
+They decide when context loads. A skill loads its instructions only when a task needs it. A hook runs code at a fixed point, such as before a tool call, so it can enforce rules without prompt text. A subagent works in its own window and returns a summary. All three keep the main context smaller.
+
+A code graph fits the same pattern. The agent asks it only when it needs structure.
+
 ## FAQ
 
 ### Is context engineering the same as prompt engineering?
@@ -80,4 +86,4 @@ No. RAG retrieves similar text chunks. A code graph stores explicit relationship
 
 ## Get started
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. Read the [querying docs](https://docs.graphify.com/open-source/features/querying), the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph), and [why coding agents burn tokens on grep](/blog/why-agents-grep-the-hidden-token-cost-of-file-search). The [Claude Code integration page](https://graphify.com/integrations/claude-code) covers setup.
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. Read the [querying docs](https://docs.graphify.com/open-source/features/querying) and [why coding agents burn tokens on grep](/blog/why-agents-grep-the-hidden-token-cost-of-file-search). The [Claude Code integration page](https://graphify.com/integrations/claude-code) covers setup.
