@@ -13,7 +13,7 @@ tags:
   - tokens
 ---
 
-Context engineering for coding agents is the practice of deciding what goes into the model's context window on each step. That covers instructions, tool definitions, chat history, and the code the agent retrieves. The goal is the smallest set of high-signal tokens that lets the agent do the task.
+Context engineering for coding agents is the practice of deciding what goes into the model's context window on each step. That covers instructions, tool definitions, chat history, and the code the agent retrieves. The goal is the smallest set of high-signal tokens that lets the agent do the task. Graphify, an open-source CLI, supplies one of those sources: a local code graph.
 
 ## What is context engineering?
 
@@ -25,6 +25,8 @@ Coding agents run long loops. Each loop reads files, runs commands, and appends 
 
 ## What goes into a coding agent's context?
 
+A coding agent's context has four layers: the instructions it loads, the tools it can call, the conversation history, and the code it retrieves. Each layer competes for the same window. Each one also has its own way to stay lean. The table below lists all four with examples and the main way to trim each.
+
 | Layer | Examples | How to keep it lean |
 |---|---|---|
 | Instructions | `CLAUDE.md`, `AGENTS.md`, Cursor rules | Short, stable facts only |
@@ -34,7 +36,7 @@ Coding agents run long loops. Each loop reads files, runs commands, and appends 
 
 ## Which techniques work for coding agents?
 
-Four techniques come up most in vendor guidance.
+Four techniques come up most in vendor guidance: keep instructions short, load only the tools a task needs, reset or compact history, and retrieve code just in time. [Anthropic's context engineering article](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) covers all four. Each one cuts tokens without hiding what the agent needs.
 
 **Just-in-time retrieval.** Keep paths and names in context, and load content when needed. Anthropic describes agents using grep and glob this way.
 
@@ -46,7 +48,7 @@ Four techniques come up most in vendor guidance.
 
 ## Where does a code graph fit?
 
-A code graph is a just-in-time source for structure. Instead of reading files to learn who calls what, the agent asks a graph. Graphify, an open-source CLI, builds one locally with tree-sitter:
+A code graph is a just-in-time source for structure. Instead of reading files to learn who calls what, the agent asks a graph and gets back only the relevant nodes and edges. That saves the tokens a broad file read would spend. Graphify, an open-source CLI, builds one locally with tree-sitter:
 
 ```bash
 uv tool install graphifyy
@@ -58,7 +60,7 @@ The `--budget` flag caps the answer at a token count. That makes the cost of a l
 
 ## How do you tell if context engineering is working?
 
-Measure. Pick real tasks, run them before and after a change, and compare token usage and outcome. Our post on [measuring token spend per task](/blog/measuring-token-spend-per-task-in-claude-code) gives a method. Results vary by codebase and task.
+Measure it. Pick real tasks, run them before and after a change, and compare token usage and whether the task succeeded. Fewer tokens with worse results is not a win. Our post on [measuring token spend per task](/blog/measuring-token-spend-per-task-in-claude-code) gives a method. Results vary by codebase and task.
 
 ## Where do skills, hooks and subagents fit?
 
