@@ -58,6 +58,12 @@ graphify path "handle" "verify"
 
 `path` returns the chain of edges between two symbols.
 
+## How does a hybrid search work for code?
+
+Use vector search to find where to start, then the graph to follow structure. A natural-language question such as "where do we retry payments" finds likely functions by meaning. From those nodes, graph edges give callers, callees and imports exactly. The vector step finds the entry point. The graph step gives the facts.
+
+This keeps both parts doing what they are good at.
+
 ## FAQ
 
 ### Is a knowledge graph better than a vector database?
@@ -82,4 +88,4 @@ No. Graphify builds a code knowledge graph and stores it as `graph.json`.
 
 ## Get started
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. Compare approaches on [Graphify vs vector databases](https://graphify.com/vs/vector-databases), read the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph), and see the [querying docs](https://docs.graphify.com/open-source/features/querying). Related: [context engineering for coding agents](/blog/context-engineering-for-coding-agents).
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. Compare approaches on [Graphify vs vector databases](https://graphify.com/vs/vector-databases) and see the [querying docs](https://docs.graphify.com/open-source/features/querying). Related: [context engineering for coding agents](/blog/context-engineering-for-coding-agents).
