@@ -13,7 +13,7 @@ tags:
   - rag
 ---
 
-A knowledge graph vs vector database comparison comes down to what each stores. A knowledge graph stores entities and the named relationships between them. A vector database stores embeddings, which are lists of numbers, and finds items whose embeddings are close to a query. One answers "how are these connected?" The other answers "what looks like this?"
+A knowledge graph is a store of entities and the named relationships between them, while a vector database stores embeddings and finds items whose embeddings are close to a query. Graphify, an open-source CLI, builds the first kind for code. One answers "how are these connected?" The other answers "what looks like this?"
 
 ## What is a knowledge graph?
 
@@ -24,6 +24,8 @@ A knowledge graph is a set of nodes and typed edges. In a code knowledge graph, 
 A vector database indexes embeddings and runs nearest-neighbour search. Text is split into chunks, each chunk is embedded by a model, and a query is embedded the same way. The database returns the closest chunks. Pinecone's [explainer on vector databases](https://www.pinecone.io/learn/vector-database/) covers the indexing methods.
 
 ## How do they compare?
+
+They differ in what they store, how you query them, and what they are good at. A graph answers multi-hop questions with visible edges. A vector store answers fuzzy questions with a similarity score. Build and update costs differ too, because one parses and the other embeds. The table sets them side by side.
 
 | | Knowledge graph | Vector database |
 |---|---|---|
@@ -42,11 +44,11 @@ Graphs also carry provenance. In Graphify, each edge is tagged EXTRACTED when pa
 
 ## When should you use a vector database?
 
-Use vectors when wording varies and the question is "find things like this". Searching support tickets, docs, or chat logs by meaning is the classic case. Embeddings handle synonyms that a graph would need explicit edges for.
+Use vectors when wording varies and the question is "find things like this". Searching support tickets, docs, or chat logs by meaning is the classic case. Embeddings handle synonyms and paraphrase that a graph would need explicit edges for. They are also quicker to set up when your data has no clear structure to parse.
 
 ## Can you use both?
 
-Yes. Many systems retrieve candidate chunks by similarity, then follow graph edges for context. Microsoft's [GraphRAG work](https://arxiv.org/abs/2404.16130) builds a graph from text to answer questions that span a whole corpus.
+Yes. Many systems retrieve candidate chunks by similarity, then follow graph edges to pull in related context. That pairs fuzzy recall with exact relationships. Microsoft's [GraphRAG work](https://arxiv.org/abs/2404.16130) builds a graph from text to answer questions that span a whole corpus. For code, the graph can come straight from parsing instead.
 
 For code, a graph can be built without embeddings. Graphify parses source with tree-sitter locally:
 
