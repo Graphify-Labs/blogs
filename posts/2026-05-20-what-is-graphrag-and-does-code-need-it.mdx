@@ -60,6 +60,12 @@ graphify query "how does auth reach the database?"
 
 Graphify does not generate answers itself. It returns graph context for your coding assistant to use.
 
+## Where does a code graph live?
+
+It can live in a file or a graph database. Graphify writes `graph.json` in the repository, which needs no server. For larger teams, the same graph can be exported to Neo4j and queried with Cypher. A file is enough for one developer and an agent. A database helps when many tools query the graph.
+
+Start with the file. Move to a database only when you need shared queries.
+
 ## FAQ
 
 ### Is GraphRAG better than RAG?
@@ -84,4 +90,4 @@ It can read code as text. It does not parse syntax, so edges come from the LLM r
 
 ## Get started
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. Read the [GraphRAG glossary entry](https://graphify.com/glossary/graphrag), the [community detection docs](https://docs.graphify.com/open-source/features/community-detection), and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph). Related: [knowledge graph vs vector database](/blog/knowledge-graph-vs-vector-database-for-code). See also [context engineering](/blog/context-engineering-for-coding-agents).
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. Read the [GraphRAG glossary entry](https://graphify.com/glossary/graphrag) and the [community detection docs](https://docs.graphify.com/open-source/features/community-detection). Related: [knowledge graph vs vector database](/blog/knowledge-graph-vs-vector-database-for-code). See also [context engineering](/blog/context-engineering-for-coding-agents).
