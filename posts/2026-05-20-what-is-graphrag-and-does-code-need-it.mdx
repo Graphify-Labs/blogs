@@ -1,0 +1,87 @@
+---
+title: "What is GraphRAG, and does code need it?"
+description: "GraphRAG for code, explained: how Microsoft's graph-based RAG works, what it costs, and why code graphs can skip most of the LLM extraction."
+date: "2026-05-20"
+keyword: graphrag for code
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - graphrag
+  - rag
+  - knowledge-graph
+---
+
+GraphRAG is a retrieval-augmented generation method that builds a knowledge graph from source text and answers questions from that graph. Microsoft Research introduced it in the 2024 paper [From Local to Global: A Graph RAG Approach to Query-Focused Summarization](https://arxiv.org/abs/2404.16130). It targets questions about a whole corpus, which plain vector retrieval handles poorly. GraphRAG for code is a different case, because code already has explicit structure.
+
+## What problem does GraphRAG solve?
+
+Standard RAG retrieves the text chunks most similar to a question. That works for "what does this document say about X?" It struggles with "what are the main themes across these documents?" No single chunk holds the answer. The GraphRAG paper calls these global sensemaking questions.
+
+## How does GraphRAG work?
+
+The paper describes a pipeline with an indexing stage and a query stage.
+
+1. Split source documents into text chunks.
+2. Use an LLM to extract entities, relationships, and claims from each chunk.
+3. Build a graph from those elements.
+4. Detect communities of closely related entities with the Leiden algorithm.
+5. Generate a summary for each community.
+6. At query time, answer from each community summary, then combine the partial answers.
+
+Microsoft maintains an open-source implementation, documented at [microsoft.github.io/graphrag](https://microsoft.github.io/graphrag/).
+
+## How is GraphRAG different from standard RAG?
+
+| | Standard RAG | GraphRAG |
+|---|---|---|
+| Index | Embeddings of chunks | Entity graph plus community summaries |
+| Built with | An embedding model | An LLM extraction pass |
+| Best at | Local, specific questions | Corpus-wide questions |
+| Index cost | Lower | Higher, many LLM calls |
+| Answer source | Retrieved chunks | Community summaries, graph context |
+
+## What does GraphRAG cost to build?
+
+Indexing calls an LLM over every chunk, then again for summaries. For a large corpus, that is many calls, so test on a small sample first. Re-indexing after changes adds more calls.
+
+## Does code need GraphRAG?
+
+Both build a graph and both group it into communities. The difference is where edges come from. GraphRAG extracts everything from prose with an LLM. In code, structure is already explicit: calls and imports exist in the syntax.
+
+Graphify, an open-source CLI, uses that. It parses code with tree-sitter locally, with no LLM, and tags those edges EXTRACTED. Only docs, PDFs, and images go through a model, and those edges are tagged INFERRED. Graphify also clusters the graph into communities, using Leiden when the `[leiden]` extra is installed and Louvain otherwise:
+
+```bash
+uv tool install graphifyy
+graphify update .
+graphify query "how does auth reach the database?"
+```
+
+Graphify does not generate answers itself. It returns graph context for your coding assistant to use.
+
+## FAQ
+
+### Is GraphRAG better than RAG?
+
+For corpus-wide summary questions, the paper reports better comprehensiveness and diversity. For specific lookups, standard RAG is often enough and cheaper.
+
+### Does GraphRAG need a graph database?
+
+No. Microsoft's implementation writes its index to files. You can load results into a graph database if you want.
+
+### What are communities in GraphRAG?
+
+Groups of entities that are densely connected to each other. Each gets an LLM-written summary.
+
+### Is Graphify an implementation of GraphRAG?
+
+No. Graphify builds a code knowledge graph mostly by parsing. It shares the graph and community ideas.
+
+### Can GraphRAG index source code?
+
+It can read code as text. It does not parse syntax, so edges come from the LLM rather than the parser.
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. Read the [GraphRAG glossary entry](https://graphify.com/glossary/graphrag), the [community detection docs](https://docs.graphify.com/open-source/features/community-detection), and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph). Related: [knowledge graph vs vector database](/blog/knowledge-graph-vs-vector-database-for-code). See also [context engineering](/blog/context-engineering-for-coding-agents).
