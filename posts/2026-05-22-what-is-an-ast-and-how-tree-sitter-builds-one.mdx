@@ -1,0 +1,86 @@
+---
+title: "What is an AST, and how tree-sitter builds one"
+description: "What is tree-sitter? A parser that builds a syntax tree for each file. Here is what an AST is and how tree-sitter trees become a code graph."
+date: "2026-05-22"
+keyword: what is tree-sitter
+authors:
+  - fahad
+categories:
+  - engineering
+tags:
+  - tree-sitter
+  - ast
+  - code-graph
+---
+
+Tree-sitter is a parser that turns source code into a syntax tree. A code graph is built by parsing each source file into a syntax tree, walking that tree, and recording what it finds. Definitions become nodes. Calls, imports, and inheritance become edges. Because the parser reads syntax directly, no language model is needed for this step.
+
+## What is tree-sitter?
+
+Tree-sitter is a parser generator and incremental parsing library. Its [documentation](https://tree-sitter.github.io/tree-sitter/) describes it as a tool that builds a concrete syntax tree for a source file and updates it efficiently as the file is edited. It has grammars for many languages and is used by editors such as Neovim, Zed, and Helix for highlighting and navigation.
+
+## Is a tree-sitter tree an AST or a CST?
+
+Strictly, tree-sitter produces a concrete syntax tree. A CST keeps every token, including punctuation. An abstract syntax tree drops details that do not affect meaning. In practice, tree-sitter marks nodes as named or anonymous, and tools that skip anonymous nodes get an AST-like view. Most code graph tools, Graphify included, say "AST" in this looser sense.
+
+## How does a tree-sitter tree become a code graph?
+
+The extractor walks each file's tree and looks for specific node types.
+
+| Tree node | Graph element |
+|---|---|
+| Function or method definition | Node |
+| Class definition | Node, plus `contains` edges to methods |
+| Call expression | `calls` edge from caller to callee |
+| Import statement | `imports` edge to a module or symbol |
+| Superclass list | `inherits` edge |
+| Comment or docstring | Rationale node linked to its code |
+
+Tree-sitter's [query language](https://tree-sitter.github.io/tree-sitter/using-parsers/queries/) lets you match these patterns with S-expressions instead of hand-written walks.
+
+## How are calls across files resolved?
+
+This is the hard part. A call to `check_token()` in `app.py` names a symbol, not a file. The extractor has to match it to a definition, often through an import. Some links are certain from syntax. Others are a best guess.
+
+Graphify tags each edge so you can tell. Edges read directly from one file's syntax are EXTRACTED. Edges resolved by a heuristic are INFERRED, with a confidence score. On a two-file test project at Graphify 0.8.16, `graphify path` shows both kinds:
+
+```text
+handle() <--calls [INFERRED]-- check_token() --calls [EXTRACTED]--> verify()
+```
+
+`handle` in `app.py` calls `check_token`, imported from `auth.py`, which calls `verify`.
+
+## How do you build one?
+
+```bash
+uv tool install graphifyy
+graphify update .
+```
+
+`graphify update .` parses every supported code file locally and writes `graphify-out/graph.json`, a report, and an HTML view. No source code is sent anywhere for this step.
+
+## What can tree-sitter not see?
+
+Syntax only shows what the code says. Dynamic dispatch, reflection, dependency injection, and calls built from strings are invisible or ambiguous. A type checker or language server resolves more, at higher cost. A graph built from syntax is a fast, broad map, not a proof.
+
+## FAQ
+
+### Does tree-sitter need the code to compile?
+
+No. It tolerates syntax errors and still produces a tree for the rest of the file.
+
+### Is tree-sitter the same as a language server?
+
+No. A language server type-checks and resolves symbols. Tree-sitter parses syntax only.
+
+### Which languages does Graphify parse?
+
+The [languages docs](https://docs.graphify.com/open-source/features/languages) list supported extensions.
+
+### Why are some edges INFERRED?
+
+Because syntax alone did not prove the link. See [Graphify's edge tags](/blog/extracted-inferred-ambiguous-graphifys-edge-tags-explained).
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. Read the [tree-sitter glossary entry](https://graphify.com/glossary/tree-sitter) and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph). Related: [what is GraphRAG?](/blog/what-is-graphrag-and-does-code-need-it)
