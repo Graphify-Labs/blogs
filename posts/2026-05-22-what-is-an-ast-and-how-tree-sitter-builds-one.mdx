@@ -63,6 +63,12 @@ graphify update .
 
 Syntax only shows what the code says. Dynamic dispatch, reflection, dependency injection, and calls built from strings are invisible or ambiguous. A type checker or language server resolves more, at higher cost. A graph built from syntax is a fast, broad map, not a proof.
 
+## Why does tree-sitter tolerate broken code?
+
+Tree-sitter keeps parsing when it hits a syntax error. It marks the bad region with an error node and still builds the rest of the tree. That matters for tools that run while you type. It also means a graph can still be built from a repository with a half-finished file.
+
+Tree-sitter can also re-parse only the part of a file that changed, which keeps updates fast.
+
 ## FAQ
 
 ### Does tree-sitter need the code to compile?
@@ -83,4 +89,4 @@ Because syntax alone did not prove the link. See [Graphify's edge tags](/blog/ex
 
 ## Get started
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. Read the [tree-sitter glossary entry](https://graphify.com/glossary/tree-sitter) and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph). Related: [what is GraphRAG?](/blog/what-is-graphrag-and-does-code-need-it)
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. Read the [tree-sitter glossary entry](https://graphify.com/glossary/tree-sitter). Related: [what is GraphRAG?](/blog/what-is-graphrag-and-does-code-need-it)
