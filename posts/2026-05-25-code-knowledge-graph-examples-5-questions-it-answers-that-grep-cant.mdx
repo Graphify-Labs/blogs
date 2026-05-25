@@ -60,6 +60,12 @@ This returns the shortest chain of edges between the two, with a tag on each hop
 
 `GRAPH_REPORT.md` lists god nodes, the most connected symbols, plus communities, which are clusters of closely linked code. It also flags surprising connections across clusters. Coding agents can read it before searching files. Open `graph.html` in a browser to see the same clusters visually.
 
+## Can the graph answer questions about classes?
+
+Yes. Classes are nodes, and methods hang off them with `method` edges. We tested a two-file project on Graphify 0.8.18: `Child` in `child.py` subclasses `Base` from `base.py`. `graphify explain "Base"` listed `Child` with a `uses [INFERRED]` edge, plus the `.run()` method and the import from `child.py`.
+
+The cross-file subclass link is INFERRED, so open `child.py` to confirm it before a refactor.
+
 ## FAQ
 
 ### Do these examples need an API key?
@@ -80,4 +86,4 @@ Use the label exactly as the graph shows it, such as `.send()` for a method.
 
 ## Get started
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. Read the [querying docs](https://docs.graphify.com/open-source/features/querying), the [blast radius glossary entry](https://graphify.com/glossary/blast-radius), and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph). Related: [tree-sitter and ASTs](/blog/what-is-an-ast-and-how-tree-sitter-builds-one). See also [GraphRAG](/blog/what-is-graphrag-and-does-code-need-it).
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. Read the [querying docs](https://docs.graphify.com/open-source/features/querying) and the [blast radius glossary entry](https://graphify.com/glossary/blast-radius). Related: [tree-sitter and ASTs](/blog/what-is-an-ast-and-how-tree-sitter-builds-one). See also [GraphRAG](/blog/what-is-graphrag-and-does-code-need-it). Code is parsed with [tree-sitter](https://tree-sitter.github.io/tree-sitter/).
