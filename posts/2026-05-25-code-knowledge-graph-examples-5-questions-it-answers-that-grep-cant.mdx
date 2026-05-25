@@ -1,0 +1,83 @@
+---
+title: "Code knowledge graph example: 5 questions grep can't answer"
+description: "Code knowledge graph example walkthrough: five questions a graph of calls and imports answers, from call chains to what an edit might break."
+date: "2026-05-25"
+keyword: code knowledge graph example
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - code-graph
+  - examples
+  - queries
+---
+
+This code knowledge graph example walkthrough shows what a graph of a repository's functions, classes, calls, and imports is for in daily work. Each example is a question, the command that answers it, and what comes back. All of them use Graphify, an open-source CLI, at version 0.8.18. Grep matches text, so it cannot answer any of these five directly.
+
+## How do you set up the code knowledge graph example?
+
+Install Graphify and build a code graph from any repository:
+
+```bash
+uv tool install graphifyy
+graphify update .
+```
+
+The build parses code locally with tree-sitter. It writes `graphify-out/graph.json`, `GRAPH_REPORT.md`, and `graph.html`. The examples below use a two-file project: `handle` in `app.py` calls `check_token`, imported from `auth.py`, and `check_token` calls `verify`.
+
+## Which code knowledge graph example questions matter most?
+
+| Question | Command |
+|---|---|
+| How does A reach B? | `graphify path "A" "B"` |
+| What does this function connect to? | `graphify explain "X"` |
+| What breaks if I change this? | `graphify affected "X"` |
+| How does a feature work? | `graphify query "<question>"` |
+| What are the core parts? | Read `GRAPH_REPORT.md` |
+
+## Example 1: how does a request reach a function?
+
+```bash
+graphify path "handle()" "verify()"
+```
+
+This returns the shortest chain of edges between the two, with a tag on each hop. On the demo project, the chain runs through `check_token()` in two hops.
+
+## Example 2: what is this function connected to?
+
+`graphify explain "check_token()"` prints the node's source file, line, community, and every connection. It is a quick substitute for opening several files to see who uses a function.
+
+## Example 3: what might an edit break?
+
+`graphify affected "verify()"` walks edges in reverse to find dependents. The default depth is 2. On the demo project it lists `check_token()` at `auth.py:L1`. Treat the list as a starting point for review, not a guarantee.
+
+## Example 4: how does a feature work?
+
+`graphify query "how is the token checked?" --budget 800` runs a traversal from the nodes that best match the question. The budget caps output at about 800 tokens, so an agent can call it cheaply.
+
+## Example 5: what are the core parts of the codebase?
+
+`GRAPH_REPORT.md` lists god nodes, the most connected symbols, plus communities, which are clusters of closely linked code. It also flags surprising connections across clusters. Coding agents can read it before searching files. Open `graph.html` in a browser to see the same clusters visually.
+
+## FAQ
+
+### Do these examples need an API key?
+
+No. Code graphs build and query locally.
+
+### Can a coding agent run these commands?
+
+Yes. Run `graphify claude install`, `graphify codex install`, or `graphify cursor install` to point your agent at the graph.
+
+### How do I keep the graph current?
+
+Run `graphify update .` after edits, or `graphify hook install` for a git hook.
+
+### What if a name matches several nodes?
+
+Use the label exactly as the graph shows it, such as `.send()` for a method.
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. Read the [querying docs](https://docs.graphify.com/open-source/features/querying), the [blast radius glossary entry](https://graphify.com/glossary/blast-radius), and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph). Related: [tree-sitter and ASTs](/blog/what-is-an-ast-and-how-tree-sitter-builds-one). See also [GraphRAG](/blog/what-is-graphrag-and-does-code-need-it).
