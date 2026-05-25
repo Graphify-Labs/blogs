@@ -17,7 +17,7 @@ This code knowledge graph example walkthrough shows what a graph of a repository
 
 ## How do you set up the code knowledge graph example?
 
-Install Graphify and build a code graph from any repository:
+Install Graphify and build a code graph from any repository. The build parses code locally with tree-sitter, so it needs no model and no API key. It writes `graphify-out/` with `graph.json`, `GRAPH_REPORT.md`, and an interactive HTML view. The examples below use a small two-file demo project and Graphify 0.8.18:
 
 ```bash
 uv tool install graphifyy
@@ -27,6 +27,8 @@ graphify update .
 The build parses code locally with tree-sitter. It writes `graphify-out/graph.json`, `GRAPH_REPORT.md`, and `graph.html`. The examples below use a two-file project: `handle` in `app.py` calls `check_token`, imported from `auth.py`, and `check_token` calls `verify`.
 
 ## Which code knowledge graph example questions matter most?
+
+Five questions come up again and again when you work in an unfamiliar repository. How does one function reach another? What is this symbol connected to? What breaks if I change it? How does a feature work? What are the core parts? The table maps each question to the Graphify command that answers it.
 
 | Question | Command |
 |---|---|
@@ -38,6 +40,8 @@ The build parses code locally with tree-sitter. It writes `graphify-out/graph.js
 
 ## Example 1: how does a request reach a function?
 
+`graphify path` prints the shortest chain of edges between two symbols, with the relation and confidence tag on each hop. That answers how a request travels from an entry point to the code you care about. Grep can find each name, but it cannot show the chain between them. Run it with two names:
+
 ```bash
 graphify path "handle()" "verify()"
 ```
@@ -46,15 +50,15 @@ This returns the shortest chain of edges between the two, with a tag on each hop
 
 ## Example 2: what is this function connected to?
 
-`graphify explain "check_token()"` prints the node's source file, line, community, and every connection. It is a quick substitute for opening several files to see who uses a function.
+`graphify explain "check_token()"` prints the node's source file, line, community, and every connection, each with its relation and confidence tag. It is a quick substitute for opening several files to see who uses a function and what it uses. Run it before you rename or move a function.
 
 ## Example 3: what might an edit break?
 
-`graphify affected "verify()"` walks edges in reverse to find dependents. The default depth is 2. On the demo project it lists `check_token()` at `auth.py:L1`. Treat the list as a starting point for review, not a guarantee.
+`graphify affected "verify()"` walks edges in reverse to find dependents. The default depth is 2, and `--depth` changes it. On the demo project it lists `check_token()` at `auth.py:L1`. Treat the list as a starting point for review, not a guarantee, and read any INFERRED edges yourself.
 
 ## Example 4: how does a feature work?
 
-`graphify query "how is the token checked?" --budget 800` runs a traversal from the nodes that best match the question. The budget caps output at about 800 tokens, so an agent can call it cheaply.
+`graphify query "how is the token checked?" --budget 800` runs a traversal from the nodes that best match the question. It returns the relevant nodes and edges as text. The budget caps output at about 800 tokens, so an agent can call it cheaply. Raise the budget for broader questions.
 
 ## Example 5: what are the core parts of the codebase?
 
