@@ -58,6 +58,12 @@ graphify update .
 graphify affected "verify()"
 ```
 
+## When do the call graph and dependency graph disagree?
+
+They disagree when code depends on a contract instead of a concrete class. With an interface or dependency injection, a caller imports the interface. At run time it calls whichever implementation was injected. The dependency graph shows the interface. A static call graph cannot always know which implementation runs.
+
+In that case, treat call edges to implementations as leads and check the wiring code.
+
 ## FAQ
 
 ### Is a dependency graph the same as an import graph?
@@ -78,4 +84,4 @@ Both help. Calls show behaviour, and imports show what loads. Graphify's `affect
 
 ## Get started
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. Read the [code graph glossary entry](https://graphify.com/glossary/code-graph), the [querying docs](https://docs.graphify.com/open-source/features/querying), and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph). Related: [code knowledge graph examples](/blog/code-knowledge-graph-examples-5-questions-it-answers-that-grep-cant). See also [tree-sitter](/blog/what-is-an-ast-and-how-tree-sitter-builds-one).
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. Read the [code graph glossary entry](https://graphify.com/glossary/code-graph) and the [querying docs](https://docs.graphify.com/open-source/features/querying). Related: [code knowledge graph examples](/blog/code-knowledge-graph-examples-5-questions-it-answers-that-grep-cant). See also [tree-sitter](/blog/what-is-an-ast-and-how-tree-sitter-builds-one).
