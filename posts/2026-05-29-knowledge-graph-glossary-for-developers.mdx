@@ -13,11 +13,11 @@ tags:
   - code-graph
 ---
 
-This glossary defines the knowledge graph terms developers meet when working with code graphs, graph databases, and graph-based retrieval. Each entry is one or two plain sentences. Where Graphify uses a term in a specific way, the entry says so.
+A knowledge graph glossary is a set of short definitions for the terms developers meet when working with code graphs, graph databases, and graph-based retrieval. Each entry is one or two plain sentences. Where Graphify, the open-source code graph CLI, uses a term in a specific way, the entry says so.
 
 ## What are the core knowledge graph terms?
 
-**Knowledge graph.** A set of entities and the named relationships between them, stored so a program can query them. In a code knowledge graph, entities are functions, classes, and files.
+The core terms are knowledge graph, node, edge, and relation. A **knowledge graph** is a set of entities and the named relationships between them, stored so a program can query them. In a code knowledge graph, entities are functions, classes, and files. Nodes are the entities, and edges are the relationships between them.
 
 **Node.** One entity in the graph, also called a vertex. A node has a label and properties, such as a source file and line.
 
@@ -31,7 +31,7 @@ This glossary defines the knowledge graph terms developers meet when working wit
 
 ## Which terms describe querying a graph?
 
-**Traversal.** Walking from node to node along edges to answer a question. Breadth-first search explores neighbours level by level. Depth-first search follows one path as far as it goes.
+Querying terms describe how you get answers out of a graph. **Traversal** means walking from node to node along edges to answer a question. Breadth-first search explores neighbours level by level. Depth-first search follows one path as far as it goes. A shortest path is the fewest hops between two nodes.
 
 **Path.** A sequence of edges joining two nodes. The shortest path is the one with the fewest hops.
 
@@ -43,7 +43,7 @@ This glossary defines the knowledge graph terms developers meet when working wit
 
 ## Which terms describe graph structure?
 
-**Community.** A group of nodes more densely connected to each other than to the rest. Graphify detects communities with Leiden or Louvain.
+Structure terms describe the shape of the graph as a whole. A **community** is a group of nodes more densely connected to each other than to the rest. Graphify detects communities with Leiden or Louvain. A god node is one of the most connected nodes. Degree is a node's number of edges.
 
 **God node.** Graphify's name for the most connected nodes, listed in `GRAPH_REPORT.md` as core abstractions.
 
@@ -53,7 +53,7 @@ This glossary defines the knowledge graph terms developers meet when working wit
 
 ## Which terms connect graphs and AI?
 
-**Embedding.** A list of numbers that represents text or code, used for similarity search.
+These terms come up when a graph feeds a language model. An **embedding** is a list of numbers that represents text or code, used for similarity search. Retrieval-augmented generation, or RAG, fetches context before the model answers. GraphRAG builds that context from a graph. An MCP server exposes a graph to an agent as tools.
 
 **Vector database.** A store that indexes embeddings and returns the nearest ones to a query.
 
@@ -64,6 +64,8 @@ This glossary defines the knowledge graph terms developers meet when working wit
 **MCP server.** A program that exposes tools to AI assistants over the Model Context Protocol.
 
 ## How do the terms compare?
+
+The terms fall into a few kinds: entities, relationships, groups, and query methods. Seeing them side by side makes the differences clear. The table below gives each term, its kind, and a concrete example. The examples come from a small code graph of an authentication module, used across this blog.
 
 | Term | Is a | Example in a code graph |
 |---|---|---|
