@@ -1,0 +1,96 @@
+---
+title: "Knowledge graph terms: a glossary for developers"
+description: "Knowledge graph terms for developers, defined plainly: node, edge, triple, ontology, traversal, community, god node, embedding, GraphRAG, and more."
+date: "2026-05-29"
+keyword: knowledge graph terms
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - glossary
+  - knowledge-graph
+  - code-graph
+---
+
+This glossary defines the knowledge graph terms developers meet when working with code graphs, graph databases, and graph-based retrieval. Each entry is one or two plain sentences. Where Graphify uses a term in a specific way, the entry says so.
+
+## What are the core knowledge graph terms?
+
+**Knowledge graph.** A set of entities and the named relationships between them, stored so a program can query them. In a code knowledge graph, entities are functions, classes, and files.
+
+**Node.** One entity in the graph, also called a vertex. A node has a label and properties, such as a source file and line.
+
+**Edge.** A relationship between two nodes, such as `calls` or `imports`. Edges in code graphs are usually directed: A calls B is not B calls A.
+
+**Triple.** A subject, predicate, and object, such as `handle calls check_token`. The [W3C RDF primer](https://www.w3.org/TR/rdf11-primer/) uses triples as the basic unit of a graph.
+
+**Property graph.** A model where nodes and edges both carry key-value properties. Neo4j's [graph database concepts](https://neo4j.com/docs/getting-started/graph-database/) describe it.
+
+**Ontology.** The schema of a graph: which entity types and relationship types exist, and how they may connect.
+
+## Which terms describe querying a graph?
+
+**Traversal.** Walking from node to node along edges to answer a question. Breadth-first search explores neighbours level by level. Depth-first search follows one path as far as it goes.
+
+**Path.** A sequence of edges joining two nodes. The shortest path is the one with the fewest hops.
+
+**Neighbours.** The nodes one edge away from a given node.
+
+**Degree.** The number of edges attached to a node. A high degree means many connections.
+
+**Multi-hop question.** A question whose answer needs several edges, such as how a request reaches the database.
+
+## Which terms describe graph structure?
+
+**Community.** A group of nodes more densely connected to each other than to the rest. Graphify detects communities with Leiden or Louvain.
+
+**God node.** Graphify's name for the most connected nodes, listed in `GRAPH_REPORT.md` as core abstractions.
+
+**Blast radius.** The set of code that a change could affect, found by walking edges in reverse.
+
+**Confidence tag.** In Graphify, each edge is tagged EXTRACTED, INFERRED, or AMBIGUOUS to show how it was found.
+
+## Which terms connect graphs and AI?
+
+**Embedding.** A list of numbers that represents text or code, used for similarity search.
+
+**Vector database.** A store that indexes embeddings and returns the nearest ones to a query.
+
+**RAG.** Retrieval-augmented generation: fetch relevant context, then pass it to a language model.
+
+**GraphRAG.** A RAG method that builds a graph from text and answers from it. See [what is GraphRAG](/blog/what-is-graphrag-and-does-code-need-it).
+
+**MCP server.** A program that exposes tools to AI assistants over the Model Context Protocol.
+
+## How do the terms compare?
+
+| Term | Is a | Example in a code graph |
+|---|---|---|
+| Node | Entity | `check_token()` |
+| Edge | Relationship | `handle` calls `check_token` |
+| Community | Cluster of nodes | The auth module's functions |
+| God node | High-degree node | A shared `Client` class |
+| Traversal | Query method | BFS from `handle` |
+
+## FAQ
+
+### Is a knowledge graph the same as a graph database?
+
+No. A knowledge graph is the data. A graph database is one way to store it.
+
+### What is the difference between a node and an entity?
+
+Mostly none. "Entity" is the real thing, and "node" is its place in the graph.
+
+### Do code graphs use ontologies?
+
+Loosely. Node and edge types act as a small built-in schema.
+
+### Where can I see these terms in practice?
+
+Build a graph with `uv tool install graphifyy` then `graphify update .`, and read `GRAPH_REPORT.md`.
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Browse the [knowledge graph glossary entry](https://graphify.com/glossary/knowledge-graph), the [community detection docs](https://docs.graphify.com/open-source/features/community-detection), and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph). Related: [call graph vs dependency graph](/blog/call-graph-vs-dependency-graph-vs-code-knowledge-graph).
