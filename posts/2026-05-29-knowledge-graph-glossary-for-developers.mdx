@@ -73,6 +73,12 @@ This glossary defines the knowledge graph terms developers meet when working wit
 | God node | High-degree node | A shared `Client` class |
 | Traversal | Query method | BFS from `handle` |
 
+## What are SPARQL and Cypher?
+
+They are query languages for graphs. SPARQL queries RDF data, which is stored as subject, predicate and object triples. Cypher queries property graphs, such as Neo4j, where nodes and edges carry key-value properties. A code graph is usually a property graph. So Cypher is the one developers meet most often.
+
+Graphify can export its graph as Cypher statements for Neo4j.
+
 ## FAQ
 
 ### Is a knowledge graph the same as a graph database?
@@ -93,4 +99,4 @@ Build a graph with `uv tool install graphifyy` then `graphify update .`, and rea
 
 ## Get started
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Browse the [knowledge graph glossary entry](https://graphify.com/glossary/knowledge-graph), the [community detection docs](https://docs.graphify.com/open-source/features/community-detection), and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph). Related: [call graph vs dependency graph](/blog/call-graph-vs-dependency-graph-vs-code-knowledge-graph).
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Browse the [knowledge graph glossary entry](https://graphify.com/glossary/knowledge-graph) and the [community detection docs](https://docs.graphify.com/open-source/features/community-detection). Related: [call graph vs dependency graph](/blog/call-graph-vs-dependency-graph-vs-code-knowledge-graph).
