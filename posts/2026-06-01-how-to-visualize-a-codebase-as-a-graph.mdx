@@ -53,6 +53,12 @@ Start with the report, not the picture. `GRAPH_REPORT.md` lists god nodes, the m
 
 Yes. `graphify tree` writes `graphify-out/GRAPH_TREE.html`, a collapsible tree built with D3. It suits a top-down view of files and their symbols.
 
+## How do you see what a change will affect?
+
+Pair the picture with a query. Find the node you plan to change in the view, then run `graphify affected "name"` in the terminal. It lists the nodes that reach it through calls, imports and similar edges, with file and line. The view shows the neighbourhood. The command gives the exact list.
+
+Use `--depth` to widen or narrow how far back it looks.
+
 ## FAQ
 
 ### Does visualization need an API key?
@@ -77,4 +83,4 @@ Run `graphify update .` again. `graphify watch .` rebuilds on code changes.
 
 ## Get started
 
-Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. Read the [exports docs](https://docs.graphify.com/open-source/features/exports), the [community glossary entry](https://graphify.com/glossary/community), and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph). Related: [code knowledge graph examples](/blog/code-knowledge-graph-examples-5-questions-it-answers-that-grep-cant). See also [the knowledge graph glossary](/blog/knowledge-graph-glossary-for-developers).
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. Read the [exports docs](https://docs.graphify.com/open-source/features/exports) and the [community glossary entry](https://graphify.com/glossary/community). Related: [code knowledge graph examples](/blog/code-knowledge-graph-examples-5-questions-it-answers-that-grep-cant). See also [the knowledge graph glossary](/blog/knowledge-graph-glossary-for-developers).
