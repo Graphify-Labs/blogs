@@ -1,0 +1,80 @@
+---
+title: "How to visualize a codebase as a graph"
+description: "How to visualize a codebase graph: build it locally, open the interactive HTML view, or export to SVG, GraphML for Gephi, Obsidian, or Neo4j."
+date: "2026-06-01"
+keyword: visualize codebase graph
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - visualization
+  - code-graph
+  - exports
+---
+
+To visualize a codebase graph, parse the repository into nodes and edges, then render them. Graphify, an open-source CLI, does both. One command builds the graph locally and writes an interactive `graph.html`. Export flags produce SVG, GraphML, an Obsidian vault, or Neo4j Cypher.
+
+## Why visualize a codebase graph?
+
+A picture shows shape that text hides. Clusters reveal modules that work together. A node with many lines is a hub that many parts depend on. A long thin chain can be a fragile path. When you join an unfamiliar project, the view is a fast first map.
+
+## How do you build the graph?
+
+```bash
+uv tool install graphifyy
+graphify update .
+```
+
+`graphify update .` parses code with tree-sitter and writes `graphify-out/`. That folder holds `graph.json`, `GRAPH_REPORT.md`, and `graph.html`. No model is used for code. To include docs and images, run `/graphify .` inside your coding assistant.
+
+## How do you use the interactive view?
+
+Open `graphify-out/graph.html` in any browser. The README describes it plainly: click nodes, filter, search. Nodes are coloured by community, the clusters Graphify detects. Click a node to see its connections. For very large graphs, skip the HTML with `--no-viz` and use an export instead.
+
+## Which export fits your tool?
+
+| Flag | Output | Open with |
+|---|---|---|
+| none | `graph.html` | Any browser |
+| `--svg` | `graph.svg` | Docs, slides, browsers |
+| `--graphml` | GraphML file | [Gephi](https://gephi.org/), yEd |
+| `--obsidian` | Markdown vault | [Obsidian](https://obsidian.md/) graph view |
+| `--neo4j` | `cypher.txt` | [Neo4j](https://neo4j.com/) |
+| `--neo4j-push` | Writes to a running Neo4j | Neo4j Browser |
+
+Pass the flag to the skill, for example `/graphify . --graphml`. To push to a local database, use `/graphify . --neo4j-push bolt://localhost:7687`.
+
+## How do you read a large graph?
+
+Start with the report, not the picture. `GRAPH_REPORT.md` lists god nodes, the most connected symbols, and the communities. Then open the view and search for those names. In Gephi, a force-directed layout spreads clusters apart, and a degree filter hides leaf nodes.
+
+## Is there a tree view?
+
+Yes. `graphify tree` writes `graphify-out/GRAPH_TREE.html`, a collapsible tree built with D3. It suits a top-down view of files and their symbols.
+
+## FAQ
+
+### Does visualization need an API key?
+
+No. Building a code graph and its HTML view runs locally.
+
+### Can I visualize only part of a repo?
+
+Yes. Pass a subfolder, such as `graphify update ./src`, or exclude paths with `.graphifyignore`.
+
+### Why is the HTML slow on a huge repo?
+
+Browsers struggle with many thousands of nodes. Use `--no-viz` and export GraphML for Gephi.
+
+### Can I query the graph in Neo4j?
+
+Yes. Load `cypher.txt` or use `--neo4j-push`, then query with Cypher.
+
+### Does the view update when code changes?
+
+Run `graphify update .` again. `graphify watch .` rebuilds on code changes.
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with `uv tool install graphifyy`. Read the [exports docs](https://docs.graphify.com/open-source/features/exports), the [community glossary entry](https://graphify.com/glossary/community), and the [code knowledge graph explainer](https://graphify.com/blog/what-is-a-code-knowledge-graph). Related: [code knowledge graph examples](/blog/code-knowledge-graph-examples-5-questions-it-answers-that-grep-cant). See also [the knowledge graph glossary](/blog/knowledge-graph-glossary-for-developers).
