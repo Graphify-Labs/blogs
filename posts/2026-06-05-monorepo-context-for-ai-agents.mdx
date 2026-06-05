@@ -1,0 +1,88 @@
+---
+title: "Monorepo context for AI coding agents"
+description: "How to give AI coding agents the right monorepo context: per-package instructions, scoped tests, and a code graph per package or merged across packages."
+date: "2026-06-05"
+keyword: monorepo ai coding context
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - monorepo
+  - context-engineering
+  - code-graph
+---
+
+Monorepo context for an AI coding agent means giving it only the packages a task touches, plus the links between them. Scope instructions and tests per package, and give the agent a structural map. Graphify, an open-source CLI, builds that map locally, per package or merged.
+
+## Why do agents struggle in monorepos?
+
+A monorepo holds many packages that share names, configs and tooling. An agent that searches the whole tree pulls in files from packages the task never touches. That wastes context and invites edits in the wrong place. The fix is to scope what the agent sees, then show it how packages connect, so it can reach shared code without reading everything.
+
+## How should you scope instructions per package?
+
+Put shared rules in a root instruction file and package rules next to each package. [Anthropic's guide to large codebases](https://code.claude.com/docs/en/large-codebases) describes this layering for Claude Code. Keep each file short: build commands, test commands and conventions. Point the agent at the package it should change, and tell it to run that package's tests only.
+
+[Factory's monorepo article](https://factory.com/articles/coding-agents-in-monorepos) adds that scoped test commands keep feedback fast.
+
+## How do you build a graph per package?
+
+Run Graphify inside each package, or pass the package path. Each build parses code with [tree-sitter](https://tree-sitter.github.io/tree-sitter/) and writes its own `graphify-out/`. No model or API key is needed for code. A small graph per package keeps answers focused on the code the task touches.
+
+```bash
+uv tool install graphifyy
+cd packages/api && graphify update .
+cd ../web && graphify update .
+```
+
+Use `.graphifyignore` at the root to skip build output, vendored code and generated files.
+
+## How do you see links across packages?
+
+Merge the package graphs into one. `graphify merge-graphs` combines two or more `graph.json` files and prefixes each node with its package name. We tested Graphify 0.8.31 on a two-package demo. It printed `Merged 2 graphs -> 7 nodes, 8 edges` and wrote `graphify-out/merged-graph.json`. Nodes kept their source, such as `api::billing_charge`.
+
+```bash
+graphify merge-graphs packages/api/graphify-out/graph.json packages/web/graphify-out/graph.json
+graphify explain "charge()" --graph graphify-out/merged-graph.json
+```
+
+## Should you build one graph from the root?
+
+Build from the root when a task crosses packages. On our demo, a root build let `graphify path "checkout()" "charge()"` return a one-hop chain. That call was tagged INFERRED, because it crossed files through an import. Check INFERRED edges by reading the code. For single-package work, the smaller package graph is usually enough.
+
+## Can one graph cover several repositories?
+
+Yes. Graphify 0.8.31 also keeps a global graph at `~/.graphify/global-graph.json`. `graphify global add graph.json` adds a project, and `graphify global list` shows what is in it. This suits polyrepo setups where shared code lives in a separate repository.
+
+| Setup | Command | Use when |
+|---|---|---|
+| Per package | `graphify update .` in the package | Task stays in one package |
+| Root graph | `graphify update .` at the root | Task crosses packages |
+| Merged | `graphify merge-graphs a.json b.json` | You built packages separately |
+| Global | `graphify global add graph.json` | Code spans several repos |
+
+## FAQ
+
+### Does Graphify need an API key for code?
+
+No. Code is parsed locally with tree-sitter and no model.
+
+### How do I stop the agent reading build output?
+
+List those paths in `.graphifyignore` and in the package instruction file.
+
+### Do merged graphs keep the package name?
+
+Yes. Merged node IDs carry a repo prefix, such as `api::`.
+
+### Should every package have its own instruction file?
+
+Only packages with their own commands or conventions need one. Keep shared rules at the root.
+
+### How do I refresh a package graph?
+
+Run `graphify update .` in that package again. Results are cached in `graphify-out/cache/`.
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. Read the [querying docs](https://docs.graphify.com/open-source/features/querying) and the [Claude Code integration page](https://graphify.com/integrations/claude-code). Related: [context engineering for coding agents](/blog/context-engineering-for-coding-agents). See also [how to understand a legacy codebase in a day](/blog/onboarding-to-a-legacy-codebase-in-a-day).
