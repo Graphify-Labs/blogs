@@ -1,0 +1,89 @@
+---
+title: "Graphify CLI commands: a reference, explained"
+description: "Every Graphify CLI command in v0.8.33, grouped by job: build, query, impact, export, multi-repo and setup, with the flags you will actually use."
+date: "2026-06-08"
+keyword: graphify cli commands
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - cli
+  - guides
+  - graphify
+---
+
+The Graphify CLI commands are the terminal commands that build a code knowledge graph, query it, and wire it into AI coding assistants. This reference groups every command in Graphify 0.8.33 by the job it does. It lists each command with the flags you are most likely to need.
+
+## How do you install the CLI?
+
+Install the `graphifyy` package with uv, then check the help. The PyPI package name has two y's, but the command is `graphify`. Run `graphify --help` to see the full list for your installed version. This reference was checked against the `--help` output of version 0.8.33, released in June 2026.
+
+```bash
+uv tool install graphifyy
+graphify --help
+```
+
+## Which commands build the graph?
+
+`graphify update .` builds or refreshes the graph from code, locally and with no model. `graphify watch .` rebuilds on file changes. `graphify extract` runs the full pipeline, including docs and media, with a model backend. Supported backends are gemini, kimi, claude, openai, deepseek and ollama. All builds write to `graphify-out/`.
+
+| Command | What it does | Useful flags |
+|---|---|---|
+| `update <path>` | Rebuild code graph, no model | `--force`, `--no-cluster` |
+| `watch <path>` | Rebuild on change | |
+| `extract <path>` | Full extraction with a model | `--backend`, `--mode deep`, `--token-budget`, `--out` |
+| `cluster-only <path>` | Rerun clustering only | `--no-viz`, `--no-label` |
+| `label <path>` | Name communities | |
+
+## Which commands query the graph?
+
+`graphify query` traverses the graph for a question and returns the relevant nodes and edges. It uses breadth-first search by default, `--dfs` for depth-first, and `--budget` to cap output at 2,000 tokens by default. `graphify path` prints the shortest chain between two symbols. `graphify explain` lists one symbol's neighbours with file and line.
+
+```bash
+graphify query "how does auth work?" --budget 1000
+graphify path "Client" "HTTPTransport"
+graphify explain "Response"
+```
+
+## How do you check the impact of a change?
+
+Use `graphify affected` on the symbol you plan to change. It walks edges such as calls, imports and inheritance up to `--depth`, which defaults to 2. Narrow it with `--relation`. Each result shows the relation and the file and line, so you can open the code directly. Read the INFERRED edges before you trust them.
+
+## Which commands export or visualize?
+
+`graphify tree` writes a collapsible D3 view to `GRAPH_TREE.html`, with `--root` and `--max-children` to trim it. `graphify export callflow-html` writes a Mermaid-based call-flow page. `graphify benchmark` measures token reduction versus reading the full corpus. `graphify save-result` saves a question and answer to `graphify-out/memory/` as feedback for the graph.
+
+## Which commands handle several repositories?
+
+`graphify merge-graphs` combines two or more `graph.json` files with `--out` for the result. `graphify global add`, `remove`, `list` and `path` manage a cross-project graph in your home folder. `graphify clone` clones a GitHub repository locally, and `graphify add <url>` fetches a URL into `./raw` and updates the graph. `graphify merge-driver` union-merges `graph.json` files during git merges.
+
+## Which commands set up assistants and hooks?
+
+`graphify install` copies the skill into your assistant's config, with `--platform` for tools such as codex, cursor or aider, and `graphify uninstall --purge` removes it. `graphify gemini install` sets up Gemini CLI. `graphify hook install` adds post-commit and post-checkout [git hooks](https://git-scm.com/docs/githooks), with `status` and `uninstall`. `graphify check-update` reports when semantic re-extraction is pending, and is safe to run from cron.
+
+## FAQ
+
+### Is the command graphify or graphifyy?
+
+The command is `graphify`. The package you install is `graphifyy`.
+
+### Which command needs no API key?
+
+`graphify update` and the query commands run locally with no model.
+
+### How do I limit query output size?
+
+Pass `--budget` to `graphify query`. The default is 2,000 tokens.
+
+### Can I rebuild the graph after every commit?
+
+Yes. Run `graphify hook install` to add post-commit and post-checkout hooks.
+
+### Where is the full flag list?
+
+Run `graphify --help`, or read the [CLI configuration docs](https://docs.graphify.com/open-source/configuration/cli).
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. Read the [CLI quickstart](https://docs.graphify.com/open-source/cli-quickstart) and the [querying docs](https://docs.graphify.com/open-source/features/querying). The [blast radius glossary entry](https://graphify.com/glossary/blast-radius) explains impact checks. Related: [monorepo context for AI coding agents](/blog/monorepo-context-for-ai-agents). See also [how to understand a legacy codebase in a day](/blog/onboarding-to-a-legacy-codebase-in-a-day).
