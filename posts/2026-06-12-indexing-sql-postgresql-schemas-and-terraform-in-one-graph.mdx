@@ -1,0 +1,104 @@
+---
+title: "Indexing SQL, PostgreSQL and Terraform in one code graph"
+description: "Put SQL schemas, live PostgreSQL databases and Terraform in the same code graph as your app, so table and infrastructure links are queryable."
+date: "2026-06-12"
+keyword: code graph sql terraform
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - sql
+  - terraform
+  - code-graph
+---
+
+A code graph with SQL and Terraform is a graph that stores tables, views and cloud resources as nodes beside your functions and classes. Edges record which table references which, and which resource depends on which. Graphify, an open-source CLI, indexes all three locally in Graphify 0.8.36.
+
+## Why put schemas and infrastructure in the code graph?
+
+Many bugs cross the line between code, database and infrastructure. A column rename breaks a view. A database change breaks the function that reads its address. When schema files and Terraform sit in the same graph as the app, one query shows those links. You no longer need three tools and a whiteboard to trace them.
+
+## How do you enable SQL and Terraform support?
+
+Install the optional extras. SQL support needs the `sql` extra, and Terraform needs the `terraform` extra. Terraform support covers `.tf`, `.tfvars` and `.hcl` files. In our test, a `.sql` file was skipped when the `sql` extra was missing. So check the install line first if tables do not appear.
+
+```bash
+uv tool install "graphifyy[sql,terraform]"
+graphify update .
+```
+
+## What does Graphify extract from SQL?
+
+It records tables and views as nodes, and foreign keys and view sources as edges. We tested a schema with `users`, `orders` and a `big_orders` view. Graphify 0.8.36 produced `orders references users` and `big_orders reads_from orders`. Both edges were tagged EXTRACTED, meaning they were parsed directly from the file.
+
+```sql
+CREATE TABLE users (id SERIAL PRIMARY KEY, email TEXT NOT NULL);
+CREATE TABLE orders (id SERIAL PRIMARY KEY, user_id INT REFERENCES users(id), total NUMERIC);
+CREATE VIEW big_orders AS SELECT * FROM orders WHERE total > 100;
+```
+
+`graphify explain "orders"` showed the table at `schema.sql L2` with these links:
+
+```text
+<-- schema.sql [contains], --> users [references], <-- big_orders [reads_from]
+```
+
+## What does Graphify extract from Terraform?
+
+It records resources as nodes and [attribute references](https://developer.hashicorp.com/terraform/language/expressions/references) as edges. In our test, a Lambda function read the address of an RDS instance. Graphify produced `aws_lambda_function.api references aws_db_instance.main`, tagged EXTRACTED. `graphify affected "aws_db_instance.main"` then listed the function and its file and line, `main.tf:L5`.
+
+```hcl
+resource "aws_lambda_function" "api" {
+  function_name = "api"
+  environment {
+    variables = { DB_HOST = aws_db_instance.main.address }
+  }
+}
+```
+
+## How do you index a live PostgreSQL database?
+
+Use the `postgres` extra and point `graphify extract` at a [connection string](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING). Graphify added this on 7 June 2026. It introspects the live schema rather than reading migration files. That helps when the files have drifted from what is actually deployed. Use a read-only database user for this.
+
+```bash
+uv tool install "graphifyy[postgres]"
+graphify extract --postgres "postgresql://user:pass@host/db"
+```
+
+## What are the limits?
+
+SQL inside application strings is not linked to tables. In our test, `"SELECT * FROM orders"` in a Python file created no edge to `orders`. ORMs and query builders need the same caution. Treat the graph as a map of declared schema and infrastructure, and read the code for runtime queries.
+
+| Source | Needs | Edges we saw |
+|---|---|---|
+| `.sql` files | `sql` extra | `references`, `reads_from` |
+| Terraform `.tf`, `.tfvars`, `.hcl` | `terraform` extra | `references` |
+| Live PostgreSQL | `postgres` extra | Schema introspection |
+| SQL in app strings | Not extracted | None |
+
+## FAQ
+
+### Do I need an API key to index SQL or Terraform?
+
+No. `graphify update .` parses these files locally with no model.
+
+### Why are my tables missing from the graph?
+
+Check that you installed the `sql` extra, then run `graphify update .` again.
+
+### Does Graphify read Terraform modules and variables?
+
+It parses `.tf`, `.tfvars` and `.hcl` files. Check the graph for the references you need.
+
+### Is the PostgreSQL password stored in the graph?
+
+Pass credentials through an environment variable where possible, and use a read-only user.
+
+### Can I see which code depends on a resource?
+
+Yes. Run `graphify affected` on the resource name to list what references it.
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install "graphifyy[sql,terraform]"`. See the [Terraform language page](https://graphify.com/languages/terraform) and the [querying docs](https://docs.graphify.com/open-source/features/querying). Related: [Graphify CLI commands explained](/blog/graphify-cli-commands-reference-explained). See also [how Graphify tags what it knows](/blog/grounded-answers-confidence-tags).
