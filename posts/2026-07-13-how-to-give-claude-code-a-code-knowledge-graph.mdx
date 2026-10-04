@@ -1,0 +1,102 @@
+---
+title: "How to give Claude Code a code knowledge graph (2026 guide)"
+description: "Install the skill, then build a local knowledge graph Claude Code can query before it searches your repo."
+date: "2026-07-13"
+keyword: code knowledge graph for claude code
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - claude-code
+  - graph
+  - mcp
+---
+
+Claude Code starts each session by searching the repo. It greps for a name, opens the files that match, and reads them into the conversation. A code knowledge graph for Claude Code gives it a map it can query instead, so the session starts from structure that already exists on your machine.
+
+## What does graphify install write for Claude Code?
+
+The package on PyPI is `graphifyy`, with two y's. Install the CLI first.
+
+```bash
+uv tool install graphifyy
+```
+
+`pipx install graphifyy` also works. If the shell then says `graphify` is not found, run `uv tool update-shell` and open a new terminal. `~/.local/bin` is not on PATH until you do.
+
+The bare `graphify install` targets Claude Code. It writes the `/graphify` skill to `~/.claude/skills/graphify/SKILL.md`, adds a graphify section to `~/.claude/CLAUDE.md`, and writes PreToolUse hooks to `.claude/settings.json`. When you type `/graphify`, that section tells Claude Code to follow the skill before it does anything else.
+
+`graphify install --project` writes those pieces inside the repo, so a team can commit them. The skill path there is `.claude/skills/graphify/SKILL.md`, and the hook settings go in `.claude/settings.json`. The command prints a `git add` hint. Teammates need the `graphifyy` CLI installed.
+
+If you see `ModuleNotFoundError: No module named 'graphify'`, the usual cause on Mac or Windows is a plain pip install. The skill resolves Python from `graphify-out/.graphify_python`, which can point at a different environment than pip used. Use the uv or pipx install above. Both isolate the package.
+
+The registration block is on [Graphify + Claude Code: a code knowledge graph](https://graphify.com/integrations/claude-code).
+
+## How do you build the graph?
+
+In a Claude Code session, type `/graphify .`. The skill maps the project into `graphify-out/`. `graph.html` is the interactive view, `GRAPH_REPORT.md` has the highlights and suggested questions, and `graph.json` is the queryable graph.
+
+On PowerShell, type `graphify .`. The leading slash in `/graphify .` is parsed as a path separator there.
+
+If `/graphify` does nothing, check that `~/.claude/skills/graphify/SKILL.md` exists and that the graphify section is in `CLAUDE.md`. Start a new Claude Code session so both are picked up.
+
+The background is in [What is a code knowledge graph?](https://graphify.com/blog/what-is-a-code-knowledge-graph). The glossary page is [Knowledge graph](https://graphify.com/glossary/knowledge-graph).
+
+## How does Claude Code query the graph?
+
+Before Claude Code greps or opens files one by one, the hook-guard reminds it to try the graph. `graphify query` returns a scoped subgraph for a question. `graphify path` returns the dependency path between two symbols. `graphify explain` returns everything connected to a node. Ask what calls `chargeCustomer`, and what breaks if you change its signature.
+
+```bash
+graphify query "what calls chargeCustomer, and what breaks if I change its signature?"
+graphify path "A" "B"
+graphify explain "chargeCustomer"
+```
+
+Results include `file:line` citations. Every edge is tagged `EXTRACTED`, `INFERRED`, or `AMBIGUOUS`. The tags separate what was found from what was guessed.
+
+## What does strict mode change?
+
+A normal install nudges Claude Code toward the graph. `graphify install --project --strict` blocks the first raw source read of a session and redirects that read to the graph. After that one block, the hook goes back to the soft nudge.
+
+`GRAPHIFY_HOOK_STRICT=1` or `0` toggles strict mode at runtime. No reinstall.
+
+## How does the graph stay current?
+
+`graphify update .` re-extracts changed files. That pass is AST-only. `graphify hook install` adds post-commit and post-checkout git hooks that run the update on commit and checkout. The graph does not update itself.
+
+Hook commands store an absolute path to the interpreter at install time. After you upgrade, run `graphify hook install` again so the embedded interpreter path stays fresh. If the PreToolUse hooks stop firing after an upgrade, run `graphify install` again.
+
+## Do you need the MCP server?
+
+The skill plus the CLI is the complete default. The MCP server is optional. Add `.mcp.json` at the project root when you want the graph as native tools, or when several assistants should share one graph.
+
+```json
+{
+  "mcpServers": {
+    "graphify": {
+      "command": "python",
+      "args": ["-m", "graphify.serve", "graphify-out/graph.json"]
+    }
+  }
+}
+```
+
+You can call `query_graph`, `shortest_path`, `god_nodes`, `graph_stats`, and a PR-triage set. The rest are in the [MCP tools reference](https://docs.graphify.com/reference/mcp-tools).
+
+## When should you use grep?
+
+Grep wins when the question is "find this string."
+
+Tree-sitter parses code locally with 36 language grammars. The model you already use in Claude Code reads docs and PDFs. There is no telemetry.
+
+The installer replaces or appends only its own graphify section and leaves the rest of `CLAUDE.md` alone. `graphify claude uninstall` removes the Claude Code pieces. `graphify uninstall` removes every platform at once. It also removes the graphify section from `CLAUDE.md`, and deletes that file only if graphify created it. `graphify uninstall --purge` also deletes `graphify-out/`.
+
+## How do you install it?
+
+```bash
+uv tool install graphifyy
+graphify install
+```
+
+Then open the repo in Claude Code and run `/graphify .`.
