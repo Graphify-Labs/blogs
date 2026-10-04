@@ -1,0 +1,63 @@
+---
+title: 100,000 GitHub stars
+description: One hundred thousand stars, 117 days after the first commit, and a look back at what the community built with Graphify.
+date: "2026-08-01"
+authors:
+  - safi
+categories:
+  - product
+tags:
+  - open-source
+  - community
+  - milestone
+imgThumb: thumb.png
+---
+
+We hit 100,000 GitHub stars. [github.com/Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify)
+
+That is 117 days after the first commit. Graphify has now been downloaded more than 4 million times, forked more than 10,000 times, and runs inside more than 20 AI coding assistants.
+
+That still feels surreal.
+
+I am a knowledge graph researcher. When Andrej Karpathy posted about using LLMs to build personal knowledge bases, something clicked: a coding assistant should not have to grep its way through a codebase every time you ask it a question. It should have a map. I built the first version that weekend and pushed it to GitHub on 5 April. One person and a tree-sitter parser.
+
+We had 4,000 stars on day one and 10,000 by day two, almost entirely because people we had never met posted about it on X. We never optimised for stars. We optimised for one thing: type `/graphify` in your assistant and get something useful back in thirty seconds. Stars are a side effect of that. But a milestone is a good moment to stop and look back, and this one is really about a community that showed up, stuck around, and built things we never planned for.
+
+## What hasn't changed
+
+The principles are the same ones I wrote down that first weekend.
+
+- **Your code stays on your machine.** Code is parsed locally and deterministically. No LLM call, nothing sent anywhere.
+- **Every edge is explained.** Each relationship is tagged `EXTRACTED` or `INFERRED`, so you always know what was read straight from the source and what Graphify resolved.
+- **A graph, not a vector index.** No embeddings, no vector store. Something you can traverse, query, and trace from one concept to the next.
+- **Simple enough to onboard yourself.** Two commands to install, one to run.
+
+## Standing on open source
+
+Graphify is built on top of other people's work, and we would not be here without it.
+
+- [tree-sitter](https://tree-sitter.github.io/tree-sitter/). Every code relationship in Graphify starts life as a tree-sitter AST, across dozens of languages.
+- [Leiden community detection](https://www.nature.com/articles/s41598-019-41695-z). This is how a codebase splits into the subsystems you see in every graph.
+- [faster-whisper](https://github.com/SYSTRAN/faster-whisper) and [yt-dlp](https://github.com/yt-dlp/yt-dlp). They let Graphify pull videos, talks, and recordings into the same graph as your code, transcribed locally.
+- [Model Context Protocol](https://modelcontextprotocol.io). MCP turned Graphify from a report you read into a set of tools any assistant can call.
+- [uv](https://github.com/astral-sh/uv). The reason install takes thirty seconds instead of thirty minutes.
+
+And thank you to the teams behind Claude Code, Cursor, Codex, Gemini CLI, Copilot, and every other assistant we plug into. You built the place where developers now work. We just try to give it a better map.
+
+## The community
+
+The numbers that matter most to me are not the stars. More than 130 people have contributed code, and we have shipped more than 150 releases. Nearly every fix that went out this month came from an issue or a pull request someone in the community opened. People have written tutorials, recorded videos, and posted reels about Graphify that we only found out about afterwards. This month we hit #3 on GitHub's global trending list.
+
+To everyone who starred the repo, opened an issue, sent a pull request, answered a question in Discord, or wrote about Graphify somewhere: thank you. And thank you to Andrej for the post that started all of this.
+
+## We are not done
+
+Graphify the open-source project stays open source. That is not changing.
+
+The thing you have asked for most is the always-on version: your code, docs, and meetings mapped continuously in the background, updated as you work, and queryable from anywhere instead of only on demand. That is what we have been building at [graphify.com](https://graphify.com), and as of today early access is open at [app.graphify.com](https://app.graphify.com), ahead of the public v1 launch.
+
+We think every AI assistant should work from a real map of your world, not a guess. We are going to keep building until that is the default.
+
+Thanks for all the stars.
+
+Safi and the Graphify team
