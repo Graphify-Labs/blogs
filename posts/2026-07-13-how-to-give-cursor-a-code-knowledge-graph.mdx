@@ -1,0 +1,83 @@
+---
+title: How to give Cursor a code knowledge graph (2026 guide)
+description: Four commands take Cursor from grep-and-read loops to querying a persistent, on-device knowledge graph of your codebase.
+date: "2026-07-13"
+imgThumb: thumb.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - cursor
+  - graph
+  - mcp
+---
+
+Out of the box, Cursor answers codebase questions by searching. It greps for a symbol, opens the files that match, reads them into context, and assembles an answer. That works, and it is expensive in a specific way. The exploration repeats every session, the same files get re-read, and the architectural picture the agent builds is gone the moment you close the window.
+
+A [code knowledge graph](https://graphify.com/glossary/knowledge-graph) changes the move available to the agent. Instead of re-deriving structure from text, Cursor queries a persistent map of your repo: functions, classes, tables, and config as nodes; calls, imports, and references as typed edges. The graph is built once and stored on your machine. Graphify is the open-source (Apache 2.0) tool that builds that graph and hands it to Cursor. The whole setup is four commands.
+
+## How it works
+
+Install the CLI. The package on PyPI is `graphifyy` (two y's). That puts the `graphify` command on your path.
+
+```bash
+uv tool install graphifyy
+```
+
+Wire Cursor. `graphify install` detects Cursor and registers Graphify over the [Model Context Protocol](https://modelcontextprotocol.io), the open standard Cursor already speaks for external tools. Cursor's agent can then call the graph mid-conversation: query the structure, trace a path between two nodes, explain why a node matters. No config files to hand-edit. The [Cursor integration page](https://graphify.com/integrations/cursor) has the specifics.
+
+```bash
+graphify install
+```
+
+Map the repo. In your next agent session, or from the shell, run `/graphify .` in the project. Tree-sitter parses your code locally across 36 languages, so the call and import edges come from real AST extraction. No model is involved in reading your source. Docs, PDFs, SQL, Postgres schemas, and Terraform are folded in by whichever model you choose.
+
+A few minutes later, three files sit in `graphify-out/`:
+
+- `graph.html`: an interactive map you can open in a browser
+- `GRAPH_REPORT.md`: a written brief covering god nodes, subsystem communities, and suggested questions
+- `graph.json`: the raw structure
+
+Ask structural questions. Try the ones that used to trigger long search-and-read loops: what calls this function, what is the blast radius of renaming this column, how does the webhook handler reach the database. Cursor answers by traversing the graph (a handful of nodes and edges rather than the full text of every matching file). Every edge carries a provenance tag: `EXTRACTED` from the AST, `INFERRED` by the model, or `AMBIGUOUS` when the evidence could not be resolved. Why that tagging matters is in [concepts](https://graphify.com/concepts).
+
+You can run the same queries yourself:
+
+```bash
+graphify query "what calls this handler"
+graphify path "webhook" "database"
+graphify explain "APIRouter"
+```
+
+The command reference lives in the [docs](https://docs.graphify.com).
+
+## The limit
+
+The open-source engine runs on your machine. Code parsing is local. There is no telemetry. The only optional network call is the model used to fold non-code sources into the graph, and that can stay local with Ollama.
+
+Re-run `/graphify .` when the code changes meaningfully, or `graphify . --update` to re-scan only what changed. Between refreshes the graph is plain files in `graphify-out/`. It does not update itself.
+
+[Graphify Cloud](https://app.graphify.com) is the hosted, always-on graph: the same map, kept current across repos, queryable from any assistant. This guide is the on-device setup. Cloud is a different product.
+
+This does not replace Cursor's grep. It gives the agent a map to consult first. For a question that is really "find this string," grep is still the right tool.
+
+## Proof
+
+Graph answers are small, and the graph persists, so context stops being spent on re-discovery. Actual savings depend on your repo and your questions. One community user reported 71.5× fewer tokens on their workload. That is their measurement, not a Graphify benchmark. The claim underneath it is that a traversal sends less text than a file dump.
+
+The other change is qualitative. Because every answer traces to a path through real files, you can audit what Cursor tells you instead of taking a plausible-sounding reconstruction on faith. Open `GRAPH_REPORT.md` once. The god nodes and subsystem communities it names are usually worth knowing about even before the agent starts using them.
+
+## Install
+
+```bash
+uv tool install graphifyy
+graphify install
+```
+
+Then, in Cursor:
+
+```
+/graphify .
+```
+
+First-graph walkthrough: [docs.graphify.com/guides/first-graph](https://docs.graphify.com/guides/first-graph). Cursor-specific notes: [graphify.com/integrations/cursor](https://graphify.com/integrations/cursor).
