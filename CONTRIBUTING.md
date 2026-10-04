@@ -77,6 +77,11 @@ A tag is a lowercase slug, the same string as its URL:
 
 The pill on a post links there. A post opened from that page still lives at `/blog/<slug>`. The tag is a way in, not part of the post's address. A tag page with one post only repeats that post, so it stays out of search results until a second post uses the tag.
 
+Tags also decide where else the post appears:
+
+- **Related posts.** Under each post, graphify.com lists up to three posts that share its tags or its category.
+- **From the blog.** A tag that is the slug of a page on graphify.com lists the post on that page: an assistant's integration page (`cursor`, `claude-code`, `github-copilot`, `codex`, `gemini-cli`: the part after `/integrations/`), a comparison (`rag`, `vector-databases`, `sourcegraph`, `greptile`, `coderabbit`), or a glossary term (`knowledge-graph`, `mcp-server`, `tree-sitter`: the part after `/glossary/`). A guide to Claude Code should carry `claude-code`.
+
 Supabase does not keep a permission list for tags. Their www README never says to ask before adding one. Every tag on a merged post becomes `/blog/tags/<tag>` on its own. Across 430 posts that produced 143 tags, including two spellings of the same word (`ai` and `AI`).
 
 Do the same here, with one rule they do not enforce: one lowercase spelling. You may add a new tag in the pull request for the post that uses it. A maintainer still reviews that pull request, so a tag that does not earn its place can come out in review. Do not add a second spelling, a space, or a tag that only repeats a category (`guides`).
@@ -138,7 +143,7 @@ Most readers arrive from a search result or an AI answer. Most of the work happe
 
 **Do not** repeat the phrase to fill space, write a second version for AI, copy a post that is already live somewhere else, or link graphify.net (it is not us). If you post your piece on your own blog, dev.to, or Medium after it is live here, set that copy's canonical URL to `https://graphify.com/blog/<slug>`.
 
-The site does the rest on every post: the share card, structured data for the article and its writers, the sitemap, the RSS feed, `llms.txt`, and a markdown copy at `/blog/<slug>.md` for agents. Once a new or refreshed post is live, `publish.yml` sends its URL to IndexNow.
+The site does the rest on every post: the share card, structured data for the article and its writers, the sitemap, the RSS feed, `llms.txt`, a markdown copy at `/blog/<slug>.md` for agents, and links to the post from related posts and from the pages its tags name ([3. Tags](#3-tags)). Once a new or refreshed post is live, `publish.yml` sends its URL to IndexNow.
 
 ## 8. Local checks
 
