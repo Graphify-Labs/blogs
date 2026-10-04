@@ -9,8 +9,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    outputs:
+      rebuilt: ${{ steps.hook.outputs.rebuilt }}
     steps:
       - name: Rebuild graphify.com
+        id: hook
         env:
           HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
         run: |
@@ -19,4 +22,26 @@ jobs:
             exit 0
           fi
           curl --fail --silent --show-error --request POST "$HOOK"
+          echo "rebuilt=true" >> "$GITHUB_OUTPUT"
           echo "graphify.com is rebuilding. The post is live when that build finishes."
+
+  indexnow:
+    needs: deploy
+    if: needs.deploy.outputs.rebuilt == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Tell IndexNow about new and refreshed posts
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: node scripts/indexnow.mjs

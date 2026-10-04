@@ -16,6 +16,8 @@ export type Post = {
   title: string;
   description: string;
   date: string;
+  updated?: string;
+  keyword?: string;
   authors: string[];
   categories: Category[];
   tags: string[];
@@ -81,6 +83,21 @@ function assertSafeBody(filename: string, body: string) {
   }
 }
 
+function optionalDay(value: unknown, label: string): string | undefined {
+  if (value === undefined) return undefined;
+  const day = typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00Z`) : undefined;
+  if (!day || Number.isNaN(day.getTime()) || day.toISOString().slice(0, 10) !== value) {
+    throw new Error(`${label} must be a quoted date, such as "2026-10-04"`);
+  }
+  return value as string;
+}
+
+function optionalText(value: unknown, label: string): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || value.trim() === "") throw new Error(`${label} must be a phrase, such as "cursor code knowledge graph"`);
+  return value.trim();
+}
+
 function optionalFile(value: unknown, label: string): string | undefined {
   if (value === undefined) return undefined;
   if (typeof value !== "string" || value.trim() === "" || value.startsWith("/") || value.includes("..")) {
@@ -111,6 +128,8 @@ export function parsePost(filename: string, raw: string, authors: Record<string,
   if (typeof date !== "string" || date !== fileDate) {
     throw new Error(`${filename}: date must be ${fileDate}`);
   }
+  const updated = optionalDay(data.updated, `${filename}: updated`);
+  if (updated && updated < date) throw new Error(`${filename}: updated must be on or after ${date}`);
 
   const authorIds = asStringList(data.authors, `${filename}: authors`);
   if (authorIds.length > 3) throw new Error(`${filename}: a post has at most three authors`);
@@ -139,6 +158,8 @@ export function parsePost(filename: string, raw: string, authors: Record<string,
     title,
     description,
     date,
+    updated,
+    keyword: optionalText(data.keyword, `${filename}: keyword`),
     authors: authorIds,
     categories: categories as Category[],
     tags,

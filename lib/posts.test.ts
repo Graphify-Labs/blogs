@@ -101,6 +101,20 @@ describe("parsePost", () => {
     expect(() => parsePost("2026-10-02-a-note.mdx", nested, authors)).toThrow(/relative file name/);
   });
 
+  it("keeps a refresh date on or after the publish date", () => {
+    const refreshed = (value: string) => raw.replace('date: "2026-10-02"', `date: "2026-10-02"\nupdated: ${value}`);
+    expect(parsePost("2026-10-02-a-note.mdx", refreshed('"2026-10-09"'), authors).updated).toBe("2026-10-09");
+    expect(() => parsePost("2026-10-02-a-note.mdx", refreshed('"2026-10-01"'), authors)).toThrow(/on or after/);
+    expect(() => parsePost("2026-10-02-a-note.mdx", refreshed("2026-10-09"), authors)).toThrow(/quoted date/);
+    expect(() => parsePost("2026-10-02-a-note.mdx", refreshed('"2026-02-30"'), authors)).toThrow(/quoted date/);
+  });
+
+  it("reads the target phrase as text", () => {
+    const keyed = raw.replace("tags:", "keyword: cursor code knowledge graph\ntags:");
+    expect(parsePost("2026-10-02-a-note.mdx", keyed, authors).keyword).toBe("cursor code knowledge graph");
+    expect(() => parsePost("2026-10-02-a-note.mdx", raw.replace("tags:", "keyword: []\ntags:"), authors)).toThrow(/phrase/);
+  });
+
   it("rejects an unknown category and a reserved slug", () => {
     const badCategory = raw.replace("guides", "news");
     expect(() => parsePost("2026-10-02-a-note.mdx", badCategory, authors)).toThrow(/unknown category/);

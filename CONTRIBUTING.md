@@ -19,6 +19,7 @@ Copy [template/post.mdx](template/post.mdx). The `date` field must match the fil
 title: A note
 description: One sentence a reader can use as the summary.
 date: "2026-10-02"
+keyword: code knowledge graph
 authors:
   - your-id
 categories:
@@ -35,6 +36,8 @@ imgSocial: og.png
 | `title` | yes | Sentence case |
 | `description` | yes | One sentence. This is the meta description and the index summary |
 | `date` | yes | `YYYY-MM-DD`, quoted, same as the filename |
+| `updated` | no | `YYYY-MM-DD`, quoted. The day you changed the facts. See [7. Search](#7-search) |
+| `keyword` | no | The phrase a reader types to find the post. See [7. Search](#7-search) |
 | `authors` | yes | Ids from `authors.json`. At most three |
 | `categories` | yes | One or more of the four below |
 | `tags` | no | Lowercase slugs. Each one is a page at `/blog/tags/<tag>` |
@@ -72,7 +75,7 @@ A tag is a lowercase slug, the same string as its URL:
 | `mcp` | https://graphify.com/blog/tags/mcp |
 | `launch-week` | https://graphify.com/blog/tags/launch-week |
 
-The pill on a post links there. A post opened from that page still lives at `/blog/<slug>`. The tag is a way in, not part of the post's address.
+The pill on a post links there. A post opened from that page still lives at `/blog/<slug>`. The tag is a way in, not part of the post's address. A tag page with one post only repeats that post, so it stays out of search results until a second post uses the tag.
 
 Supabase does not keep a permission list for tags. Their www README never says to ask before adding one. Every tag on a merged post becomes `/blog/tags/<tag>` on its own. Across 430 posts that produced 143 tags, including two spellings of the same word (`ai` and `AI`).
 
@@ -111,16 +114,42 @@ Use real commands and real numbers. The package on PyPI is `graphifyy` (two y's)
 
 Start with the point. Then how it works. Then the honest limit: what the open-source on-device engine does, and what Cloud adds. Then proof a reader can check. Then how to install. [template/post.mdx](template/post.mdx) is that outline.
 
-## 7. Local checks
+## 7. Search
+
+Most readers arrive from a search result or an AI answer. Most of the work happens before the first sentence.
+
+**One question.** Write the phrase a reader would type into Google or ask an assistant, and put it in `keyword`. Check that people ask it: Google's autocomplete, a Reddit or Hacker News thread, a question in Discord. One post answers one question. If a post here already answers yours, improve that post instead of writing a second one.
+
+**Title.** The phrase, near the start, in about 60 characters. The site adds " · Graphify".
+
+**Description.** Up to 160 characters. Say what the reader gets. It is the line under the title in search results and on the blog.
+
+**Opening.** Answer the question in the first paragraph, in 40 to 60 words, so it still makes sense when an answer engine quotes only that paragraph.
+
+**Headings.** Phrase `##` and `###` the way people ask: "How does the graph stay current?" says more than "Freshness". Go one level at a time.
+
+**Links.** Link at least two graphify.com pages where they help the reader: the integration page for the assistant you write about (`/integrations/cursor`), a glossary term (`/glossary/knowledge-graph`), a comparison (`/vs/rag`), the docs, or a related post. Use the page's name as the link text, not "here".
+
+**Proof.** Real commands and real output. Every number has a source, named in the sentence. Quote people by name and role.
+
+**Images.** Describe what each one shows inside the brackets. Search engines and screen readers read that text.
+
+**Freshness.** When you change the facts in an old post, set `updated` to that day and leave `date` alone. A typo fix is not an update.
+
+**Do not** repeat the phrase to fill space, write a second version for AI, copy a post that is already live somewhere else, or link graphify.net (it is not us). If you post your piece on your own blog, dev.to, or Medium after it is live here, set that copy's canonical URL to `https://graphify.com/blog/<slug>`.
+
+The site does the rest on every post: the share card, structured data for the article and its writers, the sitemap, the RSS feed, `llms.txt`, and a markdown copy at `/blog/<slug>.md` for agents. Once a new or refreshed post is live, `publish.yml` sends its URL to IndexNow.
+
+## 8. Local checks
 
 ```bash
 npm install
 npm run check
 ```
 
-That parses every post and walks the images. GitHub Actions runs the same commands on the pull request.
+That parses every post, walks the images, and runs the search check. Search errors block the merge: a second H1, a skipped heading level, an image with no description, a graphify.net link, or the wrong package name. Warnings are advice. GitHub Actions runs the same commands on the pull request and pins each finding to its line.
 
-## 8. Review
+## 9. Review
 
 GitHub asks [@SyedFahad7](https://github.com/SyedFahad7) to review. An owner of Graphify-Labs still has to turn on branch protection so a post cannot merge without that review and the **Check posts** check.
 
@@ -130,7 +159,7 @@ Keep the pull request to one post, plus that post's images and an `authors.json`
 
 In the graphify.com project on Vercel: Settings → Git → Deploy Hooks. Create one named `blog`. Store that URL as the Actions secret `VERCEL_DEPLOY_HOOK` on this repository.
 
-`.github/workflows/publish.yml` calls the hook on every push to `main`, and once a day so a post dated in the future can appear.
+`.github/workflows/publish.yml` calls the hook on every push to `main`, and once a day so a post dated in the future can appear. After a rebuild it waits until the live sitemap lists each new or refreshed post, then sends those URLs to IndexNow with the key graphify.com serves at `/1569ab0a97ec0cead86f3e05006d039a.txt`. If that key changes in Graphifydesign, change `scripts/indexnow.mjs` too.
 
 Protect `main`: require the **Check posts** check, and require a review.
 

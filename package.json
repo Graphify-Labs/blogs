@@ -4,7 +4,7 @@
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "test": "vitest run",
-    "check": "vitest run && node scripts/check-images.mjs"
+    "check": "vitest run && node scripts/check-images.mjs && node scripts/check-seo.mjs"
   },
   "dependencies": {
     "gray-matter": "^4.0.3"

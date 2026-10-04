@@ -17,3 +17,4 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: node scripts/check-images.mjs
+      - run: node scripts/check-seo.mjs
