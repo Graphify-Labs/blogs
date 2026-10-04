@@ -1,4 +1,4 @@
 # Every post needs a review before it can merge.
-# The author cannot approve their own pull request. List two people
-# so a post from one of us can still land.
-* @safishamsi @SyedFahad7
+# The author cannot approve their own pull request. List more than one
+# person so a post from one of us can still land.
+* @safishamsi @SyedFahad7 @syedfahads
