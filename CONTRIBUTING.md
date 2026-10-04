@@ -156,7 +156,7 @@ That parses every post, walks the images, and runs the search check. Search erro
 
 ## 9. Review
 
-GitHub asks [@SyedFahad7](https://github.com/SyedFahad7) to review. An owner of Graphify-Labs still has to turn on branch protection so a post cannot merge without that review and the **Check posts** check.
+GitHub asks [@SyedFahad7](https://github.com/SyedFahad7) and [@syedfahads](https://github.com/syedfahads) to review. An owner of Graphify-Labs still has to turn on branch protection so a post cannot merge without that review and the **Check posts** check.
 
 Keep the pull request to one post, plus that post's images and an `authors.json` row if you are new.
 
