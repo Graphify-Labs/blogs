@@ -1,0 +1,15 @@
+{
+  "name": "blogs",
+  "private": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "scripts": {
+    "test": "vitest run",
+    "check": "vitest run && node scripts/check-images.mjs"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}

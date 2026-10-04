@@ -1,0 +1,22 @@
+name: Publish to graphify.com
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "15 5 * * *"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rebuild graphify.com
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::warning::VERCEL_DEPLOY_HOOK is not set. The post will not go live until an owner adds the hook from the graphify.com Vercel project (Settings, Git, Deploy Hooks, name it blog)."
+            exit 0
+          fi
+          curl --fail --silent --show-error --request POST "$HOOK"
+          echo "graphify.com is rebuilding. The post is live when that build finishes."
