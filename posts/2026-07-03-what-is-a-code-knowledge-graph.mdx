@@ -1,0 +1,81 @@
+---
+title: "What is a code knowledge graph? (And why it beats grep for AI agents)"
+description: "A code knowledge graph stores calls and imports as typed edges, so an agent can follow a path that grep cannot see."
+date: "2026-07-03"
+imgThumb: thumb.png
+keyword: what is a code knowledge graph
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - graph
+  - knowledge-graph
+  - code-graph
+---
+
+A code knowledge graph is a knowledge graph built from a codebase. Functions, classes, config, and docs are nodes. Calls, imports, and references are typed edges between them. An assistant follows those edges to see how the pieces connect, instead of searching the repo as flat text.
+
+## Where does a code knowledge graph beat grep?
+
+A call can exist when the names do not match. A file can import `charge` as `take_payment` and then call `take_payment()`. Grep for `charge` finds the import. It does not find the call, because the call is named `take_payment`. The import edge still connects that call to `charge`. Tree-sitter read the alias in the syntax tree.
+
+Grep returns the lines that contain a string. A [Code graph](https://graphify.com/glossary/code-graph) stores the relationship itself, a call or an import with a direction and a type. [Knowledge graph](https://graphify.com/glossary/knowledge-graph) is the name for entities and the typed relationships between them.
+
+What calls this handler is a walk backward along call edges. A string search returns every line that mentions the handler, comments included. The call edges are the callers. A structural question, such as "what breaks if this changes," traces to a path through files. You can open those files and check the answer.
+
+## When is grep still the right tool?
+
+Grep is the right tool when the question is really "find this string." A misspelled word in a comment, or a URL in a config file, is a string to find. The graph holds nodes and edges. A string that never became a node or an edge is still a search, and grep is how you run it.
+
+## How does an agent follow a path across files?
+
+`graphify path "webhook" "database"` walks the edges between those two nodes. A path from the webhook to the database takes more than one hop. It can run from the handler, through the function that handler calls, to the table that function writes. Each hop is one typed edge. The agent starts at one node, follows the edges, and answers from the chain. Each node on the chain names a file.
+
+You can check an edge before you trust the hop. Every edge is tagged. EXTRACTED means the syntax tree produced it. INFERRED means the model proposed it. AMBIGUOUS means the evidence did not resolve, as with dynamic dispatch or an import built from a string. An AMBIGUOUS edge stays in the graph and keeps the tag. [How Graphify works](https://graphify.com/concepts) explains the tags.
+
+The comparison with retrieval over similar passages is [Code knowledge graph vs RAG](https://graphify.com/blog/code-knowledge-graph-vs-rag).
+
+## How do you build one?
+
+Code is parsed locally with tree-sitter, across 36 languages. Call and import edges come from the syntax tree. That pass does not call a model. Docs and other non-code files can be folded in by the model you already use. Those connections are tagged INFERRED.
+
+In the project, `/graphify .` writes three files under `graphify-out/`:
+
+- `graph.html`: a map you can open in a browser
+- `GRAPH_REPORT.md`: a written brief
+- `graph.json`: the raw structure
+
+You can run the queries from the shell.
+
+```bash
+graphify query "what calls this handler"
+graphify path "webhook" "database"
+graphify explain "APIRouter"
+```
+
+`graphify query` answers over the structure. `graphify path` traces how two nodes connect. `graphify explain` walks why a node matters.
+
+When the code changes, `graphify update .` re-extracts the changed files. Inside the assistant, `/graphify . --update` re-scans what changed. You run the refresh. Until then, the files in `graphify-out/` stay as they were written.
+
+There is no telemetry.
+
+Graphify is open source, Apache 2.0. Graphify Cloud at https://app.graphify.com is the hosted map, and it is a different product from this on-device setup.
+
+## Install
+
+The package on PyPI is `graphifyy` (two y's).
+
+```bash
+uv tool install graphifyy
+```
+
+`pipx install graphifyy` also works. If the `graphify` command is missing after uv, run `uv tool update-shell` and open a new terminal.
+
+Then, in the project:
+
+```
+/graphify .
+```
+
+First graph: [docs.graphify.com/guides/first-graph](https://docs.graphify.com/guides/first-graph).
