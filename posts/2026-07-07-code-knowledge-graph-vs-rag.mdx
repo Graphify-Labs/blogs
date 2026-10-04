@@ -1,0 +1,65 @@
+---
+title: "Code knowledge graph vs RAG: why structure beats similarity"
+description: RAG pulls back text that resembles the question. A graph follows the relationships that answer it, and code is the worst case for similarity.
+date: "2026-07-07"
+imgThumb: thumb.png
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - rag
+  - graph
+---
+
+Retrieval-augmented generation keeps the text and drops the structure. It splits a corpus into chunks, embeds each chunk, and pulls back the few that sit nearest the question in vector space. [Lewis et al. (2020)](https://arxiv.org/abs/2005.11401) showed that this works for lookup: a question whose answer is sitting in one passage comes back. A question about how two parts of a codebase connect does not, because that connection was never stored.
+
+A [code knowledge graph](https://graphify.com/glossary/knowledge-graph) stores the connection. Functions, classes, tables, and config are nodes. Calls, imports, and references are typed edges. The assistant answers by walking those edges, so the result is a path through the repo rather than a pile of passages that happen to share words. Graphify builds that graph from the code. The side-by-side lives at [Graphify vs RAG](https://graphify.com/vs/rag).
+
+## How it works
+
+RAG's retrieval step is a similarity search. The question and the chunks become vectors, and the closest chunks are pasted into the prompt. Closeness means "these strings embed near each other." It does not mean "this function calls that one." Two files can sit next to each other in vector space because they share vocabulary, and a real call edge can sit far apart because the names do not match.
+
+The multi-hop version is worse, and it is not fixed by retrieving more chunks. A question that needs two steps has to land the first answer before the second step can be asked. Benchmarks such as [HotpotQA](https://arxiv.org/abs/1809.09600) exist because that second hop falls over. On a graph each hop is one edge, so the third is the same kind of step as the first. [GraphRAG](https://arxiv.org/abs/2404.16130) builds a knowledge graph over a document corpus for this reason. Graphify starts from the graph a parser already extracted.
+
+On a repo, that extraction is local. Tree-sitter reads the code. Call and import edges come from the syntax tree, with no model in that step. Docs and other non-code files can be folded in by a model, and that model can stay on the machine. The map lands in `graphify-out/` as `graph.html`, `GRAPH_REPORT.md`, and `graph.json`. Asking it something is a traversal:
+
+```bash
+graphify query "what calls this handler"
+graphify path "webhook" "database"
+```
+
+What comes back is a handful of nodes and edges, not the full text of every chunk that scored well.
+
+## The limit
+
+Similarity is the right tool when the question is fuzzy and the corpus is prose. "Find the paragraph about this idea" is a nearest-neighbour problem. A graph will not beat an embedding index at that, and Graphify does not try. Keep a vector index if that is the job. Some teams run both: vectors for semantic recall over writing, the graph for anything that is a relationship.
+
+Graphify can store an embedding as one signal on a node. Retrieval is still a walk. The embedding does not choose which passage gets pasted into the prompt.
+
+Code edges come from a parser, so a changed file is re-parsed. `graphify . --update` re-scans what changed, and the rest of the graph stays. A RAG index is only as fresh as the last embedding run, and a stale chunk goes back through a model.
+
+The open-source engine runs on your machine. Code parsing is local. There is no telemetry. [Graphify Cloud](https://app.graphify.com) is the same map, hosted and kept current. This post is about what gets stored. Cloud is a different product.
+
+This also does not replace grep. A question that is really "find this string" should still be a search.
+
+## Proof
+
+You can check an answer. Every edge carries a provenance tag: `EXTRACTED` from the syntax tree, `INFERRED` by the model, or `AMBIGUOUS` when the evidence did not resolve. A similarity score does not say why a chunk matched. A path does. The tags are explained in [concepts](https://graphify.com/concepts).
+
+The cost follows from the same difference, and the number belongs to the person who measured it. Steve Scargall, at MemVerge, reported 79× fewer tokens on a 496K-token codebase, with no vector database in the stack. That is his measurement, not a Graphify benchmark. A traversal sends the path. A retrieval pipeline sends the chunks.
+
+## Install
+
+```bash
+uv tool install graphifyy
+graphify install
+```
+
+Then, in the project:
+
+```
+/graphify .
+```
+
+The package on PyPI is `graphifyy` (two y's). First graph: [docs.graphify.com/guides/first-graph](https://docs.graphify.com/guides/first-graph). The full comparison: [graphify.com/vs/rag](https://graphify.com/vs/rag).
