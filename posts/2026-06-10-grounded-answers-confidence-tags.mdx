@@ -1,0 +1,56 @@
+---
+title: "Grounded answers: how Graphify tags what it knows"
+description: "Confidence tags label every Graphify edge EXTRACTED, INFERRED, or AMBIGUOUS, so an agent can see what was parsed and what was guessed."
+date: "2026-06-10"
+imgThumb: thumb.png
+keyword: confidence tags
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - confidence-tags
+  - graph
+---
+
+Confidence tags on a Graphify graph say how each edge was established, before an agent follows it. EXTRACTED means tree-sitter found the call, import, or definition in the syntax tree. INFERRED means a model connected it. AMBIGUOUS means the evidence did not resolve, and the edge stays flagged. Read the tag before you trust the hop.
+
+## What do the confidence tags mean?
+
+A [code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph) stores functions, classes, and docs as nodes. Calls, imports, and references are the edges between them. The edge is the claim the assistant walks. [Confidence tags](https://graphify.com/glossary/confidence-tags) are the label on that claim. [How Graphify works](https://graphify.com/concepts) builds the graph in two stages, and the tag says which stage produced the edge.
+
+EXTRACTED comes from the syntax tree. Graphify parses code on the machine with tree-sitter. The parser finds the call, the import, or the definition, and that edge is deterministic. Parse the same file again and the parser finds the same edge. No model sits in that step. The Cursor integration describes this tag as parsed from the AST.
+
+INFERRED is a connection a model made. Docs, PDFs, SQL schemas, and Terraform are not a tree of calls. The model you configure joins a doc page to the service it describes, or a Terraform resource to the code that uses it. Those edges are usually right. They are still a judgment, and the tag says so. A plausible link can be wrong. The tag is how you see that the link was proposed.
+
+AMBIGUOUS means Graphify found evidence and could not resolve it. The cases named in the glossary are dynamic dispatch, reflection, and an import built from a string. The edge stays in the graph with the flag, so the unresolved link is visible as unresolved.
+
+`graphify explain` shows how each connection on a node was established. `GRAPH_REPORT.md` separates the architecture the parser extracted from the connections the model proposed. Over MCP, `graph_stats` and the confidence audit in the report break the graph down by the three tags, so you can see how much of the map is parsed fact.
+
+## Why should an agent read the tag before the next hop?
+
+An answer from the graph is a path. Each hop names a file and a line, and the edge on that hop carries one tag. The tags are different evidence. A caller the parser found and a doc the model attached can both appear in the same path, and the output keeps them distinct.
+
+Treat every hop as fact and an INFERRED link gets the same weight as an EXTRACTED call. That is how a guessed connection becomes an edit. The glossary uses this picture: the payment worker depends on the sessions table. You want to see whether the parser found that, or a model inferred it, before you change the code.
+
+Lean on an EXTRACTED hop when you change code. Treat an INFERRED hop as a lead, and open the doc and the symbol. Treat an AMBIGUOUS hop as a place to read the source, because the evidence stopped short of a resolved link.
+
+A similarity score says two chunks resemble each other. It does not record whether a relationship was parsed or proposed. That difference is the subject of [Code knowledge graph vs RAG](https://graphify.com/blog/code-knowledge-graph-vs-rag).
+
+## Where do confidence tags not help?
+
+The tag describes an edge. It does not answer "find this string." Grep returns the lines that contain the string. A misspelled word in a comment, or a URL in a config file, is that question. Grep answers the hop you can phrase as a string. A tag will not.
+
+Fuzzy search over a large body of prose is the other miss. Embeddings are the better tool there, and Graphify does not try to beat them. A tag will not find the paragraph that only resembles the question.
+
+## What runs on the machine?
+
+The open-source engine is Apache 2.0. Code parsing happens on your machine. There is no telemetry. INFERRED edges use the model backend you configure, and that backend can be a local one, so the judgment can stay on the machine too. The graph is files in `graphify-out/`: `graph.html`, `GRAPH_REPORT.md`, and `graph.json`.
+
+[Graphify Cloud](https://app.graphify.com) hosts the same kind of graph and keeps it current. It is a different product.
+
+```bash
+uv tool install graphifyy
+```
+
+The package on PyPI is `graphifyy` (two y's). `pipx install graphifyy` also works. Then `graphify install`, and in the assistant `/graphify .`. The command reference is in the [docs](https://docs.graphify.com).
