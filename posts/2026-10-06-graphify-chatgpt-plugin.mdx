@@ -1,6 +1,6 @@
 ---
 title: "Graphify is now a ChatGPT plugin"
-description: "The Graphify ChatGPT plugin connects ChatGPT and Codex to repositories you have indexed, so they can trace calls and judge what a change reaches."
+description: "The Graphify ChatGPT plugin connects ChatGPT, Codex, and Dots to repositories you have indexed, so they can trace calls and judge what a change reaches."
 date: "2026-10-06"
 imgThumb: thumb.png
 keyword: chatgpt plugin
@@ -11,23 +11,24 @@ categories:
 tags:
   - chatgpt
   - codex
+  - dots
   - mcp
   - graph
 ---
 
-Graphify is now a ChatGPT plugin. The same plugin works in Codex. It connects both to the repositories you have already indexed in Graphify Cloud, through the hosted server at `https://api.graphify.com/mcp`. You install it from the plugin directory, sign in, and ask about a repository you are allowed to see. There is no API key to paste, and neither ChatGPT nor Codex builds the graph on your computer.
+Graphify is now a ChatGPT plugin. The same plugin works in Codex and in Dots. It connects them to the repositories you have already indexed in Graphify Cloud, through the hosted server at `https://api.graphify.com/mcp`. You install it from the plugin directory, sign in, and ask about a repository you are allowed to see. There is no API key to paste, and neither ChatGPT, Codex, nor a Dot builds the graph on your computer.
 
 ## What does the ChatGPT plugin do?
 
 The [listing](https://chatgpt.com/plugins/plugin_asdk_app_6abe89f7f5d88191b9422522bb8562a4) is Graphify, by Graphify Labs, under Developer Tools. The server it connects is named `graphify`.
 
-Once you are signed in, ChatGPT and Codex can explore the indexed repositories your account is allowed to open. It can trace call paths and dependencies, assess the static impact of a change, find tests linked to that code, and keep workspace-specific engineering knowledge for later questions. A [code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph) is the map underneath: functions, calls, and imports, with a file and a line on each hop.
+Once you are signed in, ChatGPT, Codex, and a Dot can explore the indexed repositories your account is allowed to open. It can trace call paths and dependencies, assess the static impact of a change, find tests linked to that code, and keep workspace-specific engineering knowledge for later questions. A [code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph) is the map underneath: functions, calls, and imports, with a file and a line on each hop.
 
-The same hosted server is what the [VS Code and JetBrains installs](https://graphify.com/mcp) use. The plugin is the install package ChatGPT and Codex understand. MCP is the connection.
+The same hosted server is what the [VS Code and JetBrains installs](https://graphify.com/mcp) use. The plugin is the install package ChatGPT, Codex, and Dots understand. MCP is the connection.
 
 ## How do you install the ChatGPT plugin?
 
-You need a repository whose status in [Graphify Cloud](https://app.graphify.com) is Indexed. Use ChatGPT on the web or in the desktop app, or use Codex in the desktop app. On a work workspace, an admin may have to allow the plugin before Connect is available.
+You need a repository whose status in [Graphify Cloud](https://app.graphify.com) is Indexed. Use ChatGPT on the web or in the desktop app, Codex in the desktop app, or a Dot. On a work workspace, an admin may have to allow the plugin before Connect is available.
 
 1. Open [Graphify in the ChatGPT plugin directory](https://chatgpt.com/plugins/plugin_asdk_app_6abe89f7f5d88191b9422522bb8562a4). You can also go to Settings, then Plugins, and choose Graphify by Graphify Labs. The sidebar has a Plugins entry too.
 2. Select Install plugin if ChatGPT shows it, then Connect.
@@ -37,9 +38,19 @@ Codex uses that same listing. In the desktop app, switch to Codex, open Plugins,
 
 Installing the plugin does not sign you in. The connection is ready only after that Graphify sign-in finishes.
 
+## How does a Dot use the plugin?
+
+[Dots](https://openai.com/index/introducing-dots/) are OpenAI's always-on agents in ChatGPT. They use the plugins you have already connected. You choose which apps a Dot can open, and which actions it may run on its own.
+
+1. Create the Dot in the ChatGPT desktop app, or on chatgpt.com in a desktop browser.
+2. Open Settings, then Customize, then Plugins, and choose Graphify.
+3. Decide which Graphify actions the Dot may run on its own, and which ones it has to ask you about.
+
+Ask it the same questions you would ask in ChatGPT. When a Dot is researching in the background, OpenAI keeps connected apps read-only. It will not save a note or switch workspace until you ask it to, and you approve that request.
+
 ## What should you ask first?
 
-In ChatGPT, mention Graphify in the message, or choose it from +, then More, before you send. In Codex, mention it the same way.
+In ChatGPT, mention Graphify in the message, or choose it from +, then More, before you send. In Codex, and when you talk to a Dot, mention it the same way.
 
 ```text
 @Graphify Show my indexed repositories and help me choose one to explore.
@@ -61,8 +72,8 @@ Open the file and line an answer cites before you change code. The graph tags ea
 
 It does not search the public web, run SQL, or deploy anything. It answers from repositories indexed in your workspace. A repository that is still building, or that sits in another workspace, comes back empty. Check its status, then ask Graphify to list repositories again.
 
-The open-source engine is a different setup. `uv tool install graphifyy` and `graphify install` register a skill with an editor on your machine. The ChatGPT plugin does not replace that, and that install does not connect ChatGPT or Codex. The package name on PyPI is `graphifyy`, with two y's.
+The open-source engine is a different setup. `uv tool install graphifyy` and `graphify install` register a skill with an editor on your machine. The ChatGPT plugin does not replace that, and that install does not connect ChatGPT, Codex, or a Dot. The package name on PyPI is `graphifyy`, with two y's.
 
-If Graphify is missing under Settings, then Plugins, it may be unavailable on this plan, region, or workspace. An admin turns plugins on under Workspace settings, then Plugins. If Connect says an admin disabled it, ask them to enable Graphify for your role and connect again. If ChatGPT never asked you to sign in, open Settings, then Plugins, select Graphify, and choose Connect.
+If Graphify is missing under Settings, then Plugins, it may be unavailable on this plan, region, or workspace. If you cannot create a Dot, OpenAI is still rolling them out by plan and region, and a work workspace admin may have to turn them on. An admin turns plugins on under Workspace settings, then Plugins. If Connect says an admin disabled it, ask them to enable Graphify for your role and connect again. If ChatGPT never asked you to sign in, open Settings, then Plugins, select Graphify, and choose Connect.
 
 Privacy and terms for the app are on [graphify.com/privacy](https://graphify.com/privacy) and [graphify.com/terms](https://graphify.com/terms). ChatGPT tells you, on the listing, that connecting may share relevant chats with the app. That use is covered by those pages.
