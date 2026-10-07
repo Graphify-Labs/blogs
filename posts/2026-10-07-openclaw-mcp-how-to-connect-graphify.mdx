@@ -1,0 +1,119 @@
+---
+title: "OpenClaw MCP: how to connect Graphify"
+description: "Install the OpenClaw MCP plugin from ClawHub, sign in to Graphify, and ask about a repository you have already indexed in your Graphify Cloud workspace."
+date: "2026-10-07"
+imgThumb: thumb.png
+keyword: openclaw mcp
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - openclaw
+  - mcp
+  - graph
+---
+
+OpenClaw MCP is the Graphify plugin you install from ClawHub. It connects OpenClaw to the repositories you have already indexed in Graphify Cloud, through the hosted server at `https://api.graphify.com/mcp`. You sign in through the browser, then ask about a repository you are allowed to see. There is no API key to paste. OpenClaw does not build the graph on your computer.
+
+## What does the OpenClaw MCP plugin do?
+
+Graphify Labs publishes `@graphify-labs/graphify-mcp`. OpenClaw has not marked it as an official OpenClaw plugin. The listing is [Graphify MCP on ClawHub](https://clawhub.ai/graphify-labs/plugins/graphify-mcp). The steps below match [Graphify MCP for OpenClaw](https://docs.graphify.com/integrations/openclaw).
+
+Once you are signed in, OpenClaw can search those indexed repositories, follow callers and dependencies, and judge what a change reaches. The map underneath is a [code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph): functions, calls, and imports, with a file and a line on each hop.
+
+The same hosted server is what [Graphify MCP](https://graphify.com/mcp) uses for VS Code and JetBrains, and what the [ChatGPT plugin](https://graphify.com/blog/graphify-chatgpt-plugin) uses. The plugin is the package OpenClaw installs. MCP is the connection.
+
+## What do you need before you install?
+
+- OpenClaw with remote MCP, OAuth, and Claude-format bundle support. The package was prepared for OpenClaw 2026.9.8. Older releases may differ. The install flags are in [OpenClaw's plugin install guide](https://docs.openclaw.ai/cli/plugins/install).
+- A model enabled in OpenClaw, with permission to call tools. That access is separate from your Graphify plan.
+- A repository indexed in your Graphify workspace. Sign in at [Graphify Cloud](https://app.graphify.com), connect a repository, and wait until its status is Indexed. Status lives on [Repositories and builds](https://docs.graphify.com/platform/repositories).
+
+## How do you install the OpenClaw plugin?
+
+Open [Graphify MCP on ClawHub](https://clawhub.ai/graphify-labs/plugins/graphify-mcp), then install the published package and confirm OpenClaw sees it:
+
+```bash
+openclaw plugins install clawhub:@graphify-labs/graphify-mcp
+openclaw plugins inspect graphify-mcp
+```
+
+If you already cloned [graphify-mcp](https://github.com/Graphify-Labs/graphify-mcp), the same bundle is in `integrations/openclaw`:
+
+```bash
+openclaw plugins install ./integrations/openclaw
+openclaw plugins inspect graphify-mcp
+```
+
+Installing the plugin does not sign you in. If the install stops and asks you to accept capabilities, review the Graphify MCP server on that screen and accept it. On a noninteractive install, add `--accept-capabilities` to the same command.
+
+## How do you sign in to Graphify?
+
+Register the hosted server, then finish Graphify sign-in in the browser:
+
+```bash
+openclaw mcp set graphify '{"url":"https://api.graphify.com/mcp","transport":"streamable-http","auth":"oauth"}'
+openclaw mcp login graphify
+openclaw mcp doctor graphify --probe
+```
+
+If a server named `graphify` already exists, run `openclaw mcp show graphify` first and keep any settings you meant to keep.
+
+The same connection, merged into your OpenClaw configuration:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "graphify": {
+        "url": "https://api.graphify.com/mcp",
+        "transport": "streamable-http",
+        "auth": "oauth"
+      }
+    }
+  }
+}
+```
+
+Use one connection named `graphify`. A second name for the same URL shows the tools twice. Do not put a password or token in the configuration. OpenClaw stores the OAuth credentials.
+
+Start a new agent session after this. If OpenClaw prints a restart instruction, follow that instruction.
+
+## What should you ask first?
+
+Ask OpenClaw to list what the connection can see:
+
+```text
+List my Graphify workspaces and repositories.
+```
+
+Pick a repository from that answer, then ask:
+
+```text
+In my selected repository, find the function that handles authentication.
+```
+
+```text
+Show its callers and the linked tests, with file paths as evidence.
+```
+
+A connection check includes a repository lookup. Tool discovery alone does not show that the index is reachable.
+
+Open the file and line an answer cites before you change code. These results are static. They do not run the code or the tests. Some tools save a repository note or change the selected workspace. Read each tool request and approve it only when that is what you meant.
+
+## What if the OpenClaw connection fails?
+
+| What you see | What to do |
+| --- | --- |
+| The install stops and asks you to accept capabilities | Review the Graphify MCP server on that screen and accept it. On a noninteractive install, run the same install command again with `--accept-capabilities`. |
+| Graphify tools are hidden | Check that the plugin is enabled and that your tool policy allows it. A `bundle-mcp` denial hides these tools. |
+| Sign-in fails | Run `openclaw mcp doctor graphify --probe`, then `openclaw mcp login graphify` again. |
+| No repositories, or empty answers | That repository is not indexed yet, or it is in a different workspace. Check its status on [Repositories and builds](https://docs.graphify.com/platform/repositories), then ask OpenClaw to list repositories again. |
+| Two copies of the Graphify tools | Keep a single server named `graphify`. Remove the extra connection to the same URL. |
+
+## What this plugin does not do
+
+`graphify install --platform claw` installs the local skill for a graph on your machine. That path is on [Other coding assistants](https://docs.graphify.com/integrations/other-assistants). The OpenClaw plugin on this page connects OpenClaw to Graphify Cloud. The local command does not install the ClawHub plugin. The ClawHub plugin does not build the graph on your machine.
+
+The package name on PyPI, for the local engine, is `graphifyy`, with two y's.
