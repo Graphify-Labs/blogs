@@ -1,0 +1,118 @@
+---
+title: "Gemini CLI: how to connect Graphify"
+description: "Install Graphify for Gemini CLI, build a local graph of the repository, and ask which function calls which."
+date: "2026-10-09"
+imgThumb: thumb.png
+keyword: gemini cli
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - gemini-cli
+  - graph
+---
+
+Gemini CLI can query a graph of the repository on your machine. Install Graphify, run `graphify gemini install`, and type `/graphify .` in a Gemini CLI session. The graph is written to `graphify-out/`. This path needs no Graphify account. The setup page is [Graphify + Gemini CLI](https://graphify.com/integrations/gemini-cli).
+
+## Why Gemini CLI wants the graph
+
+Gemini CLI lists directories and opens files, then holds what it read. A [code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph) is the map of which function calls which, with a file and a line on each hop. Graphify builds that map on the machine, and the installer tells Gemini CLI to query it before it walks the tree.
+
+## What you need
+
+- Python 3.10 or later, and uv or pipx.
+- Gemini CLI, already able to answer a normal prompt. Model access is Google's, separate from Graphify.
+- The repository you want mapped.
+
+## Install Graphify for Gemini CLI
+
+```bash
+uv tool install graphifyy
+graphify gemini install
+```
+
+`pipx install graphifyy` is the other package install. The docs write the registration as `graphify install --platform gemini`. Both commands run the same installer.
+
+From the project root, `graphify gemini install --project` keeps the skill in the repo at `.gemini/skills/graphify/SKILL.md`, so you can commit it.
+
+If `graphify` is missing from the shell, run `uv tool update-shell` or `pipx ensurepath`, then open a new terminal.
+
+## What the installer writes
+
+The installer adds a skill, a section of `GEMINI.md`, and one hook. On an existing `GEMINI.md` it replaces only the section headed `## graphify`.
+
+The skill goes to `~/.gemini/skills/graphify/SKILL.md` on macOS and Linux. On Windows it goes to `~/.agents/skills/graphify/SKILL.md`.
+
+The `GEMINI.md` section tells the model to run `graphify query`, `graphify path`, and `graphify explain` when `graphify-out/graph.json` exists.
+
+A BeforeTool hook lands in `.gemini/settings.json`. Before `read_file` or `list_directory`, Gemini CLI runs `graphify hook-guard gemini`. When the graph file exists, the hook attaches a reminder to query it, and the read still proceeds. When the graph file is absent, the hook stays quiet.
+
+```json
+{
+  "hooks": {
+    "BeforeTool": [
+      {
+        "matcher": "read_file|list_directory",
+        "hooks": [
+          { "type": "command", "command": "graphify hook-guard gemini" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+The installed command uses the absolute path to your `graphify` executable. Run the install again after an upgrade and it replaces that entry.
+
+## Build the graph
+
+In Gemini CLI, select the Graphify skill and enter:
+
+```text
+/graphify .
+```
+
+That writes `graphify-out/graph.json`, the file later queries read, plus `graphify-out/graph.html` and `graphify-out/GRAPH_REPORT.md`. The report lists highlights and questions worth asking next.
+
+Code is parsed on the machine with tree-sitter. Docs and PDFs are read by the model you already use in Gemini CLI.
+
+## Ask about the structure
+
+Ask for a path through the code:
+
+```text
+Which modules read the payment config, and through what path?
+```
+
+From a terminal, once the graph exists:
+
+```bash
+graphify query "authentication flow"
+```
+
+Answers cite `file:line`. Each edge is tagged EXTRACTED when the parser found it, INFERRED when a model connected it, or AMBIGUOUS when the evidence did not resolve. Open the cited file before you rely on the answer.
+
+After the code changes, `graphify update .` re-extracts the files that changed. `graphify hook install` adds post-commit and post-checkout git hooks that run the same update.
+
+## Graphify Cloud uses a different install
+
+The package [Graphify for Gemini CLI](https://github.com/Graphify-Labs/Graphify-gemini-extension) points Gemini CLI at the hosted server `https://api.graphify.com/mcp`.
+
+```bash
+gemini extensions install https://github.com/Graphify-Labs/Graphify-gemini-extension
+```
+
+Start a new Gemini CLI session and run `/mcp auth graphify`. Sign-in happens in the browser. The repository has to be indexed in Graphify Cloud first. That server is [Graphify MCP](https://graphify.com/mcp).
+
+Google Antigravity has its own command, `graphify antigravity install`, and its own page, [Graphify + Google Antigravity](https://graphify.com/integrations/google-antigravity).
+
+## If Gemini CLI misses the graph
+
+- `graphify: command not found`: run `uv tool update-shell` or `pipx ensurepath`, then open a new terminal.
+- `/graphify` does nothing: confirm the skill file and the graphify section in `GEMINI.md`, then start a new session.
+- No reminder appears before a file read: build the graph first. The hook stays quiet until `graphify-out/graph.json` exists.
+- The hook stops after an upgrade: run `graphify gemini install` again so the hook picks up the current executable path.
+- The graph lives in another folder: set `GRAPHIFY_OUT` to that directory. The hook reads it.
+
+`graphify gemini uninstall` removes the Gemini CLI registration. `graphify uninstall` removes Graphify from every assistant at once. Add `--purge` when you also want `graphify-out/` deleted.
