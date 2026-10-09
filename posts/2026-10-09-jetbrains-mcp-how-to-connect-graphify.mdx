@@ -1,0 +1,111 @@
+---
+title: "JetBrains MCP: how to connect Graphify"
+description: "Install Graphify MCP in a JetBrains IDE, paste the connection into AI Assistant, and ask about a repository you have already indexed in Graphify Cloud."
+date: "2026-10-09"
+imgThumb: thumb.png
+keyword: jetbrains mcp
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - jetbrains
+  - mcp
+  - graph
+---
+
+Graphify MCP is on the JetBrains Marketplace. JetBrains AI Assistant can ask about a repository you have already indexed in Graphify Cloud. You install the plugin, copy a connection from a tool window, paste it into AI Assistant, and sign in through the browser. There is no API key. The plugin does not build the graph on your computer.
+
+The connection uses `https://api.graphify.com/mcp`, the same hosted server as [Graphify MCP](https://graphify.com/mcp). Graphify Labs publishes the plugin as [Graphify MCP](https://plugins.jetbrains.com/plugin/34740-graphify-mcp). The id is `com.graphify.graphify-mcp`. The walkthrough below follows [Graphify MCP for JetBrains](https://docs.graphify.com/integrations/jetbrains).
+
+## AI Assistant gets a map of the code
+
+AI Assistant can search the project you have open. With this connection it can also follow a [code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph): which function calls which, and which file and line each hop sits on. Graphify MCP is how you give AI Assistant that map.
+
+The Marketplace lists the plugin as free. AI Assistant is still the chat. The plugin does not upload the project you have open, and it does not keep a password of its own. Your Graphify plan is separate from Assistant access.
+
+## What you need first
+
+- A JetBrains IDE on the 2025.3 release. The published plugin accepts platform build 253 through 253.*, so it does not install on 2025.2 or on a later release.
+- JetBrains AI Assistant, with access to MCP.
+- A repository indexed in [Graphify Cloud](https://app.graphify.com). Wait until its status is Indexed. That status is on [Repositories and builds](https://docs.graphify.com/platform/repositories).
+- Node.js and npm on the IDE's PATH, only for the browser sign-in below. The direct connection does not need them.
+
+## Install the JetBrains MCP plugin
+
+Install [Graphify MCP](https://plugins.jetbrains.com/plugin/34740-graphify-mcp) from the Marketplace, or search for Graphify MCP by Graphify Labs under Settings, then Plugins. Restart the IDE if it asks.
+
+Open View, then Tool Windows, then Graphify. From that window you copy the connection, open IDE settings, open your workspace, or open the setup guide.
+
+## Choose how AI Assistant signs in
+
+Pick a method in the tool window and click Copy configuration. If a later release changes the text, copy it from the window.
+
+### Browser sign-in
+
+Use this when AI Assistant cannot sign in to a remote server on its own. The configuration runs `mcp-remote@0.14.3`. That package opens a browser for Graphify sign-in and stores the credentials on your machine. Turning the configuration on is what downloads the bridge, so Node.js and npm have to be on the IDE's PATH.
+
+```json
+{
+  "mcpServers": {
+    "graphify": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@0.14.3",
+        "https://api.graphify.com/mcp",
+        "--transport",
+        "http-only"
+      ]
+    }
+  }
+}
+```
+
+### Direct connection
+
+Use this when the client can finish Graphify's sign-in itself. If the browser never opens, switch back to the bridge above and paste that configuration instead.
+
+```json
+{
+  "mcpServers": {
+    "graphify": {
+      "url": "https://api.graphify.com/mcp"
+    }
+  }
+}
+```
+
+## Paste it into AI Assistant
+
+Open Settings, then Tools, then AI Assistant, then Model Context Protocol (MCP). On macOS the menu is Settings or Preferences, then the same path. Open Settings in the tool window opens the IDE settings dialog. You still have to open the MCP page yourself.
+
+Click Add, paste the JSON, and choose this project or every project. Click OK, then Apply.
+
+Settings, then Tools, then MCP Server is a different page. That page lets other applications use the IDE. This configuration goes on the AI Assistant MCP page.
+
+## Ask about an indexed repository
+
+Sign in when the browser opens. The MCP settings should show the server connected. Ask:
+
+```text
+List my Graphify repositories.
+```
+
+Pick a repository from the answer, then try one of these:
+
+- Find the implementation of this function.
+- What calls this symbol, and which tests are linked to it?
+- Find this function and show its callers.
+
+Open the file an answer cites before you rely on it. Some tools save notes on a repository or change the workspace you have selected. Read the request, and approve it only when that is what you meant.
+
+## If the connection fails
+
+- The plugin will not install unless the IDE is on the 2025.3 release.
+- If `npx` or Node.js is missing, install both, put them on the IDE's PATH, and restart the IDE. The browser sign-in needs them.
+- If the direct connection never signs in, switch the tool window to the OAuth bridge, copy that configuration, and replace the server entry.
+- If the answer lists no repositories, the repository is not indexed yet, or it is in another workspace. Check [Repositories and builds](https://docs.graphify.com/platform/repositories).
+- If you cannot find an MCP page under AI Assistant, confirm AI Assistant is installed and that your JetBrains account can use it.
+
+A graph that stays on your own machine is a separate setup, on [Graphify MCP](https://graphify.com/mcp). This plugin talks to the hosted server, and only to repositories already indexed in Graphify Cloud.
