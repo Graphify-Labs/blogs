@@ -1,0 +1,53 @@
+---
+title: "Graphify passed 125,000 GitHub stars"
+description: "Graphify passed 125,000 GitHub stars. On 12 October 2026 the public count was 125,736, with more than 12,000 forks."
+date: "2026-10-12"
+imgThumb: thumb.png
+keyword: github stars
+authors:
+  - safi
+categories:
+  - product
+tags:
+  - open-source
+  - community
+  - milestone
+---
+
+Graphify has passed 125,000 GitHub stars on [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify). On 12 October 2026 the public count stood at 125,736. The repository has also been forked more than 12,000 times.
+
+![Star history for Graphify-Labs/graphify, climbing from the first weeks in April 2026 to past 120,000 GitHub stars in October.](star-history.png)
+
+*Star history for [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify), charted by [star-history.com](https://star-history.com).*
+
+The first commit was 5 April. We wrote about [100,000 GitHub stars](/blog/100000-github-stars) in August, 117 days after that commit, and last week about passing [8 million PyPI downloads](/blog/eight-million-downloads-in-six-months). The chart is that same stretch: a steep April, then a steady climb through October.
+
+People star the repository when the command is useful. Type `/graphify` in your assistant and a map of the codebase comes back in about thirty seconds, parsed on the machine with tree-sitter. That is the check. The star count is what shows up afterward.
+
+## 125,000 GitHub stars
+
+The principles from the first weekend are the same ones in the [100,000-star post](/blog/100000-github-stars).
+
+- Code is parsed on your machine, from the files in the repository.
+- Every relationship is tagged [`EXTRACTED` or `INFERRED`](/glossary/confidence-tags), so you can see what was read from the source and what Graphify resolved.
+- The result is a graph you can query and walk, from one function to the next.
+- Install is two commands. The run is one.
+
+The project is Apache 2.0. That stays.
+
+## Work this sits on
+
+- [tree-sitter](https://tree-sitter.github.io/tree-sitter/) turns source into the syntax tree that every code edge starts from.
+- [Leiden community detection](https://www.nature.com/articles/s41598-019-41695-z) is how a repository splits into the subsystems on the graph.
+- [Model Context Protocol](https://modelcontextprotocol.io) is how an assistant calls that graph.
+- [uv](https://github.com/astral-sh/uv) is why the install is short.
+
+Claude Code, Cursor, Codex, Gemini CLI, and Copilot are the assistants people run this in. The map is the part we maintain.
+
+To everyone who starred the repository, opened an issue, sent a pull request, answered a question, or wrote about Graphify: thank you.
+
+The open-source project stays open source. [Graphify](https://graphify.com) Cloud is the always-on version of the same map, kept current for the code, docs, and meetings you already work in.
+
+Thanks for the stars.
+
+Safi and the Graphify team
