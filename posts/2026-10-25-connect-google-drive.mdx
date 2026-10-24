@@ -1,0 +1,82 @@
+---
+title: "Connect Google Drive so your workspace can search it"
+description: "Connect Google Drive on a paid Graphify Cloud workspace. Add a folder the account can open, then search its documents from the graph, the Wiki, and Ask."
+date: "2026-10-25"
+imgThumb: thumb.png
+keyword: connect google drive
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - google-drive
+  - knowledge-graph
+---
+
+Connect Google Drive from Connectors on a paid Graphify Cloud workspace. Under Knowledge, open Google Workspace and choose Connect Google Drive. Sign in with the Google account that can open the folder, then add that folder. Everyone in the workspace can search the documents. Google Drive still decides who can open each file.
+
+The steps below match [Connect Google Drive](https://docs.graphify.com/platform/google-drive). Sign in at [app.graphify.com](https://app.graphify.com). A paid workspace is required. Plans are on [Graphify pricing](https://graphify.com/pricing).
+
+## How do you connect Google Drive?
+
+On the Free plan the tile says "Add Google Drive folders with a paid plan." and the button is **View plans**. On Repositories, the Drive section says "Google Drive syncing requires a paid plan."
+
+You also need to be a workspace owner or admin. Anyone else sees "Ask a workspace owner or admin to connect Google Drive."
+
+Open **Connectors**. Under **Knowledge**, choose **Google Workspace**. The subtitle is "Search documents from Google Drive." Choose **Connect Google Drive**. The dialog says "Read-only access. Graphify never edits your files." Finish the Google sign-in. **Connection settings** then shows the account and "Connected · Syncs automatically".
+
+One Google account serves the workspace. The person who signed in is the person who can add folders. Graphify asks Google for read-only Drive access and for the email that identifies that account. The sign-in does not request Gmail or Calendar.
+
+## How do you add a folder?
+
+Open **Repositories** and choose **Drive**, or click the connected Google Workspace tile. That click opens the Drive list. Choose **Add folder**, then **Choose folder**. The picker title is **Choose a folder to index**. Shared drives are in the picker.
+
+Allow pop-ups for Graphify. If the window does not open, the console says "Couldn't open Google Drive. Allow pop-ups for Graphify and try again."
+
+Pick the folder. The note says everyone in the workspace can search this folder and read answers from it, including people without access in Google Drive. Select "I understand everyone in this workspace can read this folder's contents." Choose **Add folder**. The toast says the folder was added and is waiting to sync.
+
+A folder with no readable files is refused: "This folder has no readable files. Choose another folder."
+
+Graphify reads Google Docs, Sheets, and Slides, plus PDF, Word, Excel, PowerPoint, CSV, Markdown, text, and image files. A file it cannot read stays in the folder details, with a reason next to the name. Other files in the folder stay searchable. The details say the list may be incomplete.
+
+## What do Checked and Last synced mean?
+
+Each folder row shows a file count and **Checked** with a relative time, or **Not checked yet**. The status on the row is one of these:
+
+- **Waiting to sync.** A build is queued.
+- **Reading.** Graphify is building the graph.
+- **Up to date.** The latest listing matches the graph being served.
+- **Changes found.** The listing has changed, and the served graph is behind it.
+- **Sync failed.** The latest build did not finish.
+- **Not syncing.** Syncing was stopped, the folder is paused, or Google needs a reconnect.
+- **Checking status.** Graphify does not have a status for this folder yet.
+
+**Checked** is the last time Graphify listed the folder. **Last synced** is the finish time of the latest successful graph build. Expand the row to see both. **Updates** says **Syncs automatically** while the folder is enabled.
+
+After a successful check, the next check waits 15 minutes. Graphify builds a new graph only when the file list has changed. A row can say **Up to date** while **Last synced** is older, because the new listing matches the graph already being served. If a check fails, that folder waits longer before the next try, up to 6 hours. Other folders keep their own schedule.
+
+When the check says Google Drive did not respond, or the folder took too long, leave the folder enabled. Graphify retries on its own.
+
+The first build is queued as soon as you add the folder. **Open graph**, **Wiki**, and **Ask** appear after that build finishes. Before then, the row says "Graph, Wiki, and Ask are available after the first successful sync."
+
+## Who can search the folder?
+
+The Drive section says "Visible to everyone in this workspace." The checkbox is the same fact. Graphify will not add the folder until you confirm it.
+
+People who cannot open the files in Google Drive can still search the [knowledge graph](https://graphify.com/glossary/knowledge-graph) and read answers. **Open graph**, **Wiki**, and **Ask** are the three ways in. **Open in Drive** goes back to the file, and Drive decides who can open it there.
+
+[Notion AI](https://www.notion.com/help/notion-ai-connectors-for-google-drive) answers from a Google Drive file only for someone who can already open that file. [Glean](https://docs.glean.com/connectors/native/gdrive/about) does the same: a person sees documents they are allowed to access. [Dust](https://docs.dust.tt/docs/user-documentation/admins/connections-management/google-drive) syncs the files inside the connected admin's Drive permissions. Graphify matches Dust: one Google account, the folders that account can open, and a workspace that can search the result.
+
+Pull request reviews stay on GitHub and GitLab repositories. A Drive folder is searched from the graph, the Wiki, and Ask.
+
+## How do you stop syncing?
+
+An owner or admin opens the folder's options and chooses **Stop syncing**. Graphify stops reading that folder. The row says **Not syncing**. The dialog says the existing graph stays searchable.
+
+To use a different Google account, open **Connection settings**. If you connected the account, the action is **Change account**. If another owner or admin connected it, the action is **Reconnect with my account**. The dialog says a different Google account stops syncing the existing folders. Add those folders again from the new account. Reconnecting the same account leaves the folders in place.
+
+**Disconnect** stops every folder. Existing graphs remain searchable. The toast says "Google Drive disconnected. Folder syncing has stopped."
+
+When Google access expires, the tile says **Reconnect needed** and the action is **Reconnect**. Existing graphs stay available while you reconnect.
+
+**Microsoft Workspace** and **Confluence** are labeled **Coming soon** on the Connectors page.
