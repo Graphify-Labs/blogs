@@ -1,0 +1,104 @@
+---
+title: "How to use Graphify in Perplexity Computer"
+description: "Install the Graphify skill, type /graphify, and paste a GitHub link. A step-by-step guide to using Graphify in Perplexity Computer."
+date: "2026-10-27"
+imgThumb: thumb.png
+keyword: graphify in perplexity computer
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - perplexity
+  - skills
+  - graph
+---
+
+To use Graphify in Perplexity Computer, install the Graphify skill from Plugins, type `/graphify` in a Computer task, and paste a link to a public GitHub repository. Computer clones the code, builds a knowledge graph, and returns an interactive map, a downloadable bundle, and a report. [Perplexity can now use Graphify](https://graphify.com/blog/perplexity-can-now-use-graphify) has the announcement.
+
+## How do you install the Graphify skill?
+
+1. Open **Plugins** in the left sidebar.
+2. Go to the **Skills** tab and search for `graphify`.
+3. Open **Graphify**, listed under Developer.
+4. Select **Install**. The button becomes an **Enabled** toggle.
+
+![The Graphify skill page in Perplexity Computer, with the Enabled toggle switched on.](listing.webp)
+
+Perplexity is making tasks that use `/graphify` free through October 31, 2026, up to 5,000 credits per Computer user, so this is a good week to map the repositories you care about.
+
+## How do you start a Graphify task?
+
+1. Select **New** and set the mode to **Computer**.
+2. Type `/graphify` and choose **Use** to pick the skill.
+3. Tell it which repository to map.
+
+![The Perplexity Computer prompt box showing the Graphify skill highlighted under Skills, with /graphify typed and Computer mode on.](slash.webp)
+
+This is the prompt we used on our own repository:
+
+```text
+map the codebase at https://github.com/Graphify-Labs/graphify
+```
+
+Computer cloned the public repository on its own. There was no connector to add, nothing to upload, and no sign-in. It chose the files that matter, 102 code files and three docs, and finished in about five minutes.
+
+## What do you get back?
+
+Every run ends with three artifacts in the task:
+
+- **Graphify Codebase Map**, an interactive app you can open in the task.
+- **Graphify Codebase Map Bundle**, a ZIP with `graph.json`, `graph.html`, the raw extraction, and a notes file.
+- **Graphify Codebase Graph Report**, a write-up of the key functions, the main flow, and questions worth asking.
+
+![The three artifacts from a Graphify run in Perplexity Computer: the map app, the ZIP bundle, and the graph report.](artifacts.webp)
+
+On the Graphify repository, the map held 4,022 nodes, 10,079 directed edges, and 192 communities.
+
+## How do you explore the map?
+
+The map draws every node and edge as a force-directed graph. Each edge keeps its direction, its relation type, a [confidence tag](https://graphify.com/blog/grounded-answers-confidence-tags), and the source file it came from.
+
+- **Search nodes** finds any file or function by name.
+- **Node info** opens when you click a node. It shows the type, the community, the source path, the degree, and the full list of neighbors. Selecting `extract.py` shows a degree of 442, in the community Extract Core & Template Masking.
+- **Communities** lists each cluster of closely linked code with its size. Tick or untick one to show or hide it.
+- **Light, Dark, and System** switch the theme.
+
+![The Graphify map in Perplexity Computer, with extract.py selected: node info shows degree 442 and its neighbors, and the communities list shows each cluster with its size.](graph-map.webp)
+
+## What should you ask next?
+
+The map stays in the task, so follow-up questions answer from the graph instead of rereading files. Good ones to start with:
+
+```text
+Which functions call the authentication middleware?
+```
+
+```text
+How does a request get from the API router to the database?
+```
+
+```text
+What are the most connected functions, and what depends on them?
+```
+
+```text
+Trace how deduplicate_entities() connects the deduplication code.
+```
+
+## How do you run Graphify locally?
+
+The engine behind the skill is open source on [GitHub](https://github.com/Graphify-Labs/graphify). It needs Python 3.10 or newer and uv. The package is `graphifyy` and the command is `graphify`:
+
+```bash
+uv tool install graphifyy
+graphify install
+```
+
+`graphify install` detects your assistant and registers the skill. Then type this in Claude Code, Cursor, Gemini CLI, or [another supported assistant](https://graphify.com/integrations):
+
+```text
+/graphify .
+```
+
+You get the same three files locally in `graphify-out/`: `graph.html`, `GRAPH_REPORT.md`, and `graph.json`.
