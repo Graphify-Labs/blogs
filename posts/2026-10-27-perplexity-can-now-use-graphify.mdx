@@ -1,0 +1,68 @@
+---
+title: "Perplexity can now use Graphify"
+description: "Perplexity Computer can now use Graphify. Type /graphify, paste a GitHub link, and get an interactive map of the whole codebase in minutes."
+date: "2026-10-27"
+imgThumb: thumb.png
+keyword: perplexity
+authors:
+  - fahad
+categories:
+  - product
+tags:
+  - perplexity
+  - skills
+  - graph
+---
+
+Perplexity can now use Graphify. The Graphify skill is live in the Perplexity Computer skills marketplace, open to every Computer user. Type `/graphify`, paste a link to a public GitHub repository, and Computer maps the whole codebase into a knowledge graph you can explore: every file, every function, and how they connect.
+
+Perplexity is also making tasks that use `/graphify` free through October 31, 2026, up to 5,000 credits per Computer user.
+
+![The Graphify codebase mapped in Perplexity Computer: a force-directed graph of 4,022 nodes, with extract.py selected and a list of code communities beside it.](graph-map.webp)
+
+Perplexity shared the news on X:
+
+![Computer (@AskPerplexity) on X: "The Graphify skill by @graphify is now in Computer's skills marketplace, available to all Computer users. Turn a codebase into an interactive map of its files, functions, and dependencies. Tasks that use /graphify are free through October 31, up to 5,000 credits per user."](askperplexity-post.webp)
+
+*[Computer by Perplexity, on X](https://x.com/AskPerplexity/status/2113022451840122886)*
+
+![Aravind Srinivas (@AravSrinivas) on X: "/graphify now on Computer. We're giving every user 5,000 credits to try this skill that lets you visualize a codebase."](aravind-post.webp)
+
+*[Aravind Srinivas, CEO of Perplexity, on X](https://x.com/AravSrinivas/status/2113029257886847264)*
+
+## Why does this matter for developers?
+
+Reading a new codebase is slow. You open a file, follow an import, lose the thread, and start again. Graphify gives Computer a map before it answers. It turns a repository into a [code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph), where functions, classes, and files are nodes and calls and imports are the edges between them.
+
+Each edge keeps its direction, what kind of link it is, how confident Graphify is in it, and the file and line it came from. So when Computer explains how a request moves through a system, it can point to where in the code that happens.
+
+Computer runs the open-source Graphify engine and does the reading with its own model. There is nothing to install on your machine.
+
+## What happened when we pointed it at our own repo?
+
+We gave Computer one line:
+
+```text
+map the codebase at https://github.com/Graphify-Labs/graphify
+```
+
+It cloned the repository by itself, picked the 105 files that hold the code and the architecture docs, and came back about five minutes later with the full map: 4,022 nodes, 10,079 directed edges, and 192 communities of closely linked code.
+
+The report read like notes from an engineer who had spent a week in the code:
+
+- The two most connected functions are `_read_text()` with 270 links and `_make_id()` with 234, both in `extractors/base.py`. Every language extractor builds on them.
+- `dispatch_command()` in `cli.py` is the command hub. It calls 127 functions.
+- The pipeline runs detect, extract, build, cluster, analyze, report, export, and Computer matched each step to the function that does it.
+- It even spotted where our architecture doc pointed to the wrong file for the HTML exporter.
+
+Then it suggested a sharp next question about how our deduplication code fits together. Once the map exists, the questions get better.
+
+## How do you try Graphify in Perplexity?
+
+Open **Plugins**, go to **Skills**, and install **Graphify**. Then type `/graphify` in Computer and paste a GitHub link. Runs are free through October 31, per Perplexity's offer. The [step-by-step guide](https://graphify.com/blog/how-to-use-graphify-in-perplexity-computer) walks through every screen.
+
+## Can you run Graphify on your own machine too?
+
+Yes. The engine behind the skill is open source on [GitHub](https://github.com/Graphify-Labs/graphify), and it works in Claude Code, Cursor, Gemini CLI, and the [other assistants we support](https://graphify.com/integrations). For a graph your whole team shares, there is [Graphify Cloud](https://app.graphify.com).
+
+Pick a repository you want to understand, and let Computer draw the map.
