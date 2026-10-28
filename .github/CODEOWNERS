@@ -2,3 +2,7 @@
 # The author cannot approve their own pull request. List more than one
 # person so a post from one of us can still land.
 * @safishamsi @SyedFahad7 @syedfahads
+
+# Posts and their images, named explicitly so a review is always requested.
+/posts/ @safishamsi @SyedFahad7 @syedfahads
+/public/images/ @safishamsi @SyedFahad7 @syedfahads

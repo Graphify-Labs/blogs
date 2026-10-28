@@ -160,6 +160,28 @@ GitHub asks [@SyedFahad7](https://github.com/SyedFahad7) and [@syedfahads](https
 
 Keep the pull request to one post, plus that post's images and an `authors.json` row if you are new.
 
+## 10. Conventions
+
+We follow what Supabase and PostHog do in their public site repositories.
+
+**Branch names.** Keep them neutral: a public branch name can announce a launch before you do.
+
+| Kind | Branch | Pull request title |
+| --- | --- | --- |
+| New post | `post/YYYY-MM-DD-<neutral>`, for example `post/2026-11-03-launch` | `content(blog): <title>` |
+| Fix to a live post | `fix/<slug>-<what>`, for example `fix/graphify-octoverse-2026-signoff` | `fix(blog): <what> in <slug>` |
+| Repository tooling | `chore/<what>` | `chore: <what>` |
+
+**Fix forward.** A mistake in a live post gets a small follow-up pull request: one fix, a one-line title, no explanation needed. Supabase and PostHog merge these in minutes. Do not rewrite history to hide it.
+
+**Before you push,** check that the pull request is still open. Pushing to a merged branch goes nowhere. If it was merged, branch from the latest `main` and open a new one.
+
+**Embargoed posts** (a partner launch, an announcement under embargo) stay out of this public repository until launch day. Draft them privately, then open the pull request on the day.
+
+**Community fixes are welcome.** A typo or broken-link pull request from anyone is a gift. Thank them, review it, and merge it quickly. A first-time contributor gets an automatic thank-you comment.
+
+**Checks.** `npm run check` also runs `scripts/check-content.mjs`. It fails on garbled characters or a byte-order mark, the cover repeated in the body, a bold emoji "button" link, `/graphify` for Codex without `$graphify`, and a canonical URL that is not graphify.com. A finding that is correct on purpose goes in its `ALLOW` list as `<file>:<rule>`.
+
 ## Maintainers
 
 In the graphify.com project on Vercel: Settings → Git → Deploy Hooks. Create one named `blog`. Store that URL as the Actions secret `VERCEL_DEPLOY_HOOK` on this repository.
