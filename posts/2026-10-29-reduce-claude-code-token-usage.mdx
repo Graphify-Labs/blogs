@@ -11,6 +11,7 @@ tags:
   - claude-code
   - tokens
   - mcp
+imgThumb: thumb.png
 ---
 
 Where Claude Code's tokens go, and the fixes that cut them. If you want to reduce Claude Code token usage, start here: most of the bill is not your prompt. It's everything Claude Code sends back to the model on every turn: the conversation so far, CLAUDE.md, tool listings, and the files it read along the way. Anthropic's own levers are the place to start. A code graph is one more lever, and this post is clear about where it fits.
@@ -48,15 +49,15 @@ Start with the levers Anthropic documents. They cost nothing and apply to every 
 
 The remaining cost is exploration: working out how the code connects before Claude can answer or edit. That's the part [Graphify](https://github.com/Graphify-Labs/graphify) targets.
 
-Graphify builds a graph of your code locally with tree-sitter. Building that code graph costs zero model tokens. Claude Code then asks the graph structural questions (what calls this, what breaks if it changes, how does A reach B) instead of reconstructing the answer from searches and reads. A query answer is capped at 2,000 tokens by default.
+Graphify builds a graph of your code locally with tree-sitter. Building that code graph costs zero model tokens. Claude Code then asks the graph structural questions (what calls this, what breaks if it changes, how does A reach B) instead of reconstructing the answer from searches and reads.
 
 It helps on cross-file questions in a large or unfamiliar repo. It does not help on a small repo, a single-file edit, or a file you already know. Claude still reads the file it's about to change.
 
-Setup is two steps. The second one matters:
+Setup takes three commands. The last one matters:
 
 ```bash
 pip install graphifyy
-graphify install          # sets up Claude Code
+graphify install          # detects your assistant and registers the skill
 graphify claude install   # adds the CLAUDE.md section and hooks that make Claude Code use the graph
 ```
 
@@ -74,14 +75,14 @@ Public tests of Graphify point in different directions, and they're worth readin
 
 - **Constantin Ponfick** ran 11 questions on FastAPI, with and without Graphify. Files inspected fell 14.6%, while input tokens rose 49.5% and cost rose 9.5%. Graph help was biggest on broad test and change-impact questions. ([Constantin's Blog](https://constantinsblog.eu/posts/graphify-llm-query-tool/))
 - **The Gray Cat**, in one run on YouTube, measured about 18% fewer tokens with Graphify ($5.16 down to $4.29), but the run was slower, and two of three graph queries missed.
-- [Issue #985](https://github.com/Graphify-Labs/graphify/issues/985) reports Claude Code alone using the same or fewer tokens on common queries. It's still open, with no maintainer reply yet.
+- [Issue #985](https://github.com/Graphify-Labs/graphify/issues/985) reports Claude Code alone using the same or fewer tokens on common queries. It's still open.
 
 Two token regressions that users found are fixed:
 
 - [Issue #580](https://github.com/Graphify-Labs/graphify/issues/580) traced extra tokens to an installer instruction telling the assistant to read GRAPH_REPORT.md before anything else, which cost about 12–25k tokens per question. [PR #891](https://github.com/Graphify-Labs/graphify/pull/891) (16 May 2026) removed it. On the PR's test question, the patched setup matched Claude Code alone at 30k tokens, with 1 tool call instead of 4.
-- [Issue #3435](https://github.com/Graphify-Labs/graphify/issues/3435) measured about 651,000 tokens of repeated hook reminders across 87 transcripts. v0.9.87 (12 October 2026) capped the nudge. If you're on an older version, upgrade.
+- [Issue #3435](https://github.com/Graphify-Labs/graphify/issues/3435) measured about 651,000 tokens of repeated hook reminders across 87 transcripts. v0.9.87 (12 October 2026) bounded the nudge per session. If you're on an older version, upgrade.
 
-The one accuracy number we publish is in [BENCHMARKS.md](https://github.com/Graphify-Labs/graphify/blob/main/BENCHMARKS.md): on ERPNext, key-fact coverage went from 70.8% to 82.0% across six questions. That's coverage, not tokens.
+The one accuracy number we publish is in [BENCHMARKS.md](https://github.com/Graphify-Labs/graphify/blob/v8/BENCHMARKS.md): on ERPNext, key-fact coverage went from 70.8% to 82.0% across six questions. That's coverage, not tokens.
 
 So the honest answer is to measure your own repo. Run `/usage` on a few real cross-file questions with the graph and without it. The [token reduction glossary entry](/glossary/token-reduction) covers the terms, and [Graphify vs Claude Code](/vs/claude-code) covers how the two work together.
 
