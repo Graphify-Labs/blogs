@@ -38,7 +38,7 @@ The comparison with retrieval over similar passages is [Code knowledge graph vs 
 
 ## How do you build one?
 
-Code is parsed locally with tree-sitter, across 36 languages. Call and import edges come from the syntax tree. That pass does not call a model. Docs and other non-code files can be folded in by the model you already use. Those connections are tagged INFERRED.
+Code is parsed locally, across about 40 languages, 34 of them with tree-sitter. Call and import edges come from the syntax tree. That pass does not call a model. Docs and other non-code files can be folded in by the model you already use. Those connections are tagged INFERRED.
 
 In the project, `/graphify .` writes three files under `graphify-out/`:
 

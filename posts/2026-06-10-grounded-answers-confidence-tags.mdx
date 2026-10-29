@@ -21,7 +21,7 @@ A [code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-grap
 
 EXTRACTED comes from the syntax tree. Graphify parses code on the machine with tree-sitter. The parser finds the call, the import, or the definition, and that edge is deterministic. Parse the same file again and the parser finds the same edge. No model sits in that step. The Cursor integration describes this tag as parsed from the AST.
 
-INFERRED is a connection a model made. Docs, PDFs, SQL schemas, and Terraform are not a tree of calls. The model you configure joins a doc page to the service it describes, or a Terraform resource to the code that uses it. Those edges are usually right. They are still a judgment, and the tag says so. A plausible link can be wrong. The tag is how you see that the link was proposed.
+INFERRED is a connection a model made. Docs, PDFs, and recordings are not a tree of calls. (SQL schemas and Terraform are parsed, so their edges are EXTRACTED.) The model you configure joins a doc page to the service it describes, or a runbook to the Terraform resource it covers. Those edges are usually right. They are still a judgment, and the tag says so. A plausible link can be wrong. The tag is how you see that the link was proposed.
 
 AMBIGUOUS means Graphify found evidence and could not resolve it. The cases named in the glossary are dynamic dispatch, reflection, and an import built from a string. The edge stays in the graph with the flag, so the unresolved link is visible as unresolved.
 
