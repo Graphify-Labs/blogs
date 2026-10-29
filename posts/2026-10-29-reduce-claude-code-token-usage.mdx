@@ -49,7 +49,7 @@ Start with the levers Anthropic documents. They cost nothing and apply to every 
 
 The remaining cost is exploration: working out how the code connects before Claude can answer or edit. That's the part [Graphify](https://github.com/Graphify-Labs/graphify) targets.
 
-Graphify builds a graph of your code locally with tree-sitter. Building that code graph costs zero model tokens. Claude Code then asks the graph structural questions (what calls this, what breaks if it changes, how does A reach B) instead of reconstructing the answer from searches and reads.
+Graphify builds a graph of your code locally with tree-sitter. Building that code graph costs zero model tokens. Claude Code then asks the graph structural questions (what calls this, what breaks if it changes, how does A reach B) instead of reconstructing the answer from searches and reads. A query answer is capped at 2,000 tokens by default.
 
 It helps on cross-file questions in a large or unfamiliar repo. It does not help on a small repo, a single-file edit, or a file you already know. Claude still reads the file it's about to change.
 
@@ -57,7 +57,7 @@ Setup takes three commands. The last one matters:
 
 ```bash
 pip install graphifyy
-graphify install          # detects your assistant and registers the skill
+graphify install          # registers the skill for Claude Code (the default)
 graphify claude install   # adds the CLAUDE.md section and hooks that make Claude Code use the graph
 ```
 
