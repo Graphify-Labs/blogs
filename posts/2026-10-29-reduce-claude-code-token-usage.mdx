@@ -69,9 +69,9 @@ They can, but less than many people expect. Anthropic's docs say MCP tool defini
 
 ## Can a plugin really reduce Claude Code token usage by 90%?
 
-You'll find plugins claiming 90% or 94%. Those figures are their authors' own single runs on their own projects. They are not a general result, and we don't adopt them.
+You'll see plugins report big savings. How much any tool saves depends on the repo, the kind of questions you ask and how it's set up, so it's worth reading how a number was measured before you expect it on your own code.
 
-Public tests of Graphify point in different directions, and they're worth reading in full:
+Public tests of Graphify show that spread, and they're worth reading in full:
 
 - **Constantin Ponfick** ran 11 questions on FastAPI, with and without Graphify. Files inspected fell 14.6%, while input tokens rose 49.5% and cost rose 9.5%. Graph help was biggest on broad test and change-impact questions. ([Constantin's Blog](https://constantinsblog.eu/posts/graphify-llm-query-tool/))
 - **The Gray Cat**, in one run on YouTube, measured about 18% fewer tokens with Graphify ($5.16 down to $4.29), but the run was slower, and two of three graph queries missed.
