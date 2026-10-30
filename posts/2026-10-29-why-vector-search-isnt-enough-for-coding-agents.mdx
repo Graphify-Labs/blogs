@@ -1,0 +1,142 @@
+---
+title: "Why vector search isn't enough for coding agents"
+description: "Vector search finds code that sounds right. A code knowledge graph returns the dependency path, with every hop labelled parsed or inferred. One real trace."
+date: "2026-10-29"
+imgSocial: social.png
+keyword: vector search
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - vector-search
+  - knowledge-graph
+  - coding-agents
+---
+
+Ask a coding agent "where does an expired token get rejected?" and vector search will usually find something that sounds right. The hard part is the next step. The agent has to work out how that code connects to the code it's about to change.
+
+Since our post on [code knowledge graphs vs RAG](https://graphify.com/blog/code-knowledge-graph-vs-rag), readers have asked for one thing above all: show it end to end. One question, the code it finds, the dependency path the graph returns, and a label on every hop saying whether it was read from the source or inferred. This post does exactly that. Everything below the "Worked example" heading is real output from open-source Graphify, run on a public repo you can clone yourself.
+
+## What others have already shown
+
+We're not the first to look at this, and the best published examples are worth reading in full:
+
+- **The orphan function.** In [Codebase Knowledge Base Series (05)](https://dev.to/wonderlab/codebase-knowledge-base-series-05-vector-retrieval-vs-knowledge-graph-adding-a-call-graph-4ad5), WonderLab asks about "process payment". Vector top-5 returns `get_payment_history` and `verify_webhook_signature`, which look like payments but don't answer the question. One `CALLS` hop from `process_checkout` brings in `calculate_order_total`, the function that does. In their words, it's "semantically distant but structurally close."
+- **The bug three hops down.** Tian Pan's [Code-Specific RAG](https://tianpan.co/blog/2026/05/07/code-specific-rag-general-retrieval-fails-codebases) traces `processPayment → validateCard → checkFraudScore → fetchUserHistory`. A query surfaces the first function, "but the actual bug or context lives in `fetchUserHistory`. Token-based retrieval stops at the first hop."
+- **Look-alike functions.** In [CodeBot](https://www.inkylabai.com/articles/codebot), InkyLab points out that training and inference preprocessing "look almost identical. A vector search can't tell them apart." Their fix is resolved `calls` edges over the Ultralytics codebase.
+- **Ranking by references.** [Aider's repo map](https://aider.chat/2023/10/22/repomap.html) uses tree-sitter to pull out definitions and references, then ranks them on a dependency graph to fit a token budget.
+- **On a benchmark.** [RepoGraph](https://arxiv.org/abs/2410.14684) (Ouyang et al.) builds a line-level definition/reference graph and retrieves ego-graphs around keywords. Plugged into four SWE-bench systems, it reports an average relative improvement of 32.8%.
+
+They all land in the same place. Finding the starting point is the easy part. Structure is how you get from there to everything the change touches. What most of these write-ups leave out is the question readers keep asking: **how far can you trust each hop?** That's where Graphify's labelled edges come in.
+
+## Worked example: itsdangerous, one question
+
+The repo is [pallets/itsdangerous](https://github.com/pallets/itsdangerous) (commit `672971d`), the small library Flask uses to sign cookies and tokens. It's small enough to check every line by hand.
+
+Building the graph uses only the parser, with no LLM call:
+
+```text
+$ graphify update src
+[graphify watch] Rebuilt: 152 nodes, 346 edges, 7 communities
+```
+
+### Step 1: the question finds the relevant code
+
+```text
+$ graphify query "where does an expired timestamp raise SignatureExpired"
+Graph: src/graphify-out/graph.json (152 nodes) | Traversal: BFS depth=2 |
+Start: ['SignatureExpired', 'TimestampSigner', 'Raised if a signature does not match.'] | 64 nodes found
+```
+
+From a plain-language question, Graphify went straight to `SignatureExpired` and `TimestampSigner`, the code that handles expiry. A list of matching chunks would stop here. Graphify keeps going.
+
+### Step 2: the graph returns the path, with a label on every hop
+
+The same query returns the edges around those start nodes. Here are the ones that answer the question, copied as printed:
+
+```text
+EDGE TimestampSigner --method [EXTRACTED]--> .unsign() at=src/itsdangerous/timed.py:L72
+EDGE .unsign() --calls [EXTRACTED context=call]--> SignatureExpired at=src/itsdangerous/timed.py:L142
+EDGE SignatureExpired --inherits [EXTRACTED]--> BadTimeSignature at=src/itsdangerous/exc.py:L60
+EDGE TimestampSigner --inherits [EXTRACTED]--> Signer at=src/itsdangerous/timed.py:L22
+EDGE TimestampSigner --uses [INFERRED]--> SignatureExpired at=src/itsdangerous/timed.py:L142
+EDGE TimedSerializer --uses [INFERRED]--> SignatureExpired at=src/itsdangerous/timed.py:L213
+```
+
+Then we ask for the shortest route from the serializer most apps actually call:
+
+```text
+$ graphify path "TimedSerializer" "SignatureExpired"
+Shortest path (1 hops):
+  TimedSerializer --uses [INFERRED]--> SignatureExpired
+```
+
+### Step 3: check each hop against the source
+
+**`.unsign() --calls--> SignatureExpired`, EXTRACTED, timed.py:L142.** The parser read this straight from the call site:
+
+```python
+if age > max_age:
+    raise SignatureExpired(
+```
+
+That's the answer to the question, and it's backed by a line number.
+
+**`SignatureExpired --inherits--> BadTimeSignature`, EXTRACTED.** It's in the class definition. It also matters for the change: any `except BadTimeSignature` or `except BadSignature` will catch expiry too.
+
+**`TimedSerializer --uses--> SignatureExpired`, INFERRED, timed.py:L213.** No line has `TimedSerializer` calling `SignatureExpired`. The resolver linked them because the class body refers to the exception. Open line 213 and you'll find it isn't raised there. It's caught and re-raised:
+
+```python
+except SignatureExpired:
+    # The signature was unsigned successfully but was
+    # expired. Do not try the next signer.
+    raise
+```
+
+The inferred edge points at exactly the right line, and the label tells the agent this is the one hop worth a quick look before it edits. That's the point of provenance. Without labels, every hop looks equally certain. With Graphify, the agent knows which hops are read straight from the source and which one to verify.
+
+### What the agent ends up knowing
+
+Say the task is "make expired tokens return a 401 instead of a 500." Here's what each approach hands the agent:
+
+- **Graphify, with labelled hops:**
+  - The exact raise site (L142, parser-backed).
+  - The exception hierarchy that decides which `except` blocks catch it (parser-backed).
+  - The one place a serializer deliberately re-raises it (inferred, flagged to verify).
+
+Every hop comes with a file, a line number and a label, so the agent can make the change with the whole path in view.
+
+## Where vector search stops and the graph takes over
+
+- **Finding the code** answers "where is the code about X?"
+- **A [code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph)** answers "what does X call, what calls X, and what catches it?" That's the question behind most risky changes, and the one WonderLab, Tian Pan, InkyLab, Aider and RepoGraph all show similarity alone can't answer.
+- **[Provenance labels](https://graphify.com/glossary/confidence-tags)** tell the agent when it can move on and when to read the source first. `EXTRACTED` means the edge was read directly from the source. `INFERRED` means Graphify resolved it.
+
+Graphify gives the agent all three in one answer.
+
+## Try it on your own repo
+
+The fastest way to try this is the hosted **[Graphify app](https://app.graphify.com)**.
+
+To run it locally, use the Graphify CLI:
+
+```bash
+uv tool install graphifyy
+graphify install          # sets up the skill for Claude Code; use --platform for other assistants
+graphify update .         # build the code graph
+graphify query "where does an expired token get rejected?"
+graphify path "TimedSerializer" "SignatureExpired"
+```
+
+> Codex uses `$graphify` instead of `/graphify`.
+
+Over MCP, the same operations are available as `query_graph`, `shortest_path` and `get_node`, so any MCP client can use them. The source is at [github.com/Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify).
+
+## What's next
+
+Next, we want to run the same trace on a larger repo with hundreds of inferred edges, and measure how often an `INFERRED` hop holds up when you check it against the source. If you have a repo where vector search keeps sending your agent to the wrong place, tell us in the comments or on [Discord](https://discord.gg/graphify), and we'll trace it.
+
+Thanks to the authors linked above for publishing examples we could build on.
+
+Syed Fahad and the Graphify team
