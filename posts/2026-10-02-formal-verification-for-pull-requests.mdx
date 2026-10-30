@@ -1,0 +1,93 @@
+---
+title: "Formal verification for pull requests, explained"
+description: "Formal verification for pull requests compares each changed function with its earlier version and either proves equivalence or finds an input that differs."
+date: "2026-10-02"
+keyword: formal verification for pull requests
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - product
+tags:
+  - verification
+  - reviews
+  - pull-requests
+---
+
+Graphify is a code knowledge graph for AI coding agents, and formal verification for pull requests is where that graph meets the diff. When a pull request changes a function, Graphify compares the new version with the old one. It either establishes that they behave the same within a checked range, or produces a concrete input on which they give different results.
+
+A clean-looking refactor is the change I trust least, because nobody reads it closely. This post explains what that check proves, what each verdict means, and how to act on one. Formal verification shipped in [Graphify](https://app.graphify.com) on August 11 alongside pull request reviews, and on September 13 each repository gained its own setting to turn it on or off.
+
+## How do you run formal verification in Graphify?
+
+Turn on the **Formal verification** toggle in a repository's options menu, then open a pull request. Graphify checks each changed function against its earlier version. Results appear on the **Behavior checks** page, which lists pull requests; expand one to see a row per changed function, each with its verdict and an explanation.
+
+1. Connect the repository in [Graphify](https://app.graphify.com).
+2. Open the repository's options menu and turn on **Formal verification**.
+3. Open or update a pull request.
+4. On **Behavior checks**, expand the pull request and read each function's verdict.
+
+## What is formal verification for pull requests?
+
+It is a differential check on each changed function. The previous implementation is the reference, and the question is whether the new one computes the same result for the same inputs. This is a form of [equivalence checking](https://en.wikipedia.org/wiki/Formal_equivalence_checking): it compares two versions with each other, not one version against a written specification.
+
+That framing keeps the claim honest. A proof says the refactor preserved behaviour. It does not say the behaviour was right to begin with.
+
+## What does a behaviour change look like?
+
+A concrete input with two different outputs. Take a refactor of a clamp function that looks harmless. Both versions agree whenever `lo <= hi`, and they disagree when the bounds are swapped. The first input below, `x=-2, lo=-1, hi=-2`, returns -1 from the old version and -2 from the new one.
+
+```python
+def clamp_old(x, lo, hi): return max(lo, min(x, hi))
+def clamp_new(x, lo, hi): return min(hi, max(x, lo))
+```
+
+Checking every combination of inputs from -2 to 2 in plain Python finds 50 that differ and none with `lo <= hi`:
+
+```text
+50 (-2, -1, -2) -1 -2
+True
+```
+
+This is the kind of evidence a verdict carries. A reviewer reading the diff sees two equivalent-looking lines; the distinguishing input shows the case where they differ. Whether swapped bounds matter is a product decision, but now it is a visible one.
+
+## What does each verification verdict mean?
+
+There are five. The app's legend explains each in a line, and only one of them is a proof. Two say nothing about your code at all, which is the part people miss when they skim a green check. Read the label before you read the color:
+
+- **Behavior changed**: "We ran the old and new versions on the same input and got different results."
+- **Proven same**: "Proven to give the same result for every input in the range we checked."
+- **No change found**: "Same results on every input we tried. Good evidence, but not proof."
+- **Not checked**: "We couldn't compare this function, so it tells you nothing either way."
+- **Couldn't run**: "The check itself failed. This says nothing about your code."
+
+The [verification docs](https://docs.graphify.com/platform/verification.md) add two rules worth keeping in mind. A run marked **Completed** has finished; it does not mean every function was proven the same. And a run that verified no functions does not mean the change passed.
+
+## How should you act on a behaviour change?
+
+Decide whether the change was intended. If it was, note it in the pull request so reviewers know. If it was not, use the distinguishing input to reproduce the difference and turn it into a regression test before you fix the code. The docs also show whether the witness was reproduced in a sandbox or remains unconfirmed.
+
+Learning can tune advisory review findings, but it cannot change a proof verdict or hide a witness. Verification stays a separate signal from the review comments around it, as [read a review and a verdict](https://docs.graphify.com/platform/read-a-result.md) explains.
+
+## Should you turn verification on for every repository?
+
+No, and you don't have to. The toggle is per repository. I turn it on where a silent behaviour change is expensive, such as billing, auth, parsers and shared libraries, and leave it off for prototypes. A verdict costs review attention, so spend it where a regression would hurt.
+
+## Try it
+
+Connect a repository in [Graphify](https://app.graphify.com), turn on formal verification, and open a pull request. For the open-source graph that review builds on, run `uv tool install graphifyy`. More on how the graph reaches a change: [change impact analysis with a code graph](https://graphify.com/blog/change-impact-analysis-with-a-code-graph), plus the [code graph glossary entry](https://graphify.com/glossary/code-graph).
+
+## FAQ
+
+### Does a proof mean my code is correct?
+
+No. It means the new version behaves like the old one within the checked bounds. The old version is the reference.
+
+### What is the difference between "Proven same" and "No change found"?
+
+The first is a proof within bounds. The second means the sampled inputs agreed, which is evidence but not proof.
+
+### Is formal verification part of open-source Graphify?
+
+No. It runs in the hosted app on pull requests. Open-source Graphify provides the code graph and impact commands.
