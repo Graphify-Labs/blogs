@@ -1,0 +1,77 @@
+---
+title: "Code graph vs language server: which does your agent need?"
+description: "Code graph vs language server: an LSP answers live questions about the file you edit, a code graph answers whole-repo questions for agents. When to use each."
+date: "2026-10-16"
+keyword: code graph vs language server
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - lsp
+  - code-graph
+  - agents
+---
+
+Graphify is a code knowledge graph for AI coding agents, and the most common question we get from editor-minded developers is how it differs from a language server. Code graph vs language server is not a contest. They answer different questions at different moments, and most agent setups end up using both.
+
+A language server speaks the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) to your editor. A code graph is a stored index of the whole repository that an agent can query. This post compares them on what they know, when they answer, and where each fits better.
+
+## What does a language server know?
+
+The live state of the workspace open in your editor. A language server parses files as you type and answers go-to-definition, find references, hover types and diagnostics, usually with full compiler precision for one language. It runs while the editor runs, and its answers reflect unsaved edits, which a stored index cannot.
+
+That precision is why editors feel instant. It is also scoped: one server per language, tied to an open workspace.
+
+## What does a code graph know?
+
+The structure of a whole repository, stored and ready to query. A code graph records symbols and the edges between them, such as calls, imports and inheritance, across every file at a given commit. Agents query it without opening an editor or loading every file, and it can answer for repositories no one has open.
+
+Graphify builds its graph with [tree-sitter](https://tree-sitter.github.io/tree-sitter/), with 63 grammars in the hosted product and about 40 languages in the open-source CLI. See [tree-sitter code graph for AI agents](https://graphify.com/blog/tree-sitter-code-graph-for-ai-agents).
+
+## Code graph vs language server: what is the difference for agents?
+
+Scope and persistence. A language server answers for the file in front of it, now. A code graph answers for the repository, or several, from a stored build. Agents ask broad questions, such as what breaks if this changes, so they benefit from an index that already holds every edge instead of recomputing answers one request at a time.
+
+| | Language server | Code graph |
+| --- | --- | --- |
+| Scope | Open workspace, one language | Whole repository, many languages |
+| Freshness | Live, including unsaved edits | A committed build |
+| Best question | What is this symbol? | What does this connect to? |
+| Consumer | Editor | Agent, reviewer, wiki |
+
+## When does an LSP fit better?
+
+When you need precise, live answers about code you are editing right now. Type errors, renames inside one project, completions and diagnostics on unsaved changes are language server work. A code graph built from the default branch does not see your uncommitted edits, so for the current file, trust the editor and read your own changes from disk.
+
+Precise type resolution in heavily dynamic code is also a language server strength.
+
+## When does a code graph fit better?
+
+When the question spans the repository or crosses services. Impact before a change, callers in files nobody opened, unreferenced code, review context and generated docs all need the whole map at once. A stored graph also serves many consumers, so your agent, your pull request review and your wiki read the same structure.
+
+For a worked example, see [change impact analysis with a code graph](https://graphify.com/blog/change-impact-analysis-with-a-code-graph).
+
+## Try it
+
+Connect a repository in [Graphify](https://app.graphify.com) and keep your language server running in the editor. To try the graph locally, run `uv tool install graphifyy` and `graphify update .`. The [Graphify docs](https://docs.graphify.com) cover both.
+
+## FAQ
+
+### Does Graphify replace my language server?
+
+No. Keep the language server for live editing. Use the graph for repository-wide questions.
+
+### Is a code graph as precise as a language server?
+
+Not for every symbol. A language server uses compiler-level analysis for one language. The graph trades some precision for whole-repo coverage.
+
+### Can agents use a language server directly?
+
+Some can. It still answers per workspace and per language, not for the whole repository at once.
+
+### Does the graph see my unsaved changes?
+
+No. It reflects a committed build. Read your own edits from disk.
