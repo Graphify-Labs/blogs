@@ -3,6 +3,8 @@ title: "Codex MCP server setup: add one with a command or config"
 description: "Codex MCP server setup: add a remote or local server with codex mcp add or config.toml, sign in with OAuth, and test it with a code graph example."
 date: "2026-08-05"
 keyword: codex mcp server
+imgThumb: thumb.png
+imgSocial: social.png
 authors:
   - fahad
 categories:
@@ -67,17 +69,17 @@ Use an absolute path, because Codex may start the server from a different folder
 
 ## How do I test that Codex can use the server?
 
-Run `codex mcp list` and check the server is enabled. Inside the Codex terminal UI, `/mcp` lists active servers and their tools. Then give the agent a prompt that must use the server:
+Run `codex mcp list` and check the server is enabled. Inside the Codex terminal UI, `/mcp` lists active servers and their tools. If the server is missing, check the name in `config.toml` and run `codex mcp login` again. Then give the agent a prompt that must use the server:
 
 ```text
-Use Graphify's list_repositories tool and show the repositories I can access. If the tool fails, report the error instead of guessing.
+Use Graphify to list the repositories you can see. If the tool fails, report the error instead of guessing.
 ```
 
 The last sentence matters. Without it, an agent may answer from memory when a tool call fails, and you will not notice.
 
 ## What goes wrong most often?
 
-Three problems cover most failed setups:
+Most failed setups come down to sign-in, timeouts or the agent ignoring the server. The fixes are short, and none needs a reinstall. Check them in this order before you change anything else in `config.toml`, because the first one causes most reports we see. Three problems cover most failed setups:
 
 - **Not signed in.** Remote OAuth servers need `codex mcp login <name>` once.
 - **A relative path.** Local servers need absolute paths to files.
@@ -90,6 +92,8 @@ If Codex lists the server but never calls it, ask for the tool by name in your p
 Run `codex mcp add graphify --url https://api.graphify.com/mcp`, then `codex mcp login graphify`, and connect a repository at [app.graphify.com](https://app.graphify.com). For a local skill instead, run `uv tool install graphifyy` and `graphify install --platform codex`.
 
 For other agents, see [how to give Claude Code a code knowledge graph](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph) and [best codebase context tools for AI coding assistants](https://graphify.com/blog/best-codebase-context-tools-for-ai-coding-assistants-2026).
+
+Open-source Graphify is licensed under Apache 2.0. Related reading: [codebase context tools compared](https://graphify.com/blog/best-codebase-context-tools-for-ai-coding-assistants-2026) and [the same setup for Claude Code](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph). Sources: [Codex MCP docs](https://developers.openai.com/codex/mcp), [Codex source on GitHub](https://github.com/openai/codex), [MCP specification](https://modelcontextprotocol.io/specification/2025-06-18).
 
 ## FAQ
 
