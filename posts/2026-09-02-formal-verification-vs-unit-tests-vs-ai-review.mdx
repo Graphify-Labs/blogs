@@ -1,0 +1,85 @@
+---
+title: "Formal verification vs testing vs AI code review"
+description: "Formal verification vs testing vs AI code review: what each one proves, what it misses, and how to combine them on a pull request without extra noise."
+date: "2026-09-02"
+keyword: formal verification vs testing
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - formal-verification
+  - testing
+  - code-review
+---
+
+Formal verification vs testing is a question about evidence. Unit tests run your code on inputs you chose and check the outputs. Formal verification uses a solver to reason about all inputs in a range at once. AI code review is a third kind of check: a model reads the change and gives an opinion. Each catches problems the others miss.
+
+This post compares the three and shows how they fit on one pull request.
+
+## What is the difference between formal verification and testing?
+
+Testing samples behavior. A passing test shows the code works for those inputs, and nothing about inputs you did not try. Formal verification proves a property for every input within its bounds, or produces a counterexample. As Edsger Dijkstra put it in 1970, "Program testing can be used to show the presence of bugs, but never to show their absence."
+
+The trade is cost. Tests are cheap to write and run. Classic verification needs a written specification. Differential verification lowers that cost by using the previous version of the code as the specification.
+
+## What does each method catch?
+
+| | Unit tests | Formal verification (differential) | AI code review |
+| --- | --- | --- | --- |
+| Evidence | Pass or fail on chosen inputs | Proof within bounds, or a distinguishing input | A model's written opinion |
+| Covers | Inputs someone thought of | Every input in the checked range | Whatever the model notices |
+| Answers | Does it do what we expect here? | Did behavior change? | Does this look risky or wrong? |
+| Misses | Untried inputs | Requirements, out-of-scope functions | Real behavior; can be wrong |
+| Repeatable | Yes | Yes, the input can be rerun | Not exactly |
+| Cost to add | Write each test | Low with the old code as reference | Low |
+
+Regehr's essay [How Does Formal Verification Affect Software Testing?](https://blog.regehr.org/archives/742) argues the same point: the methods complement each other, they do not compete.
+
+## When is AI code review the right tool?
+
+Use AI review for questions that have no single correct answer. That covers naming, design, missing error handling and risky patterns. A good reviewer also looks past the diff to the code a change can reach. Its findings are advisory, so treat each one as a lead to check, not a verdict.
+
+The risk is noise. Reviewers that flag too much get ignored. Our post on [change impact analysis with a code graph](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) shows how graph context keeps findings tied to real callers.
+
+## How do they fit on one pull request?
+
+Run them in layers:
+
+1. **Tests** confirm the behavior you expect on known cases.
+2. **Differential verification** checks whether changed functions still behave as before. A distinguishing input becomes a new test.
+3. **AI review** flags design and risk issues for a human to judge.
+
+A human reviewer then decides whether any behavior change was intended. Since 11 August, hosted [Graphify](https://app.graphify.com) runs the last two on GitHub pull requests. Reviews read the code graph, so they consider callers and dependencies beyond the diff. Formal verification compares each supported changed function with its previous version, and either proves equivalence within the checked range or finds a concrete input that differs.
+
+Since 20 August, you can also tune reviews by replying on the pull request, for example `@graphify wrong <finding>`. That feedback changes which advisory findings appear. It never changes a verification verdict. See [learning](https://docs.graphify.com/platform/learning).
+
+## Which one should I add first?
+
+If you have few tests, write tests first for the code that matters most. If your tests are solid but refactors still break things, add differential verification, because it covers inputs tests skip. Add AI review when human reviewers are the bottleneck and you want a first pass on every pull request.
+
+## Try it
+
+Connect a GitHub repository at [app.graphify.com](https://app.graphify.com) and open a pull request. The [verification docs](https://docs.graphify.com/platform/verification) explain each result. New to the graph? Read [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph).
+
+## FAQ
+
+### Is formal verification better than testing?
+
+Neither is better overall. Verification covers every input in its bounds for a property. Tests check expected behavior and integration. Use both.
+
+### Can AI code review replace unit tests?
+
+No. A review is an opinion about code. It does not execute the code, so it cannot confirm behavior.
+
+### Does formal verification prove my requirements are met?
+
+Differential verification does not. It proves the new code matches the old code. Requirements still need tests and review.
+
+### What should I do with a distinguishing input?
+
+Reproduce it, decide whether the change was intended, and add it as a regression test either way.
+
+### Do Graphify's review settings affect verification?
+
+No. Learning only changes which advisory review findings show. Verification verdicts stay as computed.
