@@ -1,0 +1,86 @@
+---
+title: "How to ask questions about your codebase in plain English"
+description: "Ask questions about your codebase in plain English with Graphify. Answers come from a code knowledge graph and point back to the files they came from."
+date: "2026-08-18"
+keyword: ask questions about your codebase
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - ask
+  - code-graph
+---
+
+Graphify is a code knowledge graph for AI coding agents, and **Ask** is the fastest way to use it without an agent at all. You ask questions about your codebase in plain English, and Graphify answers from the graph of your repository, pointing back to the parts of the code each answer came from.
+
+"Chat with your codebase" usually means a model reading whatever files a search returned. That works until the answer depends on a caller three files away. This post covers what to ask, how answers are grounded, and how the same questions work from a terminal. For the background, see [code knowledge graph vs RAG](https://graphify.com/blog/code-knowledge-graph-vs-rag).
+
+## How do you ask questions about your codebase in Graphify?
+
+Open **Ask** in the [Graphify console](https://app.graphify.com), pick an indexed repository, and type a question. Graphify follows the code graph before it answers and cites what it used. You can then open the cited code and check each step yourself, instead of trusting a summary that came from somewhere you cannot see.
+
+You need one repository with the status **Indexed**. Connecting a GitHub or GitLab repository and indexing it is covered in the [quickstart](https://docs.graphify.com/platform/quickstart).
+
+## What can I ask a code graph?
+
+Ask about structure: where something lives, who calls it, and how two parts connect. Those are the questions a graph answers well, because calls, imports and definitions are stored as edges. Questions about intent or history are weaker, since the graph holds what the code does, not why someone wrote it.
+
+Good starters:
+
+- "Where is the session token validated?"
+- "What calls `create_invoice`?"
+- "How does the upload worker reach the storage client?"
+- "What might break if I change the retry helper?"
+
+Name a real symbol, file or module when you can. One relationship per question gives a tighter answer than three at once.
+
+## How is the answer grounded?
+
+Each answer is built from nodes and edges in your repository's graph, and it cites them. When a relationship was parsed from the [tree-sitter](https://tree-sitter.github.io/tree-sitter/) syntax tree, it is a direct fact. When it was inferred from usage, the graph marks it that way. That split is explained in [grounded answers and confidence tags](https://graphify.com/blog/grounded-answers-confidence-tags).
+
+A cited answer changes how you review it. You do not argue with the prose; you open the cited file and line, and either it is there or it is not.
+
+## Graph answer vs chat over files: what is the difference?
+
+Chat over files retrieves text that looks similar to your question and asks a model to reason over it. A graph answer starts from the symbol and follows real edges, such as calls and imports. The first can miss a caller whose name never appears near your words. The second finds it, because the call is an edge.
+
+Text search still wins for exact strings, like an error message or a config key. Use both: the graph for structure, search for literals.
+
+## Can I ask the same questions from my terminal?
+
+Yes. The open-source Graphify CLI answers structural questions on a local checkout. Build a graph once, then query it, trace a path between two symbols, or explain one node. Everything runs on your machine, and nothing about your code is sent anywhere to build the graph.
+
+```bash
+uv tool install graphifyy
+graphify update .
+graphify query "where are invoices created"
+graphify path "create_invoice" "send_receipt"
+graphify explain "create_invoice"
+```
+
+The [querying docs](https://docs.graphify.com/open-source/features/querying) cover the options for each command.
+
+## Try it
+
+Index a repository in [Graphify](https://app.graphify.com) and ask it the question you would normally grep for. To work locally, run `uv tool install graphifyy` and start with `graphify query`.
+
+## FAQ
+
+### Does Ask edit my code?
+
+No. Ask answers questions and cites code. It does not change your repository.
+
+### Why is an answer missing a caller I expected?
+
+Check the repository finished indexing, and that the caller is in the same repository. Calls from another repository need a combined graph.
+
+### Can my coding agent ask the same questions?
+
+Yes. Connect the agent to the hosted MCP server at `https://api.graphify.com/mcp`, and it queries the same graph you use in Ask.
+
+### Does Ask understand questions about uncommitted work?
+
+No. Ask reads the indexed graph. Use the CLI for a graph of your local changes.
