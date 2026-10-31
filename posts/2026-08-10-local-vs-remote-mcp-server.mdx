@@ -3,6 +3,8 @@ title: "Local vs remote MCP server: when each one fits"
 description: "Local vs remote MCP server: how stdio and Streamable HTTP differ in setup, sign-in, updates and sharing, and how to pick one, with a code graph example."
 date: "2026-08-10"
 keyword: local vs remote mcp server
+imgThumb: thumb.png
+imgSocial: social.png
 authors:
   - fahad
 categories:
@@ -12,7 +14,7 @@ tags:
   - architecture
 ---
 
-A local vs remote MCP server choice comes down to where the server runs. A local server runs on your machine as a process your AI client starts, and talks over stdio. A remote server runs as a web service, and your client reaches it over Streamable HTTP at a URL. Both speak the same Model Context Protocol (MCP), so the agent sees tools either way.
+A local vs remote MCP server choice comes down to where the server runs. Graphify, a code knowledge graph for AI coding agents, ships both kinds. A local server runs on your machine as a process your AI client starts, and talks over stdio. A remote server runs as a web service, and your client reaches it over Streamable HTTP at a URL. Both speak the same Model Context Protocol (MCP), so the agent sees tools either way.
 
 The choice changes setup, sign-in, updates and who can share the server. This post compares them and shows both forms of one server, a code graph.
 
@@ -67,7 +69,7 @@ The [Graphify vs Graphify CLI comparison](https://docs.graphify.com/platform/gra
 
 ## Can a local server be shared over HTTP?
 
-Yes. Some local servers can also listen on HTTP for a small team. `graphify-mcp` takes `--transport http` and an `--api-key`, and binds to `127.0.0.1` by default:
+Yes. Some local servers can also listen on HTTP for a small team, which gives you a self-hosted remote server. You then own uptime, updates and access control. `graphify-mcp` takes `--transport http` and an `--api-key`, and binds to `127.0.0.1` by default:
 
 ```bash
 graphify-mcp graphify-out/graph.json --transport http --port 8099 --api-key "$GRAPHIFY_API_KEY"
@@ -86,6 +88,8 @@ Our explainer on [what a code knowledge graph is](https://graphify.com/blog/what
 Connect a repository at [app.graphify.com](https://app.graphify.com) to try the remote form. For the local form, run `uv tool install graphifyy` and `graphify install`.
 
 For agent-specific setup, see [how to give Cursor a code knowledge graph](https://graphify.com/blog/how-to-give-cursor-a-code-knowledge-graph) and [how to give Claude Code a code knowledge graph](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph).
+
+Open-source Graphify is licensed under Apache 2.0. Related reading: [code knowledge graphs vs RAG](https://graphify.com/blog/code-knowledge-graph-vs-rag) and [hosted graphs for GitLab](https://graphify.com/blog/gitlab-code-knowledge-graph). Sources: [MCP transports](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports), [MCP authorization](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization).
 
 ## FAQ
 
