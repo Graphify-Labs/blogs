@@ -1,0 +1,95 @@
+---
+title: "Graphify vs code-review-graph: which code graph fits?"
+description: "Graphify vs code-review-graph: two open-source tree-sitter code graphs for AI agents. What each one is built for, how they differ, and when each fits better."
+date: "2026-12-11"
+keyword: graphify vs code-review-graph
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - code-graph
+  - mcp
+  - reviews
+---
+
+Graphify is a code knowledge graph for AI coding agents, and code-review-graph is another open-source project that builds one. Searches for Graphify vs code-review-graph usually come from developers who want a graph behind Claude Code or Cursor and are choosing a tool. Both parse code with tree-sitter and serve it over MCP. They aim at different jobs.
+
+We describe code-review-graph only from its own README. If something here is out of date, its repository is the source of truth.
+
+## What is the difference between Graphify and code-review-graph?
+
+code-review-graph focuses on review context: it builds a local SQLite graph, computes the blast radius of a change and posts risk-scored pull request comments from a GitHub Action. Graphify is a general code knowledge graph that agents query for architecture, callers and paths, with confidence-tagged edges, and it comes as an open-source CLI or a hosted product.
+
+In one line each:
+
+- **code-review-graph**: "A local code knowledge graph that gives AI coding tools precise review context over MCP," in its README's words.
+- **Graphify**: a map of your repositories that your agent queries instead of grepping, on your machine or hosted at app.graphify.com.
+
+## Graphify vs code-review-graph side by side
+
+Both are open source, both use tree-sitter, and both install into many AI coding assistants. The differences are in license, storage, how the graph stays fresh, what reviews look like and whether a hosted option exists. The table below compares the open-source tools first, then notes what hosted Graphify adds on top.
+
+| | code-review-graph | Graphify CLI |
+| --- | --- | --- |
+| License | MIT | Apache 2.0 |
+| Install | `pip install code-review-graph`, then `code-review-graph install` | `uv tool install graphifyy`, then `graphify install` |
+| Storage | One SQLite file in `.code-review-graph/` | `graph.json` in `graphify-out/` |
+| Updates | Incremental, re-parses files whose SHA-256 changed, via hooks or watch mode | Rebuild or update from the CLI or assistant hooks |
+| Edges | Calls, imports and other structural edges | Calls, imports and references, each tagged EXTRACTED, INFERRED or AMBIGUOUS |
+| Beyond code | Jupyter and Databricks notebooks | Docs, PDFs and images through a model backend you choose |
+| Reviews | GitHub Action with sticky risk-scored comments and an optional `fail-on-risk` gate | Not in the CLI. Hosted Graphify reviews pull requests |
+| Hosted option | None | [app.graphify.com](https://app.graphify.com) |
+
+The open-source Graphify CLI supports about 40 languages. code-review-graph lets you add a language through a `languages.toml` file, which is a nice touch.
+
+## When does code-review-graph fit better?
+
+code-review-graph fits better when your main goal is reviewing changes locally and in CI, with no hosted service. Its GitHub Action runs on your own runner, posts risk-scored comments and can block merges. Its incremental updates are measured and fast. If you want one SQLite file and a review gate, it is a strong choice.
+
+Its README is also candid about limits. It notes that its impact recall figure is circular by construction, that small single-file edits may cost more than a plain read, and that impact analysis is conservative. That honesty is worth reading in full on the [code-review-graph repository](https://github.com/tirth8205/code-review-graph).
+
+## When does Graphify fit better?
+
+Graphify fits better when agents need to understand a codebase, not only a diff: architecture questions, callers of callers and paths between components. Confidence tags let an agent see which edges were read from code and which were inferred. If you want graphs built and refreshed for a team without running anything, hosted Graphify does that.
+
+Hosted Graphify rebuilds the graph on every push to the default branch and serves it at `https://api.graphify.com/mcp` with OAuth. It adds pull request reviews, formal verification, a generated wiki, cross-repository graphs and shared agent memory. The hosted app lists 63 grammars. The [Graphify vs Graphify CLI comparison](https://docs.graphify.com/platform/graphify-vs-local.md) lists exactly which features are hosted only.
+
+For change impact in Graphify, see our post on [change impact analysis with a code graph](https://graphify.com/blog/change-impact-analysis-with-a-code-graph).
+
+## Can I use both?
+
+You can, but pick one MCP server per question type so your agent does not get duplicate tools. A common split is code-review-graph's Action as a CI gate and Graphify as the graph your agent queries while writing code. Keep their output folders out of version control unless your team decides otherwise.
+
+Both projects improve quickly, so check each changelog before you decide.
+
+## Try it
+
+Connect a repository on the Free plan at [app.graphify.com](https://app.graphify.com), or build a graph locally:
+
+```bash
+uv tool install graphifyy
+graphify install
+```
+
+Then send `/graphify .` in your assistant. To see how graphs differ from retrieval, read [code knowledge graph vs RAG](https://graphify.com/blog/code-knowledge-graph-vs-rag).
+
+## FAQ
+
+### Is code-review-graph made by Graphify?
+
+No. It is an independent open-source project under the MIT license. Graphify is made by Graphify Labs.
+
+### Do both tools run fully locally?
+
+Both open-source tools parse code on your machine. Graphify sends docs, PDFs and images to a model only if you configure a backend.
+
+### Which one has a hosted version?
+
+Graphify. code-review-graph's README describes local storage with no cloud service.
+
+### Do I need Graphify for pull request reviews?
+
+Reviews are a hosted Graphify feature. The Graphify CLI focuses on building and querying the graph.
