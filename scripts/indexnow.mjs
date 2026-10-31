@@ -67,7 +67,8 @@ async function main() {
   const event = process.env.EVENT ?? "workflow_dispatch";
   const before = process.env.BEFORE ?? "";
   const after = process.env.AFTER ?? "HEAD";
-  const today = new Date().toISOString().slice(0, 10);
+  // graphify.com publishes on India time (UTC+5:30); a post dated later is not live yet.
+  const today = new Date(Date.now() + 330 * 60_000).toISOString().slice(0, 10);
   const push = event === "push" && before !== "" && !ZERO.test(before);
   const read = (file) => matter(fs.readFileSync(path.join(process.cwd(), file), "utf8")).data;
 
