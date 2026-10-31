@@ -3,6 +3,8 @@ title: "What is differential formal verification?"
 description: "Differential formal verification checks a changed function against its previous version: it proves they match within bounds or finds an input that differs."
 date: "2026-08-31"
 keyword: differential formal verification
+imgThumb: thumb.png
+imgSocial: social.png
 authors:
   - fahad
 categories:
@@ -12,7 +14,7 @@ tags:
   - code-review
 ---
 
-Differential formal verification is a way to check a code change by comparing the new version of a function with the old one. Instead of proving that code meets a written specification, it proves that two implementations behave the same. When they do not, it produces a concrete input where their outputs differ.
+Differential formal verification is a way to check a code change by comparing the new version of a function with the old one. Instead of proving that code meets a written specification, it proves that two implementations behave the same. When they do not, it produces a concrete input where their outputs differ. Graphify, a code knowledge graph for AI coding agents, runs this check on pull requests.
 
 That makes it a good fit for pull requests. Most changes are refactors, cleanups or fixes, and the question a reviewer asks is "did behavior change, and was that intended?"
 
@@ -20,7 +22,7 @@ That makes it a good fit for pull requests. Most changes are refactors, cleanups
 
 It checks equivalence: for every input in the checked range, do the old and new functions return the same result? The previous implementation acts as the specification. There are two useful outcomes. Either the tool proves the two match within its bounds, or it returns a distinguishing input, sometimes called a witness, with the old and new values.
 
-Researchers call this idea regression verification or equivalence checking. Microsoft Research's [SymDiff](https://www.microsoft.com/en-us/research/project/symdiff-differential-program-verifier/) is a well-known differential program verifier. KIT's [llrêve](https://formal.kastel.kit.edu/projects/improve/reve/) checks two programs for equivalence by reducing the question to logic a solver can decide.
+Researchers call this idea regression verification or equivalence checking. Microsoft Research's [SymDiff](https://www.microsoft.com/en-us/research/project/symdiff-differential-program-verifier/) is a well-known differential program verifier. KIT's [llrêve](https://formal.kastel.kit.edu/projects/improve/reve/) checks two programs for equivalence by reducing the question to logic a solver can decide. [Differential assertion checking](https://doi.org/10.1145/2491411.2491452) applies the same idea to assertions across versions.
 
 ## How is it different from classic formal verification?
 
@@ -55,6 +57,8 @@ Graphify keeps them separate. Its reviews read the code graph to see callers a c
 ## Try it
 
 Connect a GitHub repository at [app.graphify.com](https://app.graphify.com) and open a pull request that changes a function. For background on the graph, read [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph).
+
+Prefer to stay local? Run `uv tool install graphifyy` for the open-source CLI. Open-source Graphify is licensed under Apache 2.0. Related reading: [change impact analysis](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) and [asking questions about your codebase](https://graphify.com/blog/ask-questions-about-your-codebase).
 
 ## FAQ
 
