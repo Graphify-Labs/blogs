@@ -1,0 +1,85 @@
+---
+title: "How to reduce AI code review noise on pull requests"
+description: "Reduce AI code review noise: measure which comments get acted on, give the reviewer graph context, and teach it what to skip with PR feedback."
+date: "2026-09-18"
+keyword: reduce ai code review noise
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - code-review
+  - ai-review
+---
+
+To reduce AI code review noise, make every comment earn its place. A reviewer that posts ten comments when one matters trains your team to ignore all ten. The fix is a mix of measurement, better context and feedback that the reviewer learns from. Graphify, a code knowledge graph for AI coding agents, uses all three in its reviews.
+
+## Why are AI code reviews noisy?
+
+Most noise has three causes. The reviewer sees only the diff, so it guesses about code it cannot see. It flags style issues that a linter or formatter already handles. And it has no memory of what your team rejected last week, so it repeats the same comment on every pull request.
+
+## How do I measure review noise?
+
+Track how often a comment leads to a code change. ByteDance's [BitsAI-CR paper](https://arxiv.org/abs/2501.15134) uses an "Outdated Rate": the share of flagged lines that developers later changed. Its two-stage system, a rule checker followed by a filter, reached 75.0% precision in review comment generation. For Go, it kept an Outdated Rate of 26.7%, across more than 12,000 weekly active users.
+
+You do not need their pipeline to use the idea. For a sample of pull requests, count comments that were fixed, discussed or ignored. A high ignored share is your noise.
+
+## What actually cuts the noise?
+
+Split finding issues from checking them. Let the reviewer propose candidates, then keep only findings backed by evidence in the code. Hand style to tools built for it, such as [ESLint](https://eslint.org/) or [Ruff](https://docs.astral.sh/ruff/). Then let feedback mute what your team keeps rejecting.
+
+| Fix | What it removes | Effort |
+| --- | --- | --- |
+| Hand style to linters | Formatting and naming nits | Low |
+| Give the reviewer graph context | Guesses about unseen callers | Low with a code graph |
+| Filter low-confidence findings | Vague "consider" comments | Medium |
+| Teach it with feedback | Repeated false positives | Low, ongoing |
+| Separate opinions from proof | Arguments over whether behavior changed | Low with verification |
+
+## How does a code graph help?
+
+A reviewer that sees only the diff cannot tell whether a renamed parameter breaks a caller in another package. With a code graph, it checks the callers and drops the guess. Hosted [Graphify](https://app.graphify.com) reviews pull requests this way, looking beyond the diff. See [change impact analysis with a code graph](https://graphify.com/blog/change-impact-analysis-with-a-code-graph).
+
+## How do I teach the reviewer what to skip?
+
+Reply on the pull request. Feedback works best in the place the finding appears, because the reviewer sees which finding, which rule and which path you meant. Your teammates see the reply too, so the team agrees on what to mute. Since 20 August, Graphify learns from three commands:
+
+- `@graphify wrong <finding>` dismisses a finding that does not apply.
+- `@graphify good <finding>` confirms one that was useful.
+- `@graphify suppress <rule>` mutes a rule, optionally for one path.
+
+The Learn page in the console shows what has been learned: muted findings, muted patterns and recent feedback, with who gave it and where. Learning only changes which advisory findings appear. It never changes a formal verification verdict. See the [learning docs](https://docs.graphify.com/platform/learning).
+
+## Why separate review from verification?
+
+Many review threads are arguments about whether a change altered behavior. Opinion cannot settle that. Formal verification can, for supported functions: it either proves the new version matches the old within checked bounds or finds an input that differs. Graphify runs it on GitHub pull requests, so reviewers can skip "this might change behavior" comments. See the [verification docs](https://docs.graphify.com/platform/verification).
+
+## Try it
+
+Connect a repository at [app.graphify.com](https://app.graphify.com), open a pull request and reply `@graphify wrong` to the first finding you disagree with. Background: [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph).
+
+Prefer to stay local? Run `uv tool install graphifyy` for the open-source CLI. Open-source Graphify is licensed under Apache 2.0. Related reading: [change impact analysis](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) and [shared codebase context for teams](https://graphify.com/blog/shared-codebase-context-for-teams).
+
+## FAQ
+
+### What is a good precision target for AI code review?
+
+Measure your own baseline first. BitsAI-CR reports 75.0% precision in production, which is a useful reference point.
+
+### Should I turn off AI review for small pull requests?
+
+Not necessarily. Muting noisy rules usually works better than turning the reviewer off.
+
+### Does muting a rule hide real bugs?
+
+It can. Scope suppressions to a path when possible, and check the Learn page now and then.
+
+### Can feedback change a verification result?
+
+No. Feedback only affects advisory review findings. Verification verdicts stay as computed.
+
+### Who can teach Graphify?
+
+Anyone who replies on the pull request with a command. The Learn page records who gave each piece of feedback.
