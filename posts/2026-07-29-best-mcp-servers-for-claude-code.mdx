@@ -3,6 +3,8 @@ title: "Best MCP servers for Claude Code: a code graph first"
 description: "The best MCP servers for Claude Code by job: code structure, repos, docs, browser and errors. What each adds, when to skip it and how to add one."
 date: "2026-07-29"
 keyword: best mcp servers claude code
+imgThumb: thumb.png
+imgSocial: social.png
 authors:
   - fahad
 categories:
@@ -12,7 +14,7 @@ tags:
   - mcp
 ---
 
-The best MCP servers for Claude Code are the ones that show it something it cannot already see. Claude Code already reads, edits and searches files. An MCP (Model Context Protocol) server earns its place when it adds a new source: your repository's structure, your issues, live docs, a browser or production errors.
+The best MCP servers for Claude Code are the ones that show it something it cannot already see. Claude Code already reads, edits and searches files. An MCP (Model Context Protocol) server earns its place when it adds a new source: your repository's structure, your issues, live docs, a browser or production errors. Graphify, a code knowledge graph for AI coding agents, is the server this guide puts first.
 
 This guide groups servers by the job they do. It also says when to skip one, because every server adds tool descriptions to the context before you type a word.
 
@@ -40,7 +42,7 @@ Grep is still right for an exact string, such as an error message. The graph is 
 
 ## How do I add a remote MCP server to Claude Code?
 
-Use `claude mcp add` with `--transport http`. Claude Code's [MCP documentation](https://code.claude.com/docs/en/mcp) recommends HTTP for remote servers, and it supports OAuth sign-in in the browser. Hosted Graphify works this way:
+Use `claude mcp add` with `--transport http`. Claude Code's [MCP documentation](https://code.claude.com/docs/en/mcp) recommends HTTP for remote servers, and it supports OAuth sign-in in the browser. Hosted Graphify works this way. Add it once with `--scope user` so every project can use it, then run `/mcp` inside Claude Code to sign in and confirm the tools loaded:
 
 ```bash
 claude mcp add --transport http --scope user graphify https://api.graphify.com/mcp
@@ -69,7 +71,7 @@ You need a repository connected at app.graphify.com first. The [Claude Code inte
 
 ## Can I run a code graph server locally instead?
 
-Yes. The open-source Graphify CLI ships `graphify-mcp`, a local server over stdio. Build a graph, install the MCP extra and register it with an absolute path:
+Yes. The open-source Graphify CLI ships `graphify-mcp`, a local server over stdio, so your code never leaves your machine and no account is needed. Open-source Graphify is licensed under Apache 2.0. Build a graph, install the MCP extra and register it with an absolute path:
 
 ```bash
 uv tool install "graphifyy[mcp]"
@@ -87,6 +89,8 @@ Check credentials as well. Give each server the narrowest scope that works, and 
 ## Try it
 
 Connect a repository at [app.graphify.com](https://app.graphify.com) and run the `claude mcp add` command above. Prefer local? Run `uv tool install graphifyy`, then `graphify install`. Our guide on [giving Claude Code a code knowledge graph](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph) shows the questions to ask first.
+
+Related reading: [giving Claude Code a code knowledge graph](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph) and [code knowledge graphs vs RAG](https://graphify.com/blog/code-knowledge-graph-vs-rag).
 
 ## FAQ
 
