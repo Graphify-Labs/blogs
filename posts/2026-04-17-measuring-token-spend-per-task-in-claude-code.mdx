@@ -1,0 +1,87 @@
+---
+title: "Claude Code token tracking: measure spend per task"
+description: "Claude Code token tracking per task: use /cost, local usage logs, and a fixed task set to see whether a change cuts token spend."
+date: "2026-04-17"
+keyword: claude code token tracking
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - claude-code
+  - tokens
+  - measurement
+imgThumb: thumb.png
+imgSocial: social.png
+---
+
+Claude Code token tracking means recording how many input and output tokens a task used, so you can compare one way of working with another. Session totals are easy to get. The useful number is per task: the same job, run the same way, measured before and after a change such as adding a code graph. This guide measures how Graphify, an open-source code graph CLI, changes those numbers.
+
+## What does Claude Code token tracking show by default?
+
+The `/cost` command prints token use and estimated spend for the current session. Anthropic's [cost documentation](https://docs.anthropic.com/en/docs/claude-code/costs) explains it and lists ways to reduce use. For teams, Claude Code can export usage through OpenTelemetry, described in the [monitoring guide](https://docs.anthropic.com/en/docs/claude-code/monitoring-usage).
+
+Those numbers are per session. A session often mixes several tasks, so a session total cannot tell you which task was expensive or why.
+
+## How do you measure token spend per task?
+
+Make the task the unit. Start each task in a fresh session with `/clear`, do one job, then record `/cost` before moving on. Write the result down with the task name and the date. Over a week, this gives a small table you can compare.
+
+Community tools help with history. [ccusage](https://github.com/ryoppippi/ccusage) reads Claude Code's local usage logs and reports tokens by day and by session. If each session is one task, its session report becomes a per-task report.
+
+## How do you run a fair before-and-after test?
+
+Keep everything fixed except the one change you are testing. Pick five to ten real tasks from your repository. Write each as a single prompt. Run them with the same model, the same CLAUDE.md, and fresh sessions. Then make the change and run the same prompts again.
+
+| Keep fixed | Why it matters |
+|---|---|
+| Model and settings | Different models use tokens differently |
+| Prompt wording | Small wording changes alter the search path |
+| Starting state | Fresh session, same commit |
+| Success check | A cheap wrong answer is not a saving |
+
+Record whether each task succeeded, not only what it cost. Run each task more than once if you can, because agent runs vary. Report the median, the date, and the setup. Results vary by codebase, so a number from one repository is not a promise for another.
+
+## Where do the tokens usually go?
+
+Look at the transcript of an expensive task. The cost is rarely the final answer. It is usually the discovery phase: grepping for a name, reading whole files to find one function, then searching again. Output tokens tend to be small next to the input that tool results add.
+
+That tells you what to change. Shorter instructions help a little. Fewer exploratory reads help more.
+
+## How does a code graph fit into the measurement?
+
+Graphify builds a code knowledge graph of the repository, parsed locally with tree-sitter. With `graphify claude install`, Claude Code reads `GRAPH_REPORT.md` first and can run `graphify query` instead of searching raw files. That changes the discovery phase, which is the part your measurements should show.
+
+Measure it with your own tasks. Run the task set without the graph, build the graph with `/graphify .`, then run the set again. Building the graph has its own cost the first time, from model calls for docs and images. Code-only rebuilds after that run locally. Count both in your comparison.
+
+## Where does Claude Code store token data?
+
+Claude Code writes each session as JSONL files under `~/.claude/projects/`. Each assistant message in those files records its token usage. Tools such as ccusage read those files locally, so no API key or upload is needed. That makes the logs the most detailed source for per-task measurement.
+
+To isolate one task, note the session file it ran in. Then sum input, output and cache tokens for just that session.
+
+## FAQ
+
+### Is /cost exact?
+
+It reports the usage Claude Code recorded for the session, with an estimated price. Use your provider's billing console for invoiced amounts.
+
+### Why do the same tasks cost different amounts on different runs?
+
+Agents choose different search paths on different runs. Repeat each task and compare medians, not single runs.
+
+### What tasks make a good test set?
+
+Real questions you ask often, such as "where is X handled" or "what breaks if I change Y". Avoid toy tasks that fit in one file.
+
+### Does the graph-building step count toward cost?
+
+Yes, the first extraction of docs, PDFs, and images uses your assistant's model. Code parsing is local. Include the build in your totals.
+
+### What should I report to my team?
+
+The task list, model, date, median tokens per task before and after, and success rate. Add that results vary by codebase.
+
+## Next steps
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy` and run `graphify install`. Read [what fills the Claude Code context window](/blog/claude-code-context-window-what-fills-it-and-how-to-keep-it-lean) and [CLAUDE.md best practices](/blog/claude-md-vs-a-code-graph-what-belongs-where). The [token reduction glossary entry](https://graphify.com/glossary/token-reduction) and the [Claude Code integration page](https://graphify.com/integrations/claude-code) explain the terms. Setup details are in the [installation docs](https://docs.graphify.com/open-source/installation).
