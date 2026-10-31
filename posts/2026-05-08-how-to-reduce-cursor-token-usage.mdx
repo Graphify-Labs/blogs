@@ -1,0 +1,97 @@
+---
+title: "How to reduce Cursor token usage"
+description: "How to reduce Cursor token usage: start new chats, keep rules short, mention exact files, and give Cursor a code graph so it searches less."
+date: "2026-05-08"
+keyword: reduce cursor token usage
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - cursor
+  - tokens
+  - context
+imgThumb: thumb.png
+imgSocial: social.png
+---
+
+To reduce Cursor token usage, cut what goes into each request: old chat history, long always-on rules, and the results of broad codebase searches. Start a new chat per task, keep rules short, point Cursor at exact files, and give the agent a code map. The map means fewer search-and-read loops, which are where most tokens go. Graphify, an open-source CLI, adds a code graph that Cursor can query instead of reading whole files.
+
+## What drives Cursor token usage?
+
+Cursor token usage is mostly input. Each agent request carries the rules that apply, the conversation so far, the files you attached, and the output of tools the agent ran. Search and read tools add the most, because the agent reads files to learn where things are. Cursor's [documentation on models and pricing](https://docs.cursor.com/models) explains how requests are counted.
+
+## How do you reduce Cursor token usage day to day?
+
+Most savings come from five habits. Cursor's [community forum](https://forum.cursor.com/) collects many variations, but these cover the main cases.
+
+| Habit | Why it helps |
+|---|---|
+| New chat per task | Old history stops riding along |
+| Short, scoped rules | Always-on rules load on every request |
+| Mention exact files with @ | The agent skips the search |
+| Smaller model for simple edits | Cheaper per token |
+| A code map the agent can read | Fewer exploratory searches |
+
+## Why do rules cost tokens?
+
+A rule with `alwaysApply: true` is added to every request in the project. Cursor's [rules documentation](https://docs.cursor.com/context/rules) explains the rule types. Keep always-on rules to a few lines. Put long guidance in rules that apply only to matching files, or that the agent pulls in when relevant.
+
+The same logic applies to architecture notes. A long description of your modules in a rule is paid for on every request, and it goes stale.
+
+## How does a code graph cut Cursor's searches?
+
+A code knowledge graph is a map of a repository's functions, classes, files, and the calls and imports between them. Graphify is an open-source CLI that builds one. It parses code locally with tree-sitter, so building the code graph sends no source to a model.
+
+Install it and add the skill for Cursor:
+
+```bash
+uv tool install graphifyy
+graphify cursor install
+```
+
+`graphify cursor install` writes `.cursor/rules/graphify.mdc` with `alwaysApply: true`. The rule is short. It tells Cursor to read `graphify-out/GRAPH_REPORT.md` before answering architecture questions. It also asks Cursor to run `graphify update .` after editing code, which rebuilds the code graph locally with no API cost.
+
+Build the graph by typing `/graphify .` in Cursor's chat. Then the agent can read the report, which lists the most connected nodes and clusters, instead of opening files to discover structure.
+
+## How does Cursor ask the graph a specific question?
+
+The agent can run the CLI in the terminal. `graphify query "what calls the session store?"` returns the nodes and edges that answer it. The `--budget` flag caps the output at a token count. `graphify path "A" "B"` returns the shortest chain between two symbols, and `graphify explain "Name"` lists a node's connections.
+
+Each answer is a few lines of structure with file and line references. Cursor then opens only the files it needs.
+
+## How do you check that usage went down?
+
+Compare the same tasks. Pick five real requests, run them in new chats, and note usage from your Cursor dashboard. Build the graph and repeat with the same prompts and model. The first graph build costs model calls for any docs and images. Results vary by codebase, so measure on yours. The method is in our post on [measuring token spend per task](/blog/measuring-token-spend-per-task-in-claude-code).
+
+## Should you use .cursorignore and trim MCP servers?
+
+Yes. A `.cursorignore` file keeps build output, vendored code and large generated files out of indexing and agent reads. Each enabled MCP server also adds its tool definitions to the context. Turn off servers you are not using in this project. Both changes cut tokens on every request, not just on one task.
+
+Keep the graph tool on. It replaces many searches with one small answer.
+
+## FAQ
+
+### Does the Graphify rule add many tokens?
+
+No. It is a few lines. The report it points to is read when an architecture question comes up.
+
+### Does Cursor's own indexing do the same thing?
+
+Cursor's codebase index helps find relevant text. A code graph adds explicit relationships, such as who calls a function, with tags that show how each was found.
+
+### Do I need to rebuild the graph after every edit?
+
+The rule asks Cursor to run `graphify update .` after code edits. You can also run `graphify hook install` to rebuild on every commit.
+
+### Can I remove the rule later?
+
+Yes. Run `graphify cursor uninstall` to delete `.cursor/rules/graphify.mdc`.
+
+### Does Graphify send code to a model?
+
+Not for code. Docs, PDFs, and images go through the model your Cursor chat uses.
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. The [Cursor integration page](https://graphify.com/integrations/cursor) covers setup. Using Codex too? Read [how to reduce Codex CLI token usage](/blog/how-to-reduce-codex-cli-token-usage). Setup details are in the [installation docs](https://docs.graphify.com/open-source/installation).
