@@ -1,0 +1,106 @@
+---
+title: "Knowledge graph terms: a glossary for developers"
+description: "Knowledge graph terms for developers, defined plainly: node, edge, triple, ontology, traversal, community, god node, embedding, GraphRAG, and more."
+date: "2026-05-29"
+keyword: knowledge graph terms
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - glossary
+  - knowledge-graph
+  - code-graph
+imgThumb: thumb.png
+imgSocial: social.png
+---
+
+A knowledge graph glossary is a set of short definitions for the terms developers meet when working with code graphs, graph databases, and graph-based retrieval. Each entry is one or two plain sentences. Where Graphify, the open-source code graph CLI, uses a term in a specific way, the entry says so.
+
+## What are the core knowledge graph terms?
+
+The core terms are knowledge graph, node, edge, and relation. A **knowledge graph** is a set of entities and the named relationships between them, stored so a program can query them. In a code knowledge graph, entities are functions, classes, and files. Nodes are the entities, and edges are the relationships between them.
+
+**Node.** One entity in the graph, also called a vertex. A node has a label and properties, such as a source file and line.
+
+**Edge.** A relationship between two nodes, such as `calls` or `imports`. Edges in code graphs are usually directed: A calls B is not B calls A.
+
+**Triple.** A subject, predicate, and object, such as `handle calls check_token`. The [W3C RDF primer](https://www.w3.org/TR/rdf11-primer/) uses triples as the basic unit of a graph.
+
+**Property graph.** A model where nodes and edges both carry key-value properties. Neo4j's [graph database concepts](https://neo4j.com/docs/getting-started/graph-database/) describe it.
+
+**Ontology.** The schema of a graph: which entity types and relationship types exist, and how they may connect.
+
+## Which terms describe querying a graph?
+
+Querying terms describe how you get answers out of a graph. **Traversal** means walking from node to node along edges to answer a question. Breadth-first search explores neighbours level by level. Depth-first search follows one path as far as it goes. A shortest path is the fewest hops between two nodes.
+
+**Path.** A sequence of edges joining two nodes. The shortest path is the one with the fewest hops.
+
+**Neighbours.** The nodes one edge away from a given node.
+
+**Degree.** The number of edges attached to a node. A high degree means many connections.
+
+**Multi-hop question.** A question whose answer needs several edges, such as how a request reaches the database.
+
+## Which terms describe graph structure?
+
+Structure terms describe the shape of the graph as a whole. A **community** is a group of nodes more densely connected to each other than to the rest. Graphify detects communities with Leiden or Louvain. A god node is one of the most connected nodes. Degree is a node's number of edges.
+
+**God node.** Graphify's name for the most connected nodes, listed in `GRAPH_REPORT.md` as core abstractions.
+
+**Blast radius.** The set of code that a change could affect, found by walking edges in reverse.
+
+**Confidence tag.** In Graphify, each edge is tagged EXTRACTED, INFERRED, or AMBIGUOUS to show how it was found.
+
+## Which terms connect graphs and AI?
+
+These terms come up when a graph feeds a language model. An **embedding** is a list of numbers that represents text or code, used for similarity search. Retrieval-augmented generation, or RAG, fetches context before the model answers. GraphRAG builds that context from a graph. An MCP server exposes a graph to an agent as tools.
+
+**Vector database.** A store that indexes embeddings and returns the nearest ones to a query.
+
+**RAG.** Retrieval-augmented generation: fetch relevant context, then pass it to a language model.
+
+**GraphRAG.** A RAG method that builds a graph from text and answers from it. See [what is GraphRAG](/blog/what-is-graphrag-and-does-code-need-it).
+
+**MCP server.** A program that exposes tools to AI assistants over the Model Context Protocol.
+
+## How do the terms compare?
+
+The terms fall into a few kinds: entities, relationships, groups, and query methods. Seeing them side by side makes the differences clear. The table below gives each term, its kind, and a concrete example. The examples come from a small code graph of an authentication module, used across this blog.
+
+| Term | Is a | Example in a code graph |
+|---|---|---|
+| Node | Entity | `check_token()` |
+| Edge | Relationship | `handle` calls `check_token` |
+| Community | Cluster of nodes | The auth module's functions |
+| God node | High-degree node | A shared `Client` class |
+| Traversal | Query method | BFS from `handle` |
+
+## What are SPARQL and Cypher?
+
+They are query languages for graphs. SPARQL queries RDF data, which is stored as subject, predicate and object triples. Cypher queries property graphs, such as Neo4j, where nodes and edges carry key-value properties. A code graph is usually a property graph. So Cypher is the one developers meet most often.
+
+Graphify can export its graph as Cypher statements for Neo4j.
+
+## FAQ
+
+### Is a knowledge graph the same as a graph database?
+
+No. A knowledge graph is the data. A graph database is one way to store it.
+
+### What is the difference between a node and an entity?
+
+Mostly none. "Entity" is the real thing, and "node" is its place in the graph.
+
+### Do code graphs use ontologies?
+
+Loosely. Node and edge types act as a small built-in schema.
+
+### Where can I see these terms in practice?
+
+Build a graph with `uv tool install graphifyy` then `graphify update .`, and read `GRAPH_REPORT.md`.
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Browse the [knowledge graph glossary entry](https://graphify.com/glossary/knowledge-graph) and the [community detection docs](https://docs.graphify.com/open-source/features/community-detection). Related: [call graph vs dependency graph](/blog/call-graph-vs-dependency-graph-vs-code-knowledge-graph).
