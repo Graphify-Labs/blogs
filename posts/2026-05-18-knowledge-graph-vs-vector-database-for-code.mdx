@@ -1,0 +1,95 @@
+---
+title: "Knowledge graph vs vector database: which fits your use?"
+description: "Knowledge graph vs vector database: one stores explicit relationships, the other stores embeddings for similarity search. When to use each, with a table."
+date: "2026-05-18"
+keyword: knowledge graph vs vector database
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - knowledge-graph
+  - vector-database
+  - rag
+imgThumb: thumb.png
+imgSocial: social.png
+---
+
+A knowledge graph is a store of entities and the named relationships between them, while a vector database stores embeddings and finds items whose embeddings are close to a query. Graphify, an open-source CLI, builds the first kind for code. One answers "how are these connected?" The other answers "what looks like this?"
+
+## What is a knowledge graph?
+
+A knowledge graph is a set of nodes and typed edges. In a code knowledge graph, nodes are functions, classes, and files. Edges are relationships such as `calls` and `imports`. Neo4j's [graph database concepts](https://neo4j.com/docs/getting-started/graph-database/) describe the same model with nodes, relationships, and properties. Queries follow edges, so a multi-step question becomes a traversal.
+
+## What is a vector database?
+
+A vector database indexes embeddings and runs nearest-neighbour search. Text is split into chunks, each chunk is embedded by a model, and a query is embedded the same way. The database returns the closest chunks. Pinecone's [explainer on vector databases](https://www.pinecone.io/learn/vector-database/) covers the indexing methods.
+
+## How do they compare?
+
+They differ in what they store, how you query them, and what they are good at. A graph answers multi-hop questions with visible edges. A vector store answers fuzzy questions with a similarity score. Build and update costs differ too, because one parses and the other embeds. The table sets them side by side.
+
+| | Knowledge graph | Vector database |
+|---|---|---|
+| Stores | Nodes and typed edges | Embeddings of chunks |
+| Query | Traversal, path, neighbours | Similarity search |
+| Good at | Multi-hop, exact relationships | Fuzzy matching, paraphrase |
+| Explainability | Each edge is visible | Similarity score only |
+| Build cost | Parsing or extraction | Embedding every chunk |
+| Updates | Re-parse changed files | Re-embed changed chunks |
+
+## When should you use a knowledge graph?
+
+Use a graph when the answer is a relationship. In code: what calls this function, what imports this module, how request handling reaches the database. A similarity search can find code that mentions the database. It cannot tell you the call chain.
+
+Graphs also carry provenance. In Graphify, each edge is tagged EXTRACTED when parsed from source or INFERRED when reasoned, with a confidence score. See [Graphify's edge tags](/blog/extracted-inferred-ambiguous-graphifys-edge-tags-explained).
+
+## When should you use a vector database?
+
+Use vectors when wording varies and the question is "find things like this". Searching support tickets, docs, or chat logs by meaning is the classic case. Embeddings handle synonyms and paraphrase that a graph would need explicit edges for. They are also quicker to set up when your data has no clear structure to parse.
+
+## Can you use both?
+
+Yes. Many systems retrieve candidate chunks by similarity, then follow graph edges to pull in related context. That pairs fuzzy recall with exact relationships. Microsoft's [GraphRAG work](https://arxiv.org/abs/2404.16130) builds a graph from text to answer questions that span a whole corpus. For code, the graph can come straight from parsing instead.
+
+For code, a graph can be built without embeddings. Graphify parses source with tree-sitter locally:
+
+```bash
+uv tool install graphifyy
+graphify update .
+graphify path "handle" "verify"
+```
+
+`path` returns the chain of edges between two symbols.
+
+## How does a hybrid search work for code?
+
+Use vector search to find where to start, then the graph to follow structure. A natural-language question such as "where do we retry payments" finds likely functions by meaning. From those nodes, graph edges give callers, callees and imports exactly. The vector step finds the entry point. The graph step gives the facts.
+
+This keeps both parts doing what they are good at.
+
+## FAQ
+
+### Is a knowledge graph better than a vector database?
+
+Neither is better in general. They answer different questions.
+
+### Does a knowledge graph need embeddings?
+
+No. Edges can come from parsing, as with code, or from extraction by a model.
+
+### Can a graph database store vectors?
+
+Some can. Neo4j, for example, offers vector indexes alongside graph queries.
+
+### Which is cheaper to keep current?
+
+For code, re-parsing changed files is local and needs no model. Re-embedding needs a model call per changed chunk.
+
+### Is Graphify a vector database?
+
+No. Graphify builds a code knowledge graph and stores it as `graph.json`.
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. Compare approaches on [Graphify vs vector databases](https://graphify.com/vs/vector-databases) and see the [querying docs](https://docs.graphify.com/open-source/features/querying). Related: [context engineering for coding agents](/blog/context-engineering-for-coding-agents).
