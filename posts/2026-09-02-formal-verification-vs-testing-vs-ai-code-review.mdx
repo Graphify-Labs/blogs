@@ -3,6 +3,8 @@ title: "Formal verification vs testing vs AI code review"
 description: "Formal verification vs testing vs AI code review: what each one proves, what it misses, and how to combine them on a pull request without extra noise."
 date: "2026-09-02"
 keyword: formal verification vs testing
+imgThumb: thumb.png
+imgSocial: social.png
 authors:
   - fahad
 categories:
@@ -13,17 +15,19 @@ tags:
   - code-review
 ---
 
-Formal verification vs testing is a question about evidence. Unit tests run your code on inputs you chose and check the outputs. Formal verification uses a solver to reason about all inputs in a range at once. AI code review is a third kind of check: a model reads the change and gives an opinion. Each catches problems the others miss.
+Formal verification vs testing is a question about evidence. Unit tests run your code on inputs you chose and check the outputs. Formal verification uses a solver to reason about all inputs in a range at once. AI code review is a third kind of check: a model reads the change and gives an opinion. Each catches problems the others miss. Graphify, a code knowledge graph for AI coding agents, runs the last two on pull requests.
 
 This post compares the three and shows how they fit on one pull request.
 
 ## What is the difference between formal verification and testing?
 
-Testing samples behavior. A passing test shows the code works for those inputs, and nothing about inputs you did not try. Formal verification proves a property for every input within its bounds, or produces a counterexample. As Edsger Dijkstra put it in 1970, "Program testing can be used to show the presence of bugs, but never to show their absence."
+Testing samples behavior. A passing test covers only the inputs you tried. Formal verification proves a property for every input within its bounds, or produces a counterexample. In his lecture [On the reliability of programs](https://www.cs.utexas.edu/~EWD/transcriptions/EWD03xx/EWD303.html), Edsger Dijkstra wrote that "program testing can be used very effectively to show the presence of bugs but never to show their absence."
 
 The trade is cost. Tests are cheap to write and run. Classic verification needs a written specification. Differential verification lowers that cost by using the previous version of the code as the specification.
 
 ## What does each method catch?
+
+Tests catch regressions on known cases, verification catches any behavior change in the checked range, and AI review catches design and risk issues that no test encodes. None covers the others' gaps. Formal results also hold only within the tool's model and assumptions, so read each result with its scope.
 
 | | Unit tests | Formal verification (differential) | AI code review |
 | --- | --- | --- | --- |
@@ -44,7 +48,7 @@ The risk is noise. Reviewers that flag too much get ignored. Our post on [change
 
 ## How do they fit on one pull request?
 
-Run them in layers:
+Run them in layers, cheapest and most certain first, so each layer filters what the next one has to judge. Tests and verification produce evidence that can be rerun. Review produces leads that a person checks. The order keeps reviewers focused on intent rather than on whether behavior changed:
 
 1. **Tests** confirm the behavior you expect on known cases.
 2. **Differential verification** checks whether changed functions still behave as before. A distinguishing input becomes a new test.
@@ -61,6 +65,8 @@ If you have few tests, write tests first for the code that matters most. If your
 ## Try it
 
 Connect a GitHub repository at [app.graphify.com](https://app.graphify.com) and open a pull request. The [verification docs](https://docs.graphify.com/platform/verification) explain each result. New to the graph? Read [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph).
+
+Prefer to stay local? Run `uv tool install graphifyy` for the open-source CLI. Open-source Graphify is licensed under Apache 2.0. Related reading: [change impact analysis](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) and [auditing inferred edges](https://graphify.com/blog/how-to-audit-inferred-edges). Sources: [Hypothesis docs](https://hypothesis.readthedocs.io/).
 
 ## FAQ
 
