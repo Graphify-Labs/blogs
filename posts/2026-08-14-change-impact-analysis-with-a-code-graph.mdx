@@ -1,0 +1,124 @@
+---
+title: "Change impact analysis with a code graph"
+description: "Change impact analysis with a code graph: walk callers in reverse, read each hop with its file and line, and see what an edit reaches before you make it."
+date: "2026-08-14"
+keyword: change impact analysis
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - impact-analysis
+  - graph
+  - cli
+---
+
+Graphify is a code knowledge graph for AI coding agents: it turns a repository into nodes for files, classes and functions, and edges for the calls, imports and references between them. Change impact analysis is the question that graph answers best. Before you edit a function, you want the list of code that depends on it, with a file and line for every entry, not a guess from a text search.
+
+I've shipped the "tiny helper refactor" that broke signing in a module I never opened. Grep said three call sites. The graph said 23 connections. This post shows how I check that now: first in Graphify, then with open-source Graphify on [itsdangerous](https://github.com/pallets/itsdangerous). Every command and output below comes from that run.
+
+## What is change impact analysis?
+
+Change impact analysis is the step of listing what a proposed change can reach before you make it. In a code graph that means a reverse walk: start at the node you plan to edit, follow incoming calls, imports and references, and stop at a chosen depth. The result is a bounded list of dependents you can read and test.
+
+Text search finds where a name appears. It does not tell a call from a comment, and it cannot follow a second hop. A [code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph) stores the relationships themselves, so a two-hop question is one traversal instead of several rounds of grep.
+
+## How do you check change impact in Graphify?
+
+Open the node you plan to edit and read its **What a change could affect** panel. It lists **Possible dependents** at depth 1, 2 or 3, with 2 as the default, and shows the hop count for each one. Start at 2, read the list, then open the dependents that sit on public code before you touch anything.
+
+1. Index the repository in [Graphify](https://app.graphify.com).
+2. Find the symbol in the graph and open its node.
+3. In **What a change could affect**, keep depth 2 and read **Possible dependents**.
+4. Switch to depth 3 if the symbol is part of a public interface.
+
+An empty list is not a green light. The panel says so itself: "Dynamic and external callers may not be represented." I treat that line as a reminder to grep for string-built names before I merge.
+
+## How do you find what a change affects with the Graphify CLI?
+
+Build a graph, then run `graphify affected` on the node you plan to change. The build is AST-only and needs no model or API key. The command walks incoming edges to depth 2 by default and prints each dependent with the relation that links it and the file and line where that relation appears.
+
+```bash
+uv tool install graphifyy
+cd itsdangerous
+graphify update .
+graphify affected "want_bytes()"
+```
+
+```text
+Affected nodes for want_bytes()
+Relations: calls, indirect_call, references, imports, imports_from, dynamic_import, re_exports, inherits, extends, implements, uses, mixes_in, embeds, defines, requires
+Depth: 2
+- base64_decode() [calls] src/itsdangerous/encoding.py:L32
+- .get_signature() [calls] src/itsdangerous/signer.py:L217
+...
+```
+
+`want_bytes()` is a small helper that coerces strings to bytes. It looks harmless to change. The graph shows it sits under signing and decoding, which is the core of the library. Ranked by degree, it is the fourth most connected node in the whole graph:
+
+```bash
+graphify god-nodes
+```
+
+```text
+Serializer 36
+Signer 25
+TestSerializer 24
+want_bytes() 23
+```
+
+## How do you check one hop in detail?
+
+Use `graphify explain` on any dependent to see its own connections, each tagged with how the edge was found. That tells you whether a hop was read directly from the syntax tree or worked out by a resolver, and where to look in the source to confirm it before you trust the path.
+
+```bash
+graphify explain "base64_decode()"
+```
+
+```text
+Connections (14):
+  <-- .verify_signature() [calls] [EXTRACTED] src/itsdangerous/signer.py:L230
+...
+```
+
+All 14 connections on `base64_decode()` are EXTRACTED, so each one is a call the parser found at that exact line. The [confidence tags](https://graphify.com/glossary/confidence-tags) post covers what the other tags mean.
+
+## How does impact analysis work on pull requests?
+
+On open pull requests, `graphify prs` applies the same idea to a diff: it maps the changed files onto the graph and reports what each pull request touches. `graphify prs --conflicts` flags open pull requests that change the same part of the graph, so you can see a collision before either one merges.
+
+In the hosted app, the [pull request reviews](https://docs.graphify.com/platform/reviews.md) that shipped on August 11 run this analysis for you on every pull request, using the graph of the indexed repository. The [check impact guide](https://docs.graphify.com/concepts/check-impact.md) shows how to ask your agent the same question over MCP.
+
+## What are the limits of graph-based impact analysis?
+
+A graph only knows the edges it could resolve. Calls made through reflection, string-built names or plugin registries may be missing or appear as inferred edges. Treat the result as a starting list, read each entry, and run the tests linked to it. A short list is a reason to check the build, not proof of safety.
+
+Depth matters too. Depth 1 is direct callers. Depth 2 adds their callers, which is usually where surprises live. Going deeper grows the list fast on a central node, so start at 2 and widen only when the change is to a public interface.
+
+## Try it on your own code
+
+The fastest path is [Graphify](https://app.graphify.com): index a repository, open a node, and read **What a change could affect**. Your agent can ask the same question over the hosted MCP server. Prefer local? Run open-source Graphify:
+
+```bash
+uv tool install graphifyy
+graphify update .
+graphify affected "your_function()"
+```
+
+See the [Graphify docs](https://docs.graphify.com) for the full command reference, and [graphify.com](https://graphify.com) for plans.
+
+## FAQ
+
+### Does change impact analysis need an LLM?
+
+No. Open-source Graphify builds the code graph from tree-sitter syntax trees on your machine, and `graphify affected` is a graph traversal. No model is called and no code leaves the machine.
+
+### What depth should I use?
+
+Start with the default of 2. Use 1 for a private helper and 3 for a public API or a shared library.
+
+### Why does `graphify affected` say "No unique node match"?
+
+The name matched more than one node or none. Use the label the graph prints, such as `want_bytes()` or `.get_signature()`, or pass the node ID from `graphify explain`.
