@@ -23,8 +23,37 @@ export type Post = {
   tags: string[];
   imgSocial?: string;
   imgThumb?: string;
+  /** Pins the post as the blog lead, whatever its date. At most one post sets it. */
+  featured?: boolean;
+  /** Question and answer pairs; the site emits them as FAQPage structured data. */
+  faq?: Faq[];
   body: string;
 };
+
+export type Faq = { question: string; answer: string };
+
+/** Today's date in India (UTC+5:30), the day graphify.com publishes on. */
+export function todayIST(now = new Date()): string {
+  return new Date(now.getTime() + 330 * 60_000).toISOString().slice(0, 10);
+}
+
+/** A post is public from its date (IST). Until then it stays off every list, route, feed and sitemap. */
+export function isPublished(post: Pick<Post, "date">, today = todayIST()): boolean {
+  return post.date <= today;
+}
+
+function optionalFaq(value: unknown, label: string): Faq[] | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length === 0) throw new Error(`${label} must be a list of { question, answer }`);
+  return value.map((item, i) => {
+    const q = (item as { question?: unknown })?.question;
+    const a = (item as { answer?: unknown })?.answer;
+    if (typeof q !== "string" || q.trim() === "" || typeof a !== "string" || a.trim() === "") {
+      throw new Error(`${label} item ${i + 1} needs a question and an answer`);
+    }
+    return { question: q.trim(), answer: a.trim() };
+  });
+}
 
 const RESERVED = new Set(["categories", "authors", "tags", "feed.xml"]);
 const TAG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -152,6 +181,9 @@ export function parsePost(filename: string, raw: string, authors: Record<string,
     seenTags.add(tag);
   }
   assertSafeBody(filename, parsed.content);
+  if (data.featured !== undefined && typeof data.featured !== "boolean") {
+    throw new Error(`${filename}: featured must be true or false`);
+  }
 
   return {
     slug,
@@ -165,6 +197,8 @@ export function parsePost(filename: string, raw: string, authors: Record<string,
     tags,
     imgSocial: optionalFile(data.imgSocial, `${filename}: imgSocial`),
     imgThumb: optionalFile(data.imgThumb, `${filename}: imgThumb`),
+    ...(data.featured === true ? { featured: true } : {}),
+    ...(data.faq !== undefined ? { faq: optionalFaq(data.faq, `${filename}: faq`) } : {}),
     body: parsed.content.trim(),
   };
 }
@@ -189,5 +223,7 @@ export function getPosts(dir = path.join(process.cwd(), "posts")): Post[] {
     if (seen.has(post.slug)) throw new Error(`Duplicate slug: ${post.slug}`);
     seen.add(post.slug);
   }
+  const featured = posts.filter((post) => post.featured);
+  if (featured.length > 1) throw new Error(`Only one post can be featured: ${featured.map((p) => p.slug).join(", ")}`);
   return posts.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug.localeCompare(b.slug)));
 }
