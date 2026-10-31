@@ -1,0 +1,72 @@
+---
+title: "Shared codebase context for teams: one graph per org"
+description: "Give your team shared codebase context: one Graphify workspace per GitHub org, the same code graph for every developer and agent, and clear access rules."
+date: "2026-09-16"
+keyword: shared codebase context
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - product
+tags:
+  - teams
+  - workspaces
+  - github
+---
+
+Graphify is a code knowledge graph for AI coding agents, and on a team the graph is most useful when everyone shares it. Shared codebase context means one graph of your repositories that every developer and every agent queries, so two people asking "who calls this?" get the same answer from the same build.
+
+Without it, each developer builds context alone: their own local index, their own stale copy, their own agent guessing from whatever files it opened. This post covers how teams share one graph in [Graphify](https://app.graphify.com), who sees what, and how workspaces map to GitHub organizations.
+
+## How do teams get shared codebase context?
+
+Put the team's repositories in one Graphify workspace and connect every agent to it. Graphify indexes each repository once and keeps the graph current from its default branch. Every member and every connected agent reads that same graph through the console or the hosted MCP server, so nobody rebuilds context on their own laptop.
+
+The **Teams** plan gives that workspace a seat for each developer. You choose the number of seats at [signup](https://app.graphify.com/signup). When you upgrade, you can turn your current workspace into a team workspace and keep its repositories, graphs, memory and address, or start a new one.
+
+## What happens when a teammate already installed Graphify on our org?
+
+You request access instead of hitting a dead end. Graphify tells you which workspace owns the GitHub installation on your organization and lets you ask to join. It checks that you are a member of the organization on GitHub, and the workspace owner approves you. Then you work on the same repositories as the rest of the team.
+
+This replaced an error that used to stop the second person on a team from connecting. See [GitHub organizations](https://docs.github.com/en/organizations) for how org membership itself works on GitHub.
+
+## Who can see which repositories?
+
+Members see the repositories in the workspace they belong to. Owners and admins invite people from **Members** and see how many seats are in use. Graphify checks GitHub organization membership before approving a join request. Anyone who can read a repository can open its **Contributors** page, which shows who shaped that code.
+
+How repositories are connected and indexed is covered on the [repositories docs](https://docs.graphify.com/platform/repositories) page.
+
+## Workspaces vs orgs: how do they map?
+
+Each person owns one workspace and can join others by invite. A team usually runs one shared workspace for its GitHub organization. If you belong to several, switch between them from the top of the sidebar; team workspaces show a **Teams** badge, and the switcher separates **Your workspace** from those **Shared with you**.
+
+Agents follow the same rule. Each agent installation keeps its own workspace selection, so a laptop pointed at the team workspace and a desktop pointed at a personal one do not overwrite each other.
+
+## What does the team share besides the graph?
+
+Memory and learning. Developer Memory and the **Learn** page are available to every user, so what one person teaches Graphify about review findings applies to the workspace. A teammate who marks a finding as wrong with `@graphify wrong` helps quiet it across the workspace, without changing any formal verification verdict.
+
+That compounding is the point of a shared graph. Context one developer builds is context the next developer gets for free. For how the graph itself spans services, see [multi-repo code graph](https://graphify.com/blog/multi-repo-code-graph).
+
+## Try it
+
+Start a workspace in [Graphify](https://app.graphify.com), connect your GitHub organization, and invite the team from **Members**. Developers who also want a local graph for experiments can run `uv tool install graphifyy` alongside it; see [change impact analysis](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) for a local workflow.
+
+## FAQ
+
+### Do teammates need their own GitHub App install?
+
+No. One installation on the organization serves the workspace. Teammates request access to it.
+
+### Can one person be in several workspaces?
+
+Yes. Each person owns one workspace and can join others by invite.
+
+### Does each agent need its own API key?
+
+No. Agents sign in to the hosted MCP server through the browser.
+
+### Do I lose my graphs when I upgrade to Teams?
+
+No. You can convert your current workspace and keep its repositories, graphs, memory and address.

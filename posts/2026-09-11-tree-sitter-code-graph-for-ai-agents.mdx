@@ -1,0 +1,81 @@
+---
+title: "Tree-sitter code graphs: how Graphify parses code"
+description: "Graphify builds its code graph with tree-sitter: syntax trees parsed on your machine, about 40 languages in the CLI, no model and no API key."
+date: "2026-09-11"
+keyword: tree-sitter
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - tree-sitter
+  - languages
+  - graph
+---
+
+Graphify is a code knowledge graph for AI coding agents, and tree-sitter is the parser underneath it. Every file, class, function, call and import in a Graphify code graph starts as a node in a tree-sitter syntax tree. That one choice is why the code graph is built locally, why it needs no model, and why parsing the same commit twice gives the same graph.
+
+I like boring infrastructure under an agent. A parser that gives the same answer twice is about as boring as it gets. This post explains what [tree-sitter](https://tree-sitter.github.io/tree-sitter/) contributes, what the extractor adds on top, and what it skips, with output from a real build of [itsdangerous](https://github.com/pallets/itsdangerous).
+
+## What is tree-sitter?
+
+Tree-sitter is an open-source parser generator and incremental parsing library. Each language has a grammar that turns source text into a concrete syntax tree, fast enough to re-parse on every keystroke in an editor. Grammars exist for most mainstream languages, and the parser keeps working on files with syntax errors, which matters on half-edited code.
+
+## Why build a code graph from syntax trees instead of a model?
+
+Because a syntax tree is a fact about the file, while a model's reading is a judgment. A call found in the tree is recorded as EXTRACTED with its file and line. Parsing is deterministic, runs locally, costs nothing per token, and sends no code anywhere. Models are kept for docs and media, where no grammar exists.
+
+Determinism is easy to see. Re-running a build on an unchanged checkout leaves the graph alone:
+
+```bash
+uv tool install graphifyy
+cd itsdangerous
+graphify update .
+```
+
+```text
+Re-extracting code files in . (no LLM needed)...
+[graphify watch] 6 file(s) not classified (no supported extension or shebang), skipped: .editorconfig, .gitignore, Makefile, make.bat, py.typed, uv.lock
+[graphify watch] No relevant changes; graphify-out left untouched.
+Code graph updated. For doc/paper/image changes run /graphify --update in your AI assistant.
+```
+
+The first build of the same repository produced 372 nodes, 695 edges and 23 communities, with no API key set.
+
+## What does Graphify add on top of the parser?
+
+Resolution. A syntax tree knows that `want_bytes(key)` is a call; it does not know which definition `want_bytes` names. Graphify binds names to definitions across files, follows imports and re-exports, and links methods to classes. When a binding is certain the edge is EXTRACTED. When it is worked out, such as a function passed as a callback, the edge is INFERRED.
+
+The [inferred edges audit](https://graphify.com/blog/how-to-audit-inferred-edges) measures that split on real graphs: 9% of itsdangerous edges and under 8% of Flask edges are inferred.
+
+## Which languages does the Graphify CLI parse?
+
+About 40. The [languages page](https://docs.graphify.com/open-source/features/languages) lists them, from Python, TypeScript, Go, Rust, Java and C++ to Elixir, Julia, Fortran and Verilog, plus Vue, Svelte and Astro components. SQL, Terraform, OCaml and Common Lisp need an optional extra. Hosted [Graphify](https://app.graphify.com) indexes with 63 grammars.
+
+## What does a syntax-tree graph miss?
+
+Anything decided at run time. Reflection, string-built imports, dependency injection containers and plugin registries leave no call in the tree. Some show up as inferred edges, others not at all. The build tells you what it skipped, as in the six unclassified files above, so read that line before you trust a sparse graph.
+
+## How do you get a tree-sitter code graph without building it yourself?
+
+Index the repository in Graphify. It runs the same parse-then-resolve pipeline on its side, indexes with 63 grammars, and keeps the graph current as the repository changes. Your agent then reads that graph over the hosted MCP server, so nobody on the team needs a local build or has to remember to refresh it.
+
+## Try it
+
+Index a repository in [Graphify](https://app.graphify.com) and connect your agent. Prefer local? Parse one with `uv tool install graphifyy` and `graphify update .`. For the bigger picture, read [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph) and the [knowledge graph glossary entry](https://graphify.com/glossary/knowledge-graph).
+
+## FAQ
+
+### Does Graphify send my code to a model to build the graph?
+
+Not for code. Code is parsed locally with tree-sitter. Only docs, PDFs, images and media use a model, and only if you configure one.
+
+### Is the graph the same every time?
+
+For the same commit and version, yes. Parsing is deterministic, and an unchanged checkout leaves `graphify-out` untouched.
+
+### What happens to files with syntax errors?
+
+Tree-sitter recovers and parses what it can, so the rest of the file still contributes nodes and edges.

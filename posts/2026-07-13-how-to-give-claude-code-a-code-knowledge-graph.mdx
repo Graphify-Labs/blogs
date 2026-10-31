@@ -89,7 +89,7 @@ You can call `query_graph`, `shortest_path`, `god_nodes`, `graph_stats`, and a P
 
 Grep wins when the question is "find this string."
 
-Tree-sitter parses code locally with 36 language grammars. The model you already use in Claude Code reads docs and PDFs. There is no telemetry.
+Code is parsed locally across about 40 languages, 34 of them with tree-sitter grammars. The model you already use in Claude Code reads docs and PDFs. There is no telemetry.
 
 The installer replaces or appends only its own graphify section and leaves the rest of `CLAUDE.md` alone. `graphify claude uninstall` removes the Claude Code pieces. `graphify uninstall` removes every platform at once. It also removes the graphify section from `CLAUDE.md`, and deletes that file only if graphify created it. `graphify uninstall --purge` also deletes `graphify-out/`.
 

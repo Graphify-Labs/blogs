@@ -1,0 +1,91 @@
+---
+title: "Find unreferenced code with a code graph"
+description: "Find unreferenced code by listing graph nodes with no incoming edges, then rule out public APIs, dunder methods, overrides and values passed by name."
+date: "2026-09-30"
+keyword: find unreferenced code
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - dead-code
+  - graph
+  - cleanup
+---
+
+Graphify is a code knowledge graph for AI coding agents, and one of the simplest questions you can ask it is what nothing points at. To find unreferenced code, list the functions and methods with no incoming call, reference or import edge. The list is short, cheap to compute and a good start for cleanup. It is also full of code that is very much alive.
+
+Every cleanup sprint I've joined started with a "dead code" list that turned out to be half public API. This post runs that query on a real graph of [itsdangerous](https://github.com/pallets/itsdangerous) built with open-source Graphify, then sorts the results into what is safe to delete and what is not.
+
+## How do you find unreferenced code in Graphify?
+
+You don't run a script. Since September 27, Graphify tracks code that nothing references on each indexed repository, as part of its Code findings checks. The analysis details describe them in one line: "Checks look for potentially unused code and matching function bodies. Review the source before making a change." The same rule applies to the script below.
+
+1. Index the repository in [Graphify](https://app.graphify.com).
+2. Open the repository's Code findings and read the analysis details.
+3. Run each candidate through the exclusions in this post before you delete it.
+
+
+## How do you find unreferenced code in a code graph?
+
+Count incoming edges per node and keep the callable ones with none. In a Graphify graph, edges such as `calls`, `references`, `imports`, `uses`, `inherits` and `indirect_call` mean something depends on the target. A function with zero of them is a delete candidate. Exclude tests first, since nothing calls a test function.
+
+```python
+from json import load
+from collections import Counter
+g = load(open("graphify-out/graph.json"))
+deps = {"calls", "references", "imports", "imports_from", "uses", "inherits", "re_exports", "indirect_call"}
+incoming = Counter(e["target"] for e in g["links"] if e["relation"] in deps)
+for n in g["nodes"]:
+    if n.get("_callable") and not incoming[n["id"]] and "tests" not in (n.get("source_file") or ""):
+        print(n["label"], n["source_file"], n.get("source_location"))
+```
+
+On itsdangerous this prints 22 candidates, including:
+
+```text
+.secret_key() src/itsdangerous/signer.py L176
+.loads() src/itsdangerous/serializer.py L25
+_lazy_sha1() src/itsdangerous/signer.py L40
+.__str__() src/itsdangerous/exc.py L18
+.load_payload() src/itsdangerous/url_safe.py L23
+.dumps() src/itsdangerous/serializer.py L29
+```
+
+## Why is unreferenced code not the same as dead code?
+
+Because a graph only sees references written in the repository. Library entry points are called by users, special methods are called by the runtime, and overrides are reached through dispatch on a base class. None leave an incoming edge inside the repository, yet every one of them runs. Read the list as candidates to check, never as a delete list.
+
+The six examples above break down like this:
+
+- `.loads()` and `.dumps()` are the public API of the library. Callers live in other projects, so the repository holds no call to them.
+- `.secret_key()` is a `@property`. It is read as `self.secret_key`, an attribute access, not a call.
+- `.__str__()` runs when Python formats the exception. No code calls it by name.
+- `.load_payload()` in `url_safe.py` overrides the base serializer. Calls go through `self`, typed as the base class.
+- `_lazy_sha1()` is passed by name, as `default_digest_method = staticmethod(_lazy_sha1)` on lines 54 and 120 of `signer.py`. It is used as a value, which the graph does not record as an incoming dependency.
+
+## Which candidates are safe to remove?
+
+The ones left after the exclusions: private, non-special, non-overriding functions with no use as a value and no export. Search the name across the repository and any repository that imports it, run the tests, and check the history for why it was added. On itsdangerous, none of the six examples above survives those checks.
+
+A [multi-repo code graph](https://graphify.com/blog/multi-repo-code-graph) helps with the cross-repository step, since a function unused at home may be called by a sibling service.
+
+## Try it
+
+Start in [Graphify](https://app.graphify.com) and review the Code findings checks. To run the query yourself, `uv tool install graphifyy`, `graphify update .`, then the script above. The [console tour](https://docs.graphify.com/platform/console.md) shows where repository details live. For more on reading a graph, see [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph) and the [code graph glossary entry](https://graphify.com/glossary/code-graph).
+
+## FAQ
+
+### Is every function with no callers dead?
+
+No. Public APIs, special methods, properties, overrides and functions passed as values all run without a direct call in the repository.
+
+### Should I exclude tests?
+
+Yes. Test functions are called by the test runner, so they always look unreferenced.
+
+### Does this work on dynamic languages?
+
+It works, but with more false positives. Reflection and string-built names leave no edges, so check each candidate by hand.
