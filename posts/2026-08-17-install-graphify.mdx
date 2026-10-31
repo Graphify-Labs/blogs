@@ -1,0 +1,136 @@
+---
+title: "Install Graphify: graphifyy with uv, or the hosted app"
+description: "How to install Graphify: the graphifyy package with uv or pipx, registering it with your assistant, a first graph, or skipping installs with hosted."
+date: "2026-08-17"
+keyword: install graphify
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - cli
+  - pypi
+  - mcp
+---
+
+Graphify is a code knowledge graph that your AI coding agent queries instead of grepping, and there are two ways to install Graphify. You can install the open-source Graphify CLI from PyPI and build graphs on your machine. Or you can use hosted Graphify at app.graphify.com, which needs no install beyond connecting your agent.
+
+This guide covers both. It takes about five minutes either way.
+
+## What do I need before I install Graphify?
+
+For the Graphify CLI you need Python 3.10 or newer and a package tool that installs command-line apps, ideally uv or pipx. You also need an AI coding assistant such as Claude Code, Cursor or Codex. For hosted Graphify you need a GitHub or GitLab account and an assistant that supports remote MCP servers.
+
+If you do not have uv yet, the [uv installation guide](https://docs.astral.sh/uv/getting-started/installation/) has a one-line installer for macOS, Linux and Windows.
+
+## Install the Graphify CLI with uv
+
+The package on PyPI is `graphifyy`, with two y's. The command it installs is `graphify`.
+
+```bash
+uv tool install graphifyy
+```
+
+uv puts the tool in its own environment, so it does not clash with your project's dependencies. If you prefer pipx, `pipx install graphifyy` does the same job.
+
+If your shell then says `graphify: command not found`, the tool directory is not on your PATH yet. Fix it once:
+
+```bash
+uv tool update-shell
+```
+
+Open a new terminal and run `graphify --help` to confirm. The [installation docs](https://docs.graphify.com/open-source/installation) cover Windows PowerShell and other edge cases.
+
+## Register Graphify with your assistant
+
+Installing the package gives you the CLI. To let your assistant use it, register the skill:
+
+```bash
+graphify install
+```
+
+On its own, `graphify install` targets Claude Code. For other assistants, name the platform:
+
+```bash
+graphify install --platform codex
+graphify install --platform cursor
+graphify antigravity install
+```
+
+Add `--project` to write the skill into the current repository instead of your user profile, so teammates get it from git. For Claude Code, `graphify claude install` also writes a section to `CLAUDE.md` and registers hooks, so the assistant checks the graph before searching files.
+
+## Build your first graph
+
+Open your assistant in a repository and send:
+
+```text
+/graphify .
+```
+
+The graph lands in `graphify-out/`. To build a code-only graph from the terminal, with no model calls at all, run:
+
+```bash
+graphify extract . --code-only
+```
+
+A code-only build parses files with tree-sitter on your machine and makes no model calls. Build time and graph size depend on the codebase. Then ask the graph a question:
+
+```bash
+graphify query "how does authentication work"
+graphify path "Client" "Transport"
+```
+
+The open-source CLI supports about 40 languages. Our [comparison of codebase context tools](https://graphify.com/blog/best-codebase-context-tools-for-ai-coding-assistants-2026) shows where a graph fits.
+
+## Should I use hosted Graphify instead?
+
+Use hosted Graphify when your code is on GitHub or GitLab and you want graphs rebuilt on every push, shared with a team and used in pull request reviews. Reviews and formal verification run on GitHub repositories. You install nothing locally. Connect a repository at app.graphify.com, then add the hosted MCP server to your assistant and sign in with OAuth in the browser.
+
+For Claude Code, the whole setup is one command:
+
+```bash
+claude mcp add --transport http --scope user graphify https://api.graphify.com/mcp
+```
+
+Then run `/mcp` in Claude Code and choose Authenticate. You can start on the Free plan. See the [integrations overview](https://docs.graphify.com/integrations/overview) for other clients.
+
+## How do I upgrade or uninstall Graphify?
+
+Upgrade the CLI with `uv tool upgrade graphifyy`, or `pipx upgrade graphifyy` if you used pipx. Uninstall with `uv tool uninstall graphifyy`. Graph files live in each repository's `graphify-out/` folder, so delete that folder to remove a graph. Hosted Graphify updates itself, and you remove repositories from the console.
+
+After an upgrade, run `graphify install` again so the assistant skill matches the new version.
+
+## Try it
+
+The fastest start is hosted: sign in at [app.graphify.com](https://app.graphify.com) and connect a repository. For a local graph:
+
+```bash
+uv tool install graphifyy
+graphify install
+```
+
+New to the idea? Start with [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph).
+
+## FAQ
+
+### Why is the package graphifyy and not graphify?
+
+The PyPI name has two y's. The command is still `graphify`. Other similarly named packages are not from Graphify Labs.
+
+### Does the Graphify CLI need an account or API key?
+
+No. It is free under Apache 2.0, needs no account, and code-only builds make no model calls.
+
+### Which Python version does Graphify need?
+
+Python 3.10 or newer.
+
+### Can I use uvx instead of installing?
+
+You can run a one-off command with uvx, but a persistent install with `uv tool install graphifyy` is better for assistants and hooks.
+
+### Does hosted Graphify need the CLI?
+
+No. Hosted Graphify builds the graph for you. Your assistant connects to `https://api.graphify.com/mcp`.
