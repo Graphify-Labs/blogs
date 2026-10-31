@@ -3,6 +3,8 @@ title: "Code change blast radius: find every caller first"
 description: "Code change blast radius is everything a change can affect. Find every direct and indirect caller before you merge, with a code graph or by hand."
 date: "2026-09-14"
 keyword: code change blast radius
+imgThumb: thumb.png
+imgSocial: social.png
 authors:
   - fahad
 categories:
@@ -12,17 +14,17 @@ tags:
   - code-review
 ---
 
-A code change blast radius is the set of code a change can affect: the function you edited, everything that calls it, and everything that calls those callers. Knowing it before you merge tells you which tests to run, who should review and where a bug would show up.
+A code change blast radius is the set of code a change can affect: the function you edited, everything that calls it, and everything that calls those callers. Knowing it before you merge tells you which tests to run, who should review and where a bug would show up. Graphify, a code knowledge graph for AI coding agents, computes it from call and import edges.
 
 This guide shows how to find it with a code graph and what to do with the list.
 
 ## Why is text search not enough?
 
-`grep` finds names, not calls. It misses calls through aliases, re-exports, interfaces and method dispatch. It also returns comments, strings and unrelated functions that share a name. On a large repository, you get both false positives and gaps. A call graph records which function actually calls which, so you can follow the edges outward.
+`grep` finds names, not calls. It misses calls through aliases, re-exports, interfaces and method dispatch. It also returns comments and unrelated functions that share a name. On a large repository, you get false positives and gaps. A call graph records which function calls which.
 
 ## How do I find every caller of a function?
 
-Build a code graph and ask for the affected nodes. With the Graphify CLI, a code-only build needs no API key:
+Build a code graph and ask for the affected nodes. A graph follows calls, imports and references, including callers that use a different name for the function. With the Graphify CLI, a code-only build parses files locally and needs no API key. Open-source Graphify is licensed under Apache 2.0. Run:
 
 ```bash
 uv tool install graphifyy
@@ -44,7 +46,7 @@ graphify path "charge_card" "send_receipt"
 
 ## How do I read the blast radius?
 
-Sort the results into three groups:
+The list is only useful once you rank it. Direct callers can break at once, indirect callers break through them, and entry points are where users see the failure. Start with entry points, because they set the test plan and the review list. Sort the results into three groups:
 
 | Group | What it is | What to do |
 | --- | --- | --- |
@@ -56,7 +58,7 @@ A small radius with no entry points is low risk. A radius that reaches public AP
 
 ## Can my AI agent check the blast radius for me?
 
-Yes. Connect the graph over MCP and ask in plain language: "What calls `charge_card`, and which of those are API handlers?" The local server is a separate entry point:
+Yes. Connect the graph over MCP and ask in plain language: "What calls `charge_card`, and which of those are API handlers?" The agent then calls graph tools instead of grepping, and answers with file paths you can check. The local server is a separate entry point:
 
 ```bash
 uv tool install "graphifyy[mcp]"
@@ -69,6 +71,8 @@ Hosted [Graphify](https://app.graphify.com) keeps the graph current on every pus
 
 ## What should I do before merging?
 
+Turn the blast radius into a merge checklist. Run the right tests, name the risky entry points and pull in the owners of affected code. For a large radius, ship behind a feature flag or a staged rollout, so you can turn the change off fast. The [Google SRE book](https://sre.google/sre-book/reliable-product-launches/) covers staged rollouts in depth.
+
 1. List the changed functions.
 2. Get the blast radius for each.
 3. Run the tests for every caller in the list, not only the changed file.
@@ -80,6 +84,8 @@ For the wider method, see [change impact analysis with a code graph](https://gra
 ## Try it
 
 Sign in at [app.graphify.com](https://app.graphify.com) and connect a repository, or run `uv tool install graphifyy` and `graphify affected` locally. Background: [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph).
+
+Related reading: [change impact analysis](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) and [an MCP server for your codebase](https://graphify.com/blog/mcp-server-for-your-codebase). Sources: [tree-sitter](https://tree-sitter.github.io/tree-sitter/), [MCP specification](https://modelcontextprotocol.io/specification/2025-06-18).
 
 ## FAQ
 
