@@ -1,0 +1,97 @@
+---
+title: "Aider repo map vs a code knowledge graph"
+description: "Aider's repo map ranks symbols to fit a token budget. A code knowledge graph stores every call and import. How the Aider repo map and a graph differ."
+date: "2026-05-11"
+keyword: aider repo map
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - aider
+  - repo-map
+  - graph
+imgThumb: thumb.png
+imgSocial: social.png
+---
+
+The Aider repo map is a compact summary of a repository that Aider sends to the model with each request. It lists the most important classes, functions, and signatures, ranked so the summary fits a token budget. A code knowledge graph is different: it stores every call and import as an edge you can query. The two work well together. Graphify, an open-source CLI, builds a fuller code knowledge graph for the same job.
+
+## How does the Aider repo map work?
+
+Aider's [repo map documentation](https://aider.chat/docs/repomap.html) describes the method. Aider parses source files with tree-sitter and collects the symbols each file defines and references. It builds a graph where files are nodes and references are edges. Then it ranks that graph with what the docs call "a graph ranking algorithm" and keeps the top symbols that fit the budget.
+
+The budget is set with `--map-tokens`. Aider's docs give a default of 1k tokens, and Aider can grow the map when no files are in the chat.
+
+## What does a code knowledge graph store that the repo map does not?
+
+The repo map is a ranked excerpt. Its job is to fit in the prompt, so it leaves symbols out. A code knowledge graph keeps everything and answers questions on demand. Graphify, an open-source CLI, builds one from the same tree-sitter parse.
+
+| | Aider repo map | Graphify code graph |
+|---|---|---|
+| Built from | tree-sitter tags | tree-sitter AST |
+| Stored as | Text summary in the prompt | `graph.json` on disk |
+| Coverage | Top-ranked symbols within budget | Every node and edge found |
+| Edges | Used for ranking, not shown | Calls, imports, and more, each tagged |
+| Query | Implicit, sent each turn | `query`, `path`, `explain` on demand |
+| Non-code files | No | Docs, PDFs, images via a model |
+
+## When is the repo map enough?
+
+For small and medium projects, often. The map gives the model a sense of the codebase every turn at a fixed cost. You add files to the chat when you want edits. Aider's design keeps the map small, which suits most single-module tasks.
+
+## When does a graph help Aider?
+
+A graph helps with questions the map cannot answer from its excerpt. Examples: what calls this function across the repo, how two modules connect, or what an edit might break. The answer comes from the graph as a short list of nodes with file and line references.
+
+Install Graphify and add its instructions to the project:
+
+```bash
+uv tool install graphifyy
+graphify aider install
+```
+
+`graphify aider install` writes a graphify section to `AGENTS.md`. Build the code graph locally with `graphify update .`, which uses no model.
+
+## How do you use the graph inside an Aider chat?
+
+Aider's `/run` command runs a shell command and can add its output to the chat. Use it to ask the graph a question:
+
+```text
+/run graphify query "what calls check_token?" --budget 800
+/run graphify path "handle" "verify"
+```
+
+Load the graph report as read-only context with `/read-only graphify-out/GRAPH_REPORT.md`. Aider's [in-chat command list](https://aider.chat/docs/usage/commands.html) documents both commands.
+
+## Does the repo map grow when no files are added?
+
+Yes. Aider sizes the map with `--map-tokens`, which defaults to 1k tokens. When no files are in the chat, Aider can expand the map well beyond that budget to give the model a wider view. Once you add files, the map shrinks back. So map cost depends on how you use the chat.
+
+Add the files you plan to edit early. That keeps the map near its budget.
+
+## FAQ
+
+### Does Graphify replace the Aider repo map?
+
+No. Keep the repo map on. The graph answers specific structural questions when you ask.
+
+### Can I turn the repo map off?
+
+Yes. Aider's docs note `--map-tokens 0` disables it.
+
+### Does the graph cost tokens to build?
+
+Not for code. `graphify update .` parses locally. Docs and images need a model pass.
+
+### Does Aider read AGENTS.md on its own?
+
+Aider reads conventions files you load with `/read-only` or `--read`. Load `AGENTS.md` that way to apply the graphify section.
+
+### How do I keep the graph current?
+
+Run `graphify update .` after edits, or `graphify hook install` to rebuild on each commit.
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. See the [Aider integration page](https://graphify.com/integrations/aider) and the [querying docs](https://docs.graphify.com/open-source/features/querying). Related: [how to reduce Cursor token usage](/blog/how-to-reduce-cursor-token-usage). See also [how to reduce Codex CLI token usage](/blog/how-to-reduce-codex-cli-token-usage).
