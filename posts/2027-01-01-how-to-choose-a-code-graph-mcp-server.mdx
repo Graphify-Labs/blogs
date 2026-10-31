@@ -1,0 +1,82 @@
+---
+title: "How to choose a code graph MCP server"
+description: "How to choose a code graph MCP server for Claude Code or Cursor: eight questions on parsing, edge provenance, freshness, privacy, scope and honest numbers."
+date: "2027-01-01"
+keyword: code graph mcp server
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - mcp
+  - code-graph
+  - coding-agents
+---
+
+Graphify is one code graph MCP server among several, so this guide is written to be useful even if you pick another one. A code graph MCP server gives an AI coding agent a structured map of your repository: functions, classes and files, linked by calls and imports. The agent asks the server for a path or a set of callers instead of grepping.
+
+The category is young and the tools differ a lot. Here are the questions we would ask before installing any of them.
+
+## What is a code graph MCP server?
+
+A code graph MCP server is a program that parses a codebase into nodes and edges, stores that graph, and exposes query tools over the Model Context Protocol. Agents such as Claude Code, Cursor and Codex call those tools to find callers, dependencies or the reach of a change, and receive compact answers with file locations instead of whole files.
+
+The protocol itself is documented at [modelcontextprotocol.io](https://modelcontextprotocol.io/). Our post on [an MCP server for your codebase](https://graphify.com/blog/mcp-server-for-your-codebase) shows one in practice.
+
+## Which kinds of tools are in this category?
+
+There are three broad kinds. Graph builders parse code with tree-sitter and store a graph, as Graphify and code-review-graph do. Language-server tools, such as Serena, give agents IDE-style symbol lookup and editing through the language server protocol. Hosted services build and refresh graphs for a team on their own infrastructure.
+
+They overlap, and some projects do more than one. A language-server tool is precise for one language at a time but needs that server running. A tree-sitter graph covers many languages with one parser family but resolves some edges by inference.
+
+## Eight questions for any code graph MCP server
+
+1. **How does it parse code?** Tree-sitter, a language server or something else, and for which languages.
+2. **Does it tell you how sure each edge is?** A call read directly from code is different from one resolved by name. Look for provenance on edges.
+3. **How does it stay fresh?** Hooks, watch mode, CI or rebuilds on push. A stale graph gives confident wrong answers.
+4. **Where does your code go?** Local parsing, a model backend, or a hosted service with documented retention.
+5. **Can it see across repositories?** Most real systems span more than one.
+6. **How many tools does it expose?** Too many tools crowd the agent's context. A few well-named ones are often better.
+7. **Does it cite sources?** Every answer should point to file paths and lines you can open.
+8. **Are its numbers honest?** Look for method, date and setup, and for a limitations section.
+
+## How does Graphify answer those questions?
+
+Graphify parses code with tree-sitter: about 40 languages in the open-source CLI and 63 grammars in the hosted app. Every edge is tagged EXTRACTED, INFERRED or AMBIGUOUS. The CLI parses locally with no telemetry. Hosted Graphify rebuilds on each push, supports cross-repository graphs and serves `https://api.graphify.com/mcp` with OAuth.
+
+On numbers, our [token benchmark docs](https://docs.graphify.com/open-source/features/token-benchmark.md) say what the measure is and what it is not. For edge trust, see [how to audit inferred edges](https://graphify.com/blog/how-to-audit-inferred-edges).
+
+## When is a code graph not the right tool?
+
+A code graph is not the right tool for finding an exact string, such as an error message or a log line. Grep is faster and exact. It is also weaker on very small edits, where reading one file costs less than the graph's structure. Use a graph for multi-hop questions and keep plain search for literal lookups.
+
+We would also not pick a tool on a single headline ratio. Measure on your own repository.
+
+## Try it
+
+Run Graphify as a hosted MCP server at [app.graphify.com](https://app.graphify.com), or locally:
+
+```bash
+uv tool install graphifyy
+graphify install
+```
+
+## FAQ
+
+### Is a code graph MCP server the same as RAG?
+
+No. RAG retrieves similar text chunks. A code graph returns structural relationships, such as callers and imports.
+
+### Can I run more than one code graph MCP server?
+
+Yes, but agents may get duplicate or conflicting tools. Use one per question type.
+
+### Do code graph MCP servers work with Cursor and Claude Code?
+
+Most do, because both clients support MCP. Check each tool's install docs.
+
+### Which is better, tree-sitter or a language server?
+
+Neither in general. Language servers are precise per language, while tree-sitter covers many languages with one approach.
