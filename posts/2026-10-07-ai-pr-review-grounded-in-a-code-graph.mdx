@@ -1,0 +1,76 @@
+---
+title: "AI PR review grounded in a code graph, not the diff"
+description: "Graphify's AI PR review reads your code graph, so it sees the callers and dependencies a change can reach. When reviews run, @graphify review, and Learn."
+date: "2026-10-07"
+keyword: AI PR review
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - product
+tags:
+  - reviews
+  - pull-requests
+  - code-graph
+---
+
+Graphify is a code knowledge graph for AI coding agents, and it also reviews your pull requests with that graph. An AI PR review that only reads the diff sees the lines that changed. A review grounded in a code graph also sees the callers and dependencies those lines can reach, which is where most surprising breakage lives.
+
+Reviews have been in [Graphify](https://app.graphify.com) since August 11. Two recent changes make them quieter: a review now runs when a PR is ready, and `@graphify review` asks for a fresh one on demand. This post covers why the graph matters, when reviews run, and how to tune what they flag.
+
+## Why does diff-only AI PR review miss callers?
+
+Because callers are not in the diff. Change a function's return value and the diff shows the function. It does not show the twelve places that use the result, in files nobody touched. A graph stores those call edges, so the review can follow them and ask whether each caller still makes sense after the change.
+
+That is the same structure behind [change impact analysis](https://graphify.com/blog/change-impact-analysis-with-a-code-graph): start at the changed symbol, walk outward along real edges, and look at what you reach.
+
+## When does a review run?
+
+When the pull request is ready. Graphify reviews a PR when it is opened or reopened, and a draft gets reviewed when you mark it **Ready for review**. Pushing more commits no longer triggers a new review on its own. That means fewer repeated comments on work in progress, and one review per meaningful state of the PR.
+
+GitHub's guide to [changing the stage of a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/changing-the-stage-of-a-pull-request) explains draft and ready states.
+
+## What does @graphify review do?
+
+It reviews the pull request's current head on demand. After you push fixes, comment `@graphify review` on the PR, and Graphify reviews the latest commit and updates its result. You choose when a new review is worth running, instead of getting one on every push while you are still iterating.
+
+```text
+@graphify review
+```
+
+Formal verification works differently. It still runs on every push and compares against the merge base, so behavior checks stay current while you iterate. See [formal verification for pull requests](https://graphify.com/blog/formal-verification-for-pull-requests).
+
+## What does a graph-grounded review flag?
+
+Findings tied to code a change can reach, ranked by how likely they are to need a fix. Reviews can also add advisory notes on risky patterns in added lines and on documentation that may be out of date after the change. Each finding sits next to the affected code it refers to, so you can check it in context.
+
+Advisory notes are switchable per repository. A review is a pointer to something worth a look; it is not proof that behavior is unchanged. That is the job of verification.
+
+## How do I teach the review what matters?
+
+Reply on the pull request. `@graphify wrong <finding>` dismisses a finding that does not apply, `@graphify good <finding>` confirms a useful one, and `@graphify suppress <rule>` mutes a rule, optionally for one path. The **Learn** page shows what Graphify has learned for the workspace and who gave the feedback.
+
+Learning only changes which advisory findings appear. It never changes a formal verification verdict.
+
+## Try it
+
+Connect a GitHub repository in [Graphify](https://app.graphify.com) and open a pull request. For a local, graph-based look at open PRs, the open-source CLI has `graphify prs`; install it with `uv tool install graphifyy`. The [reviews docs](https://docs.graphify.com/platform/reviews) cover every setting.
+
+## FAQ
+
+### Does a Graphify review block merging?
+
+No. Review findings are advisory.
+
+### Why didn't my new push get a review?
+
+Pushes no longer trigger reviews on their own. Comment `@graphify review` to review the current head.
+
+### Is a passing review the same as verified behavior?
+
+No. Reviews flag concerns. Formal verification checks whether supported functions changed behavior.
+
+### Can I turn reviews off for one repository?
+
+Yes. On **Repositories**, open **Options** and switch **PR reviews** off. Indexing stays on.

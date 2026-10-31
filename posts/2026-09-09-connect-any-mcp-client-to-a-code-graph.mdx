@@ -1,0 +1,103 @@
+---
+title: "Connect any MCP client to a hosted code graph"
+description: "Connect any MCP client to Graphify's hosted code graph: one URL, browser sign-in, no API key. Setup for Claude Code, Codex, Cursor, VS Code and more."
+date: "2026-09-09"
+keyword: connect any MCP client
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - mcp
+  - agents
+  - integrations
+---
+
+Graphify is a code knowledge graph for AI coding agents, and you can connect any MCP client to it with one URL. The hosted server at `https://api.graphify.com/mcp` gives your agent the same graph you see in the console, and the agent signs in through your browser, so there is no key to paste.
+
+As of this month, the console's connect page lists 30 clients, grouped into **Coding agents** and **Cloud connectors**. This post shows the setup that all of them share, the commands for the most common ones, and how to prove the agent is really calling the graph. To run a server on your own machine instead, see [MCP server for your codebase](https://graphify.com/blog/mcp-server-for-your-codebase).
+
+## Can I connect any MCP client to Graphify?
+
+Yes, if it supports remote MCP servers over HTTP. The console has setup for 30 of them, including Claude Code, Codex, Cursor, VS Code, Gemini CLI, Amp, Kiro, OpenCode, Warp, JetBrains Junie, Kilo Code and OpenHands. Cloud connectors include ChatGPT, Perplexity and Microsoft 365 Copilot. Every one uses the same URL and sign-in.
+
+The protocol itself is open and documented at [modelcontextprotocol.io](https://modelcontextprotocol.io), which is why one server can serve so many clients.
+
+## How do I add the server to my client?
+
+Add a remote MCP server named `graphify` with the URL `https://api.graphify.com/mcp`, then finish the browser sign-in the first time the client connects. The connect page in the [Graphify console](https://app.graphify.com) shows the exact config for your client, with the endpoint already filled in.
+
+Claude Code:
+
+```bash
+claude mcp add --transport http --scope user graphify https://api.graphify.com/mcp
+```
+
+Then run `/mcp`, select **graphify**, and choose **Authenticate**.
+
+Codex:
+
+```bash
+codex mcp add graphify --url https://api.graphify.com/mcp
+codex mcp login graphify
+```
+
+Cursor, in `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "graphify": {
+      "url": "https://api.graphify.com/mcp"
+    }
+  }
+}
+```
+
+The [hosted MCP docs](https://docs.graphify.com/platform/hosted-mcp) have the config for each client.
+
+## OAuth or API key: how does sign-in work?
+
+Sign-in uses OAuth in your browser. The client's first request has no token, the server answers with a pointer to its sign-in flow, and the client opens a browser window. After you approve, the client holds the token. No API key goes into a config file, so nothing secret gets committed by accident.
+
+Each agent installation keeps its own session and workspace selection. Two machines signed in to the same account no longer overwrite each other's choice of workspace.
+
+## How do I test the connection?
+
+Run one prompt that only works through Graphify, then watch the tool calls in the chat. Ask the agent to list the repositories it can see. If your indexed repositories come back, the connection and sign-in both work. Then ask about a function you know, and check the file paths it cites.
+
+```text
+Use Graphify's list_repositories tool and show the repositories I can access. If the tool fails, report the error instead of guessing.
+```
+
+If the list is empty, you are probably in a workspace with no indexed repositories. If the client says it needs authentication, run its sign-in step again.
+
+## What if my agent still greps?
+
+A connected server is not a used server. Agents often fall back to the file search they know. Ask a code question without naming Graphify, and see which tool runs. If it is a file search, add a short rule to your agent's instructions file telling it to query the graph before it greps.
+
+The client guides for [Claude Code](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph) and [Cursor](https://graphify.com/blog/how-to-give-cursor-a-code-knowledge-graph) include rule examples.
+
+## Try it
+
+Index a repository in [Graphify](https://app.graphify.com), copy your client's config from the connect page, and sign in. For a local graph with no account, run `uv tool install graphifyy` and see the open-source [MCP server docs](https://docs.graphify.com/open-source/mcp-server).
+
+## FAQ
+
+### Do I need a different URL for each client?
+
+No. Every client uses `https://api.graphify.com/mcp`.
+
+### Can I connect while my first repository is indexing?
+
+You can add the server any time. Tool calls return results once a repository shows **Indexed**.
+
+### Does the hosted server see my uncommitted changes?
+
+No. It serves the indexed graph. Use the open-source Graphify CLI for a graph of local work.
+
+### Is the MCP server listed in client galleries?
+
+Gallery listings vary by client. If you cannot find it, add the URL directly.
