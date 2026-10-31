@@ -1,0 +1,114 @@
+---
+title: "Codex MCP server setup: add one with a command or config"
+description: "Codex MCP server setup: add a remote or local server with codex mcp add or config.toml, sign in with OAuth, and test it with a code graph example."
+date: "2026-08-05"
+keyword: codex mcp server
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - codex
+  - mcp
+---
+
+A Codex MCP server is a tool server that OpenAI's Codex connects to through the Model Context Protocol (MCP). It gives the agent new tools, such as a code graph, an issue tracker or a database. Codex supports two kinds: local servers it starts as a process, and remote servers it reaches over Streamable HTTP.
+
+This guide shows both ways to add one: the `codex mcp add` command and the `config.toml` file. It uses hosted Graphify as the worked example.
+
+## How do I add an MCP server to Codex?
+
+Run `codex mcp add <name> --url <url>` for a remote server, or `codex mcp add <name> -- <command>` for a local one. Codex writes the entry to `~/.codex/config.toml`. For a server that uses OAuth, run `codex mcp login <name>` to sign in. Then run `codex mcp list` to confirm it.
+
+OpenAI's [Codex MCP documentation](https://learn.chatgpt.com/docs/extend/mcp.md) lists every option. The CLI and the IDE extension share the same configuration.
+
+## Add a remote server with one command
+
+Hosted Graphify is a remote MCP server at `https://api.graphify.com/mcp`. Add it and sign in:
+
+```bash
+codex mcp add graphify --url https://api.graphify.com/mcp
+codex mcp login graphify
+```
+
+The login command opens your browser. Sign in and approve access. No token is stored in your config file. Connect a repository at [app.graphify.com](https://app.graphify.com) first, so the server has something to return.
+
+## Add a remote server in config.toml
+
+If you prefer to edit the file, add a table under `mcp_servers`:
+
+```toml
+[mcp_servers.graphify]
+url = "https://api.graphify.com/mcp"
+auth = "oauth"
+```
+
+Each remote server needs a `url`. Optional keys include `bearer_token_env_var` for servers that take a token, and `tool_timeout_sec`, which defaults to 60 seconds. You can also scope a server to one repository with `.codex/config.toml`, which Codex reads only in trusted projects.
+
+The [Codex integration docs](https://docs.graphify.com/integrations/codex) show the same setup for Graphify.
+
+## Add a local stdio server
+
+A local server runs on your machine. Codex starts it with a command. The open-source Graphify CLI ships one, `graphify-mcp`, which serves a graph you build yourself:
+
+```bash
+uv tool install "graphifyy[mcp]"
+codex mcp add graphify -- graphify-mcp /absolute/path/to/repo/graphify-out/graph.json
+```
+
+Use an absolute path, because Codex may start the server from a different folder. The local server exposes ten tools, including `query_graph`, `get_node` and `shortest_path`. See the [MCP server quickstart](https://docs.graphify.com/open-source/mcp-server).
+
+| | Remote (Streamable HTTP) | Local (stdio) |
+| --- | --- | --- |
+| Add with | `codex mcp add name --url URL` | `codex mcp add name -- command` |
+| Sign-in | OAuth with `codex mcp login`, or a bearer token | Environment variables |
+| Runs on | The provider's servers | Your machine |
+| Best for | Shared, always-fresh data | Local files and offline work |
+
+## How do I test that Codex can use the server?
+
+Run `codex mcp list` and check the server is enabled. Inside the Codex terminal UI, `/mcp` lists active servers and their tools. Then give the agent a prompt that must use the server:
+
+```text
+Use Graphify's list_repositories tool and show the repositories I can access. If the tool fails, report the error instead of guessing.
+```
+
+The last sentence matters. Without it, an agent may answer from memory when a tool call fails, and you will not notice.
+
+## What goes wrong most often?
+
+Three problems cover most failed setups:
+
+- **Not signed in.** Remote OAuth servers need `codex mcp login <name>` once.
+- **A relative path.** Local servers need absolute paths to files.
+- **A slow start.** A server that takes more than 10 seconds to start times out. Raise `startup_timeout_sec`.
+
+If Codex lists the server but never calls it, ask for the tool by name in your prompt. Our post on [what a code knowledge graph is](https://graphify.com/blog/what-is-a-code-knowledge-graph) explains which questions a graph answers well.
+
+## Try it
+
+Run `codex mcp add graphify --url https://api.graphify.com/mcp`, then `codex mcp login graphify`, and connect a repository at [app.graphify.com](https://app.graphify.com). For a local skill instead, run `uv tool install graphifyy` and `graphify install --platform codex`.
+
+For other agents, see [how to give Claude Code a code knowledge graph](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph) and [best codebase context tools for AI coding assistants](https://graphify.com/blog/best-codebase-context-tools-for-ai-coding-assistants-2026).
+
+## FAQ
+
+### Where is the Codex MCP config file?
+
+In `~/.codex/config.toml`. A project can also have `.codex/config.toml`, which Codex reads only in trusted projects.
+
+### Does Codex support remote MCP servers?
+
+Yes. Codex supports Streamable HTTP servers with a `url` key, and OAuth sign-in through `codex mcp login`.
+
+### Do the Codex CLI and IDE extension share MCP servers?
+
+Yes. They read the same configuration, so you set a server up once.
+
+### Do I need an API key for Graphify in Codex?
+
+No. The hosted server uses OAuth. The local server reads a graph file and needs no key for code-only graphs.
+
+### How do I remove an MCP server from Codex?
+
+Run `codex mcp remove <name>`, or delete its table from `config.toml`.
