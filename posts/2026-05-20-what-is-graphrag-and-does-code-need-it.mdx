@@ -13,6 +13,17 @@ tags:
   - knowledge-graph
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Is GraphRAG better than RAG?"
+    answer: "For corpus-wide summary questions, the paper reports better comprehensiveness and diversity. For specific lookups, standard RAG is often enough and cheaper."
+  - question: "Does GraphRAG need a graph database?"
+    answer: "No. Microsoft's implementation writes its index to files. You can load results into a graph database if you want."
+  - question: "What are communities in GraphRAG?"
+    answer: "Groups of entities that are densely connected to each other. Each gets an LLM-written summary."
+  - question: "Is Graphify an implementation of GraphRAG?"
+    answer: "No. Graphify builds a code knowledge graph mostly by parsing. It shares the graph and community ideas."
+  - question: "Can GraphRAG index source code?"
+    answer: "It can read code as text. It does not parse syntax, so edges come from the LLM rather than the parser."
 ---
 
 GraphRAG is a retrieval-augmented generation method that builds a knowledge graph from source text and answers questions from that graph. Microsoft Research introduced it in the 2024 paper [From Local to Global: A Graph RAG Approach to Query-Focused Summarization](https://arxiv.org/abs/2404.16130). It targets questions about a whole corpus, which plain vector retrieval handles poorly. GraphRAG for code is a different case, because code already has explicit structure. Graphify, an open-source CLI, parses that structure directly instead of extracting it with a model.

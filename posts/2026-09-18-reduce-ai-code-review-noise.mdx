@@ -12,6 +12,17 @@ categories:
 tags:
   - code-review
   - ai-review
+faq:
+  - question: "What is a good precision target for AI code review?"
+    answer: "Measure your own baseline first. BitsAI-CR reports 75.0% precision in production, which is a useful reference point."
+  - question: "Should I turn off AI review for small pull requests?"
+    answer: "Not necessarily. Muting noisy rules usually works better than turning the reviewer off."
+  - question: "Does muting a rule hide real bugs?"
+    answer: "It can. Scope suppressions to a path when possible, and check the Learn page now and then."
+  - question: "Can feedback change a verification result?"
+    answer: "No. Feedback only affects advisory review findings. Verification verdicts stay as computed."
+  - question: "Who can teach Graphify?"
+    answer: "Anyone who replies on the pull request with a command. The Learn page records who gave each piece of feedback."
 ---
 
 To reduce AI code review noise, make every comment earn its place. A reviewer that posts ten comments when one matters trains your team to ignore all ten. The fix is a mix of measurement, better context and feedback that the reviewer learns from. Graphify, a code knowledge graph for AI coding agents, uses all three in its reviews.

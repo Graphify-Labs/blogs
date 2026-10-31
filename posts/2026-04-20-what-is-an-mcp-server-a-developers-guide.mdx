@@ -12,6 +12,17 @@ tags:
   - agents
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Is MCP only for Claude?"
+    answer: "No. Anthropic introduced it as an open protocol, and other hosts implement it. Check your tool's documentation for MCP support."
+  - question: "What language do I write an MCP server in?"
+    answer: "Any language that can speak JSON-RPC. Official SDKs exist for several languages, including Python and TypeScript."
+  - question: "Is an MCP server the same as an API?"
+    answer: "Not exactly. It wraps capabilities in a standard format that models can discover. It often calls an API underneath."
+  - question: "Do I need MCP to use Graphify?"
+    answer: "No. Assistants can read GRAPH_REPORT.md and run graphify query in a shell. MCP is optional for repeated tool access."
+  - question: "Does a stdio server open a network port?"
+    answer: "No. The host starts it as a child process and talks over standard input and output."
 ---
 
 An MCP server is a program that exposes tools, data, or prompts to an AI application through the Model Context Protocol. The AI app, called the host, connects to the server through a client. The model can then call the server's tools, such as querying a database or a code graph, without custom glue code for each app. Graphify, an open-source CLI, can run one that serves a code graph to your agent.

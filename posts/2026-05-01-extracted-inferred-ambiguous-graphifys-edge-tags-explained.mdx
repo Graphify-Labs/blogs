@@ -13,6 +13,17 @@ tags:
   - cli
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Is an INFERRED edge usually wrong?"
+    answer: "No. Most inferred edges are right. The tag means the link was matched or judged rather than read directly, so check it before relying on it."
+  - question: "Can I filter a graph to EXTRACTED edges only?"
+    answer: "The confidence field is in graph.json, so you can filter it with any JSON tool. The report also shows the split."
+  - question: "Does the model assign the confidence score?"
+    answer: "For doc and media edges, yes. For cross-file code matches, Graphify assigns it during resolution."
+  - question: "Do tags change when I rebuild?"
+    answer: "EXTRACTED edges stay stable for unchanged code. INFERRED edges from a model can vary between runs."
+  - question: "Where are the tags stored?"
+    answer: "On each edge in graphify-out/graph.json, in the confidence and confidence_score fields."
 ---
 
 Graphify edge confidence is a label on every relationship in a Graphify graph that says how the relationship was found. EXTRACTED means it was read directly from the source. INFERRED means it was a reasonable inference, stored with a confidence score. AMBIGUOUS means it is flagged for review. The label tells you how far to trust a hop.

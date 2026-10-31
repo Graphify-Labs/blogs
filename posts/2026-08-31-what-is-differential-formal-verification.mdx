@@ -12,6 +12,17 @@ categories:
 tags:
   - formal-verification
   - code-review
+faq:
+  - question: "Does differential verification replace tests?"
+    answer: "No. Tests check expected behavior on chosen inputs. Differential verification checks that behavior did not change. Use both."
+  - question: "What is a distinguishing input?"
+    answer: "An input where the old and new functions return different results. It shows exactly how behavior changed and can become a test."
+  - question: "Can it prove my code is correct?"
+    answer: "Not on its own. It proves the new code matches the old code within bounds. If the old code was wrong, so is the new one."
+  - question: "What happens with functions it cannot analyze?"
+    answer: "A careful tool abstains and reports why. An abstention is not a pass, so review those functions by hand."
+  - question: "Which languages does Graphify verify?"
+    answer: "Verification covers supported functions only. The verification docs list what is in scope, and unsupported functions are reported as such."
 ---
 
 Differential formal verification is a way to check a code change by comparing the new version of a function with the old one. Instead of proving that code meets a written specification, it proves that two implementations behave the same. When they do not, it produces a concrete input where their outputs differ. Graphify, a code knowledge graph for AI coding agents, runs this check on pull requests.

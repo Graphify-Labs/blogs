@@ -13,6 +13,17 @@ tags:
   - graph
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Does graphify benchmark call an LLM?"
+    answer: "No. It runs offline against graph.json."
+  - question: "Can I pass my own questions to the benchmark?"
+    answer: "Not from the command line. Use graphify query to see the size of any single answer."
+  - question: "Why is one question missing from my results?"
+    answer: "Questions with no matching node labels are skipped, for example in a repository with no authentication code."
+  - question: "Is the ratio the same as cost savings?"
+    answer: "No. It compares an estimated corpus with answer size. Real savings depend on how your agent works."
+  - question: "Where does the corpus word count come from?"
+    answer: "From the detection step of a /graphify run. Without it, the benchmark estimates 50 words per node."
 ---
 
 The graphify benchmark is a command in the open-source Graphify CLI that compares two token counts. One is an estimate of your whole corpus. The other is the average size of the graph's answers to five sample questions. The ratio shows how focused graph answers are. It says nothing about whether those answers are correct.

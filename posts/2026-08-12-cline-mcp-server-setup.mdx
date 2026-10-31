@@ -12,6 +12,17 @@ categories:
 tags:
   - cline
   - mcp
+faq:
+  - question: "Where is cline_mcp_settings.json?"
+    answer: "Open it from the Cline panel: MCP Servers, Configure, then Configure MCP Servers. The Cline CLI uses ~/.cline/data/settings/cline_mcp_settings.json."
+  - question: "Why does Cline show a 405 error for a remote server?"
+    answer: "The entry is probably missing \"type\": \"streamableHttp\", so Cline tried legacy SSE. Add the type and reconnect."
+  - question: "Does Graphify need an API key in Cline?"
+    answer: "No. The hosted server uses OAuth in the browser, and the local server reads a file on your disk."
+  - question: "Can Cline use Graphify across several repositories?"
+    answer: "Yes. With hosted Graphify, the server can see every repository in your workspace that you have access to."
+  - question: "Does the local server send my code anywhere?"
+    answer: "No. graphify-mcp reads a graph file on your machine. Cline sends what it reads to your chosen model provider."
 ---
 
 A Cline MCP server setup connects Cline, the open-source coding agent, to tools through the Model Context Protocol (MCP). Cline supports local servers that it starts as a process and remote servers it reaches at a URL. This guide adds Graphify, a code knowledge graph, both ways, so Cline can ask how your code connects instead of reading file after file.

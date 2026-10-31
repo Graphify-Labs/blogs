@@ -13,6 +13,17 @@ tags:
   - cli
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Does Graphify work on Windows without WSL?"
+    answer: "Yes. The CLI runs in native PowerShell. WSL works too, as a Linux environment."
+  - question: "Do I need an API key on Windows?"
+    answer: "Not for code. Code parsing is local. Docs and images go through your assistant's model."
+  - question: "Why is graphify not recognized after pip install?"
+    answer: "Your Python Scripts folder is not on PATH. Use uv or pipx, or run python -m graphify."
+  - question: "Can I use Graphify with Cursor on Windows?"
+    answer: "Yes. Run graphify cursor install in the project to add an always-on rule for Cursor."
+  - question: "Where does Graphify write its output?"
+    answer: "To a graphify-out folder in the project: graph.html, GRAPH_REPORT.md, and graph.json."
 ---
 
 A Graphify Windows install is a three-step setup of the open-source Graphify CLI: install Python 3.10 or newer, install the `graphifyy` package with uv, and run `graphify install`. On Windows, `graphify install` picks the Windows version of the Claude Code skill by default. Then you build your first graph from PowerShell.

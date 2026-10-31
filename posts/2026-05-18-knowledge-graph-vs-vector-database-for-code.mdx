@@ -13,6 +13,17 @@ tags:
   - rag
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Is a knowledge graph better than a vector database?"
+    answer: "Neither is better in general. They answer different questions."
+  - question: "Does a knowledge graph need embeddings?"
+    answer: "No. Edges can come from parsing, as with code, or from extraction by a model."
+  - question: "Can a graph database store vectors?"
+    answer: "Some can. Neo4j, for example, offers vector indexes alongside graph queries."
+  - question: "Which is cheaper to keep current?"
+    answer: "For code, re-parsing changed files is local and needs no model. Re-embedding needs a model call per changed chunk."
+  - question: "Is Graphify a vector database?"
+    answer: "No. Graphify builds a code knowledge graph and stores it as graph.json."
 ---
 
 A knowledge graph is a store of entities and the named relationships between them, while a vector database stores embeddings and finds items whose embeddings are close to a query. Graphify, an open-source CLI, builds the first kind for code. One answers "how are these connected?" The other answers "what looks like this?"

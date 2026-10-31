@@ -13,6 +13,17 @@ tags:
   - graphify
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Is the command graphify or graphifyy?"
+    answer: "The command is graphify. The package you install is graphifyy."
+  - question: "Which command needs no API key?"
+    answer: "graphify update and the query commands run locally with no model."
+  - question: "How do I limit query output size?"
+    answer: "Pass --budget to graphify query. The default is 2,000 tokens."
+  - question: "Can I rebuild the graph after every commit?"
+    answer: "Yes. Run graphify hook install to add post-commit and post-checkout hooks."
+  - question: "Where is the full flag list?"
+    answer: "Run graphify --help, or read the CLI configuration docs."
 ---
 
 The Graphify CLI commands are the terminal commands that build a code knowledge graph, query it, and wire it into AI coding assistants. This reference groups every command in Graphify 0.8.33 by the job it does. It lists each command with the flags you are most likely to need.

@@ -13,6 +13,17 @@ tags:
   - cli
   - pypi
   - mcp
+faq:
+  - question: "Why is the package graphifyy and not graphify?"
+    answer: "The PyPI name has two y's. The command is still graphify. Other similarly named packages are not from Graphify Labs."
+  - question: "Does the Graphify CLI need an account or API key?"
+    answer: "No. It is free under Apache 2.0, needs no account, and code-only builds make no model calls."
+  - question: "Which Python version does Graphify need?"
+    answer: "Python 3.10 or newer."
+  - question: "Can I use uvx instead of installing?"
+    answer: "You can run a one-off command with uvx, but a persistent install with uv tool install graphifyy is better for assistants and hooks."
+  - question: "Does hosted Graphify need the CLI?"
+    answer: "No. Hosted Graphify builds the graph for you. Your assistant connects to https://api.graphify.com/mcp."
 ---
 
 Graphify is a code knowledge graph that your AI coding agent queries instead of grepping, and there are two ways to install Graphify. You can install the open-source Graphify CLI from PyPI and build graphs on your machine. Or you can use hosted Graphify at app.graphify.com, which needs no install beyond connecting your agent.

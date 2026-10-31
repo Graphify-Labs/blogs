@@ -12,6 +12,17 @@ categories:
 tags:
   - code-review
   - ai-review
+faq:
+  - question: "Is graph based review slower than diff-only review?"
+    answer: "Not noticeably once the graph exists. Lookups in a graph are fast. Building the graph happens on push, not during review."
+  - question: "Does graph based review replace human reviewers?"
+    answer: "No. It gives reviewers better leads. A person still decides whether a change is right."
+  - question: "What languages does graph based review support?"
+    answer: "Any language the graph builder parses. The Graphify CLI supports about 40."
+  - question: "How do I trigger a Graphify review manually?"
+    answer: "Comment @graphify review on the pull request."
+  - question: "Does it work with GitLab?"
+    answer: "Graphify indexes GitLab repositories. Formal verification runs on GitHub pull requests."
 ---
 
 Graph based code review checks a pull request against a code graph of the whole repository. Diff-only review reads just the changed lines. The difference matters most for bugs that live outside the diff, in a caller that relied on the old behavior. Graphify, a code knowledge graph for AI coding agents, powers the graph based kind.

@@ -13,6 +13,17 @@ tags:
   - graph
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Do I need an API key to graph PDFs?"
+    answer: "Inside an assistant, no extra key: the assistant's model does the work. Headless graphify extract needs a backend key or a local Ollama instance."
+  - question: "Are scanned PDFs supported?"
+    answer: "Graphify extracts from the PDF's text. A scan with no text layer gives the model little to read, so run OCR first."
+  - question: "Can I graph only the docs folder?"
+    answer: "Yes. Pass the folder, for example /graphify ./docs, or exclude paths with .graphifyignore."
+  - question: "Do doc edges update when files change?"
+    answer: "Run /graphify . --update to re-extract only changed files. Code-only changes rebuild locally with graphify update .."
+  - question: "Where do the PDF results end up?"
+    answer: "In graphify-out/graph.json, next to the code nodes. Each node records the source file it came from."
 ---
 
 A knowledge graph from PDF and code is one graph where functions and classes sit next to the design docs, specs, and papers that explain them. Graphify builds it in two passes. Code is parsed locally with tree-sitter. Docs, PDFs, Office files, and images are read by a model that links concepts to the code they describe.

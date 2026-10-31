@@ -13,6 +13,17 @@ tags:
   - tokens
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "How large is the Claude Code context window?"
+    answer: "It depends on the model you run. Check the model's documentation and run /context to see current use. Plan around the space left after setup, not the headline size."
+  - question: "Does /compact lose information?"
+    answer: "Yes, by design. It replaces the detailed history with a summary. Give it a short instruction about what to keep, such as the current task and the files you changed."
+  - question: "Does Graphify send my code to a model?"
+    answer: "No. The code graph is built locally with tree-sitter. Docs, PDFs, and images are different: those go through your assistant's model for extraction."
+  - question: "Do I need an MCP server to use the graph?"
+    answer: "No. Claude Code can read GRAPH_REPORT.md and call graphify query from the shell. An optional MCP server exposes the same graph as tools."
+  - question: "Will the hook block Claude from searching?"
+    answer: "No. It adds a reminder that a graph exists. Claude can still grep when the graph does not answer the question."
 ---
 
 The Claude Code context window is everything the model can see on a turn. That includes the system prompt, your CLAUDE.md files, tool definitions, the conversation so far, and every file or search result a tool returned. When it fills, Claude Code compacts or forgets. Keeping it lean means putting less raw search output into it. Graphify, an open-source CLI, helps by giving Claude Code a compact code graph to query instead of whole files.

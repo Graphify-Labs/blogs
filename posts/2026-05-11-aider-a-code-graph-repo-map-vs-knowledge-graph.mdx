@@ -13,6 +13,17 @@ tags:
   - graph
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Does Graphify replace the Aider repo map?"
+    answer: "No. Keep the repo map on. The graph answers specific structural questions when you ask."
+  - question: "Can I turn the repo map off?"
+    answer: "Yes. Aider's docs note --map-tokens 0 disables it."
+  - question: "Does the graph cost tokens to build?"
+    answer: "Not for code. graphify update . parses locally. Docs and images need a model pass."
+  - question: "Does Aider read AGENTS.md on its own?"
+    answer: "Aider reads conventions files you load with /read-only or --read. Load AGENTS.md that way to apply the graphify section."
+  - question: "How do I keep the graph current?"
+    answer: "Run graphify update . after edits, or graphify hook install to rebuild on each commit."
 ---
 
 The Aider repo map is a compact summary of a repository that Aider sends to the model with each request. It lists the most important classes, functions, and signatures, ranked so the summary fits a token budget. A code knowledge graph is different: it stores every call and import as an edge you can query. The two work well together. Graphify, an open-source CLI, builds a fuller code knowledge graph for the same job.

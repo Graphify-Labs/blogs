@@ -13,6 +13,15 @@ tags:
   - antigravity
   - mcp
   - cli
+faq:
+  - question: "Is Google Antigravity officially supported by Graphify?"
+    answer: "Yes. antigravity is a built-in platform in the Graphify CLI installer, and the hosted MCP server works with any remote MCP client."
+  - question: "Should I commit the .agents folder?"
+    answer: "Commit .agents/rules/graphify.md and .agents/workflows/graphify.md if your team uses Antigravity. The skill itself sits in your home directory."
+  - question: "Does Graphify send my code to Google?"
+    answer: "The CLI parses code locally. Antigravity sends what it reads to its own model provider under its own terms."
+  - question: "Do I need an API key?"
+    answer: "No. Hosted Graphify uses OAuth, and local code-only graphs need no key."
 ---
 
 Graphify is a code knowledge graph that coding agents query instead of grepping, and using Graphify with Google Antigravity takes a few minutes. Antigravity's agents are good at writing code. On a large repository, they still need to know how files connect. A graph gives them callers, imports and paths with file locations, so they read less and guess less.

@@ -13,6 +13,17 @@ tags:
   - code-graph
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Do I need an API key to index SQL or Terraform?"
+    answer: "No. graphify update . parses these files locally with no model."
+  - question: "Why are my tables missing from the graph?"
+    answer: "Check that you installed the sql extra, then run graphify update . again."
+  - question: "Does Graphify read Terraform modules and variables?"
+    answer: "It parses .tf, .tfvars and .hcl files. Check the graph for the references you need."
+  - question: "Is the PostgreSQL password stored in the graph?"
+    answer: "Pass credentials through an environment variable where possible, and use a read-only user."
+  - question: "Can I see which code depends on a resource?"
+    answer: "Yes. Run graphify affected on the resource name to list what references it."
 ---
 
 A code graph with SQL and Terraform is a graph that stores tables, views and cloud resources as nodes beside your functions and classes. Edges record which table references which, and which resource depends on which. Graphify, an open-source CLI, indexes all three locally in Graphify 0.8.36.

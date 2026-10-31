@@ -12,6 +12,17 @@ categories:
 tags:
   - change-impact
   - code-review
+faq:
+  - question: "What is the blast radius of a code change?"
+    answer: "It is all the code that a change can affect, through direct and indirect calls, imports and references."
+  - question: "How many hops should I check?"
+    answer: "Start with two. Shared utilities and core models often need three or more."
+  - question: "Does the blast radius include tests?"
+    answer: "Tests that call the changed code show up as callers. They are the first ones to run."
+  - question: "Can a blast radius be too large to review?"
+    answer: "Yes. If a small change reaches most of the codebase, split the change or add an adapter so fewer callers depend on it."
+  - question: "Does this work across repositories?"
+    answer: "Yes, once the graphs are combined. Our post on a multi-repo code graph covers how."
 ---
 
 A code change blast radius is the set of code a change can affect: the function you edited, everything that calls it, and everything that calls those callers. Knowing it before you merge tells you which tests to run, who should review and where a bug would show up. Graphify, a code knowledge graph for AI coding agents, computes it from call and import edges.

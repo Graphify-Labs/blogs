@@ -12,6 +12,17 @@ categories:
 tags:
   - claude-code
   - mcp
+faq:
+  - question: "What is the best MCP server for Claude Code?"
+    answer: "It depends on the job. For large codebases, a code graph helps most because it answers structural questions. For pull request work, add GitHub's server."
+  - question: "Do MCP servers slow Claude Code down?"
+    answer: "They can. Every tool description takes context, and long tool lists make selection harder. Keep a small active set."
+  - question: "Does Graphify need an API key in Claude Code?"
+    answer: "No. The hosted server signs you in with OAuth in the browser. Local code-only graphs need no key."
+  - question: "Should I use user scope or project scope?"
+    answer: "Use --scope user for servers you want everywhere. Commit .mcp.json for servers the whole team should share in one repository."
+  - question: "Is a memory MCP server worth adding?"
+    answer: "Usually not in Claude Code, which has its own memory files. Add one only if you need memory shared across several clients."
 ---
 
 The best MCP servers for Claude Code are the ones that show it something it cannot already see. Claude Code already reads, edits and searches files. An MCP (Model Context Protocol) server earns its place when it adds a new source: your repository's structure, your issues, live docs, a browser or production errors. Graphify, a code knowledge graph for AI coding agents, is the server this guide puts first.
