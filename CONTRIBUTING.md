@@ -141,6 +141,12 @@ Most readers arrive from a search result or an AI answer. Most of the work happe
 
 **Freshness.** When you change the facts in an old post, set `updated` to that day and leave `date` alone. A typo fix is not an update.
 
+**Lead post.** `featured: true` pins a post as the blog lead whatever its date. Only one post may set it; move the flag rather than adding a second.
+
+**FAQ.** An optional `faq` list of `question` / `answer` pairs becomes FAQPage structured data. Each answer must also appear in the post body, word for word or close to it.
+
+**Dates.** A post dated after today (India time) stays off the blog list, its own URL (404), the sitemap, RSS, `llms.txt` and IndexNow until that day, then appears on the daily rebuild.
+
 **Do not** repeat the phrase to fill space, write a second version for AI, copy a post that is already live somewhere else, or link graphify.net (it is not us). If you post your piece on your own blog, dev.to, or Medium after it is live here, set that copy's canonical URL to `https://graphify.com/blog/<slug>`.
 
 The site does the rest on every post: the share card, structured data for the article and its writers, the sitemap, the RSS feed, `llms.txt`, a markdown copy at `/blog/<slug>.md` for agents, and links to the post from related posts and from the pages its tags name ([3. Tags](#3-tags)). Once a new or refreshed post is live, `publish.yml` sends its URL to IndexNow.

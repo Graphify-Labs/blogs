@@ -1,0 +1,93 @@
+---
+title: "Graphify open source vs hosted: which one to use"
+description: "Graphify open source vs hosted: how the Graphify CLI and hosted Graphify differ in builds, updates, sign-in, pull requests and teams, and how to pick."
+date: "2026-08-26"
+keyword: graphify open source vs hosted
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - product
+tags:
+  - open-source
+  - mcp
+  - cli
+---
+
+Graphify open source vs hosted is a choice between two ways to run the same code knowledge graph. Open-source Graphify is the `graphifyy` package on PyPI, under Apache 2.0, and it builds the graph on your machine. Hosted [Graphify](https://app.graphify.com) indexes your GitHub or GitLab repositories and serves the graph to your agents over MCP.
+
+Both give your AI coding agent the same kind of map: functions, classes and files, linked by calls, imports and references. They differ in where the graph is built, how it stays current and what your team can do with it.
+
+## Should I use the Graphify CLI or hosted Graphify?
+
+Use hosted Graphify when your code is on GitHub or GitLab and you want the graph rebuilt on every push, shared with your team and used for pull request reviews. Use the Graphify CLI when the project lives only on your machine, must stay offline, or you want to build and keep the graph yourself with no account.
+
+## Graphify CLI vs hosted Graphify, side by side
+
+| Area | Graphify CLI | Hosted Graphify |
+| --- | --- | --- |
+| Graph build | `/graphify .` or `graphify extract` on your machine | Indexed from the default branch |
+| Updates | `graphify update .`, `graphify watch .` or git hooks | Each push to the default branch |
+| Agent connection | `graphify-mcp` over stdio, or a skill | `https://api.graphify.com/mcp` over Streamable HTTP |
+| Sign-in | None | OAuth in the browser |
+| Pull requests | `list_prs`, `get_pr_impact` and `triage_prs` through `gh` | Automatic reviews, plus formal verification on GitHub |
+| Change impact | `graphify affected "<node>"` | Impact questions through the hosted MCP tools |
+| Several repositories | `graphify merge-graphs` or `graphify global add` | Combine repositories in one workspace |
+| Team | Each clone installs the skill and hooks | Shared workspace and GitHub org access |
+| Cost | Free, Apache 2.0 | Free and Pro plans |
+
+The [Graphify vs Graphify CLI docs page](https://docs.graphify.com/platform/graphify-vs-local) keeps this table current.
+
+## What does the Graphify CLI do well?
+
+The Graphify CLI keeps everything on your machine. A code-only build parses files with tree-sitter and makes no model calls, so it needs no API key. It supports about 40 languages. It also ships skills for many assistants, so `graphify install --platform cursor` or `graphify claude install` sets up the agent side.
+
+It is the right pick for private code, air-gapped work and experiments. You can also commit `graphify-out/` so teammates share one graph through git.
+
+```bash
+uv tool install graphifyy
+graphify install
+```
+
+## What does hosted Graphify add?
+
+Hosted Graphify removes the build and upkeep. Connect a repository, and every push to the default branch starts a new build. Teammates sign in to the same workspace, and since 10 August a teammate can request access to a GitHub organization that is already connected.
+
+It also adds pull request work that needs a server. Reviews read the graph, not only the diff, so they reach callers a change can affect. Formal verification compares each supported changed function with its previous version. It either proves they behave the same within checked bounds or finds a concrete input that differs. Since 20 August, replies such as `@graphify wrong <finding>` teach reviews what to skip. See [pull request reviews](https://docs.graphify.com/platform/reviews).
+
+## Can I use both?
+
+Yes, but not for the same project in the same agent. Two servers with overlapping tools confuse the agent. A common pattern is the CLI for private side projects and hosted Graphify for team repositories. Switching a repository later is a configuration change: your application code stays the same.
+
+Our explainer on [what a code knowledge graph is](https://graphify.com/blog/what-is-a-code-knowledge-graph) covers what the graph holds in both forms.
+
+## Try it
+
+Sign in at [app.graphify.com](https://app.graphify.com), connect a repository and add `https://api.graphify.com/mcp` to your agent. To run it locally, use `uv tool install graphifyy`. Questions are welcome on [Discord](https://discord.gg/graphify).
+
+For setup in one agent, see [how to give Claude Code a code knowledge graph](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph).
+
+Related reading: [hosted graphs for GitLab](https://graphify.com/blog/gitlab-code-knowledge-graph) and [auditing inferred edges](https://graphify.com/blog/how-to-audit-inferred-edges). Sources: [Graphify on GitHub](https://github.com/Graphify-Labs/graphify), [graphifyy on PyPI](https://pypi.org/project/graphifyy/), [MCP specification](https://modelcontextprotocol.io/specification/2025-06-18).
+
+## FAQ
+
+### Is open-source Graphify the same engine as hosted Graphify?
+
+Both build the same kind of code graph. Hosted Graphify adds managed builds, sign-in, reviews and verification around it.
+
+### Does hosted Graphify support GitLab?
+
+Yes. You can sign in with GitLab and connect GitLab repositories. Formal verification runs on GitHub pull requests.
+
+### Is the Graphify CLI free for commercial use?
+
+Yes. It is licensed under Apache 2.0.
+
+### Does hosted Graphify need the CLI?
+
+No. Hosted Graphify builds the graph for you. Your agent only needs the MCP URL.
+
+### Can I move from the CLI to hosted later?
+
+Yes. Connect the repository in the console, then point each agent at the hosted server. The local graph keeps working until you switch.
