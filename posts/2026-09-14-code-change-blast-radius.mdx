@@ -1,0 +1,110 @@
+---
+title: "Code change blast radius: find every caller first"
+description: "Code change blast radius is everything a change can affect. Find every direct and indirect caller before you merge, with a code graph or by hand."
+date: "2026-09-14"
+keyword: code change blast radius
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - change-impact
+  - code-review
+---
+
+A code change blast radius is the set of code a change can affect: the function you edited, everything that calls it, and everything that calls those callers. Knowing it before you merge tells you which tests to run, who should review and where a bug would show up. Graphify, a code knowledge graph for AI coding agents, computes it from call and import edges.
+
+This guide shows how to find it with a code graph and what to do with the list.
+
+## Why is text search not enough?
+
+`grep` finds names, not calls. It misses calls through aliases, re-exports, interfaces and method dispatch. It also returns comments and unrelated functions that share a name. On a large repository, you get false positives and gaps. A call graph records which function calls which.
+
+## How do I find every caller of a function?
+
+Build a code graph and ask for the affected nodes. A graph follows calls, imports and references, including callers that use a different name for the function. With the Graphify CLI, a code-only build parses files locally and needs no API key. Open-source Graphify is licensed under Apache 2.0. Run:
+
+```bash
+uv tool install graphifyy
+graphify extract . --code-only
+graphify affected "charge_card"
+```
+
+`graphify affected` walks callers up to two hops by default. Use `--depth` to go further for widely shared code:
+
+```bash
+graphify affected "charge_card" --depth 3
+```
+
+To see how two parts of the code connect, use `graphify path`:
+
+```bash
+graphify path "charge_card" "send_receipt"
+```
+
+## How do I read the blast radius?
+
+The list is only useful once you rank it. Direct callers can break at once, indirect callers break through them, and entry points are where users see the failure. Start with entry points, because they set the test plan and the review list. Sort the results into three groups:
+
+| Group | What it is | What to do |
+| --- | --- | --- |
+| Direct callers | Functions that call the changed one | Check each still gets what it expects |
+| Indirect callers | Callers of callers | Run their tests; look for public entry points |
+| Entry points | APIs, jobs and handlers in the list | Add them to the test plan and PR description |
+
+A small radius with no entry points is low risk. A radius that reaches public APIs or payment code needs a closer review and a second reviewer.
+
+## Can my AI agent check the blast radius for me?
+
+Yes. Connect the graph over MCP and ask in plain language: "What calls `charge_card`, and which of those are API handlers?" The agent then calls graph tools instead of grepping, and answers with file paths you can check. The local server is a separate entry point:
+
+```bash
+uv tool install "graphifyy[mcp]"
+graphify-mcp
+```
+
+Its tools include `get_neighbors`, `shortest_path` and `get_pr_impact`, which reports what an open pull request touches. Our guide to an [MCP server for your codebase](https://graphify.com/blog/mcp-server-for-your-codebase) shows the setup.
+
+Hosted [Graphify](https://app.graphify.com) keeps the graph current on every push. Its pull request reviews read the graph, so findings cover callers beyond the diff.
+
+## What should I do before merging?
+
+Turn the blast radius into a merge checklist. Run the right tests, name the risky entry points and pull in the owners of affected code. For a large radius, ship behind a feature flag or a staged rollout, so you can turn the change off fast. The [Google SRE book](https://sre.google/sre-book/reliable-product-launches/) covers staged rollouts in depth.
+
+1. List the changed functions.
+2. Get the blast radius for each.
+3. Run the tests for every caller in the list, not only the changed file.
+4. Name the entry points in the PR description.
+5. Ask the owner of any affected module to review.
+
+For the wider method, see [change impact analysis with a code graph](https://graphify.com/blog/change-impact-analysis-with-a-code-graph). The [check-impact docs](https://docs.graphify.com/concepts/check-impact) describe the same workflow in hosted Graphify.
+
+## Try it
+
+Sign in at [app.graphify.com](https://app.graphify.com) and connect a repository, or run `uv tool install graphifyy` and `graphify affected` locally. Background: [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph).
+
+Related reading: [change impact analysis](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) and [an MCP server for your codebase](https://graphify.com/blog/mcp-server-for-your-codebase). Sources: [tree-sitter](https://tree-sitter.github.io/tree-sitter/), [MCP specification](https://modelcontextprotocol.io/specification/2025-06-18).
+
+## FAQ
+
+### What is the blast radius of a code change?
+
+It is all the code that a change can affect, through direct and indirect calls, imports and references.
+
+### How many hops should I check?
+
+Start with two. Shared utilities and core models often need three or more.
+
+### Does the blast radius include tests?
+
+Tests that call the changed code show up as callers. They are the first ones to run.
+
+### Can a blast radius be too large to review?
+
+Yes. If a small change reaches most of the codebase, split the change or add an adapter so fewer callers depend on it.
+
+### Does this work across repositories?
+
+Yes, once the graphs are combined. Our post on a [multi-repo code graph](https://graphify.com/blog/multi-repo-code-graph) covers how.

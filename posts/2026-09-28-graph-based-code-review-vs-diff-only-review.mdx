@@ -1,0 +1,82 @@
+---
+title: "Graph based code review vs diff-only review"
+description: "Graph based code review reads callers and dependencies, not only the diff. See how it compares with diff-only review on accuracy, noise and missed bugs."
+date: "2026-09-28"
+keyword: graph based code review
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - code-review
+  - ai-review
+---
+
+Graph based code review checks a pull request against a code graph of the whole repository. Diff-only review reads just the changed lines. The difference matters most for bugs that live outside the diff, in a caller that relied on the old behavior. Graphify, a code knowledge graph for AI coding agents, powers the graph based kind.
+
+## What is diff-only code review?
+
+A diff-only reviewer, human or AI, sees the lines that were added and removed, plus a little surrounding context. It is fast and works on any repository. It cannot see who calls a changed function or which modules import a renamed constant. Many AI reviewers work this way, because the diff fits in a prompt.
+
+## What is graph based code review?
+
+A graph based reviewer starts from the diff, then follows edges in a code graph to the code a change can reach. The graph records functions, classes and files, linked by calls, imports and references. The reviewer can then ask: "Which callers pass `None` here, and does the new code still handle it?"
+
+## How do they compare?
+
+Graph based review trades a one-time setup for context the diff lacks. It finds broken callers and checks every use of a renamed symbol. Diff-only review needs no setup but guesses about unseen code. Research agrees: a 2024 [Empirical Software Engineering study](https://link.springer.com/article/10.1007/s10664-024-10600-2) used call-graph impact to improve pull request reviews.
+
+| | Diff-only review | Graph based review |
+| --- | --- | --- |
+| Context | Changed lines and nearby code | Changed lines plus callers and dependencies |
+| Catches broken callers | Only if they are in the diff | Yes, through call edges |
+| Renames and signature changes | Flags the change | Checks every use |
+| Noise | Higher: guesses about unseen code | Lower: guesses become lookups |
+| Setup | None | A code graph that stays current |
+| Speed | Fast | Fast once the graph exists |
+
+Our post on [change impact analysis with a code graph](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) covers how the graph finds affected code.
+
+## When does diff-only review fall short?
+
+Three cases come up often. A function's return type changes and a caller three files away still expects the old shape. A default argument changes and some callers relied on it. A shared helper changes and only one of its twenty callers was tested. In each case, the bug sits in code the diff never shows.
+
+## How does Graphify review a pull request?
+
+Hosted [Graphify](https://app.graphify.com) reviews pull requests using your code graph, so findings point at the callers and dependencies a change can reach. Findings appear on the pull request and on the Reviews page in the console. Reviews start when a pull request is opened, reopened or marked ready for review. You can also ask for one with `@graphify review`.
+
+Reviews give advice. For a firm answer on behavior, Graphify also runs formal verification on GitHub pull requests. For supported functions, it proves the changed version matches the previous one within checked bounds, or finds an input that differs. Replies such as `@graphify wrong <finding>` teach reviews what to skip. See [learning](https://docs.graphify.com/platform/learning).
+
+## Can I get graph context without hosted review?
+
+Yes. Open-source Graphify builds the graph locally, and its MCP server exposes `get_pr_impact` and `triage_prs`. Ask your agent to review an open pull request with those tools. Install with `uv tool install "graphifyy[mcp]"`. The [PR impact docs](https://docs.graphify.com/open-source/features/pr-impact) show the commands.
+
+## Try it
+
+Connect a repository at [app.graphify.com](https://app.graphify.com) and open a pull request. The [reviews docs](https://docs.graphify.com/platform/reviews) explain each part of a review. Background: [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph).
+
+Prefer to stay local? Run `uv tool install graphifyy` for the open-source CLI. Open-source Graphify is licensed under Apache 2.0. Related reading: [change impact analysis](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) and [tree-sitter code graphs](https://graphify.com/blog/tree-sitter-code-graph-for-ai-agents). Sources: [tree-sitter](https://tree-sitter.github.io/tree-sitter/), [GitHub pull request docs](https://docs.github.com/en/pull-requests).
+
+## FAQ
+
+### Is graph based review slower than diff-only review?
+
+Not noticeably once the graph exists. Lookups in a graph are fast. Building the graph happens on push, not during review.
+
+### Does graph based review replace human reviewers?
+
+No. It gives reviewers better leads. A person still decides whether a change is right.
+
+### What languages does graph based review support?
+
+Any language the graph builder parses. The Graphify CLI supports about 40.
+
+### How do I trigger a Graphify review manually?
+
+Comment `@graphify review` on the pull request.
+
+### Does it work with GitLab?
+
+Graphify indexes GitLab repositories. Formal verification runs on GitHub pull requests.
