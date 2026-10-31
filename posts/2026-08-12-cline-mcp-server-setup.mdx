@@ -3,6 +3,8 @@ title: "Cline MCP server setup with Graphify, step by step"
 description: "Cline MCP server setup: add a remote Streamable HTTP server or a local stdio server in cline_mcp_settings.json, sign in, and test it with Graphify."
 date: "2026-08-12"
 keyword: cline mcp server setup
+imgThumb: thumb.png
+imgSocial: social.png
 authors:
   - fahad
 categories:
@@ -85,10 +87,10 @@ The local server exposes ten tools, including `query_graph`, `get_neighbors` and
 
 ## How do I test the connection?
 
-Check that the server shows a green status in the MCP Servers panel and lists its tools. Then start a new task and send a prompt that must call the server:
+Check that the server shows a green status in the MCP Servers panel and lists its tools. A red status usually means a wrong URL, a missing `type` field or an expired sign-in. Then start a new task and send a prompt that must call the server:
 
 ```text
-Use Graphify's list_repositories tool and show the repositories I can access. If the tool fails, report the error instead of guessing.
+Use Graphify to list the repositories you can see. If the tool fails, report the error instead of guessing.
 ```
 
 For the local server, ask Cline to call `graph_stats` instead. Once that works, try a real question: "What calls the function that loads config, and which files are they in?"
@@ -102,6 +104,8 @@ Graph tools only read, so auto-approving them saves clicks. Add tool names to `a
 Connect a repository at [app.graphify.com](https://app.graphify.com) and add the remote entry above. For local use, run `uv tool install "graphifyy[mcp]"`. Questions are welcome on [Discord](https://discord.gg/graphify).
 
 Using other agents too? See [how to give Cursor a code knowledge graph](https://graphify.com/blog/how-to-give-cursor-a-code-knowledge-graph) and [best codebase context tools for AI coding assistants](https://graphify.com/blog/best-codebase-context-tools-for-ai-coding-assistants-2026).
+
+Open-source Graphify is licensed under Apache 2.0. Related reading: [the Cursor setup](https://graphify.com/blog/how-to-give-cursor-a-code-knowledge-graph) and [the Claude Code setup](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph). Sources: [Cline MCP configuration](https://docs.cline.bot/mcp/configuring-mcp-servers), [MCP specification](https://modelcontextprotocol.io/specification/2025-06-18).
 
 ## FAQ
 
