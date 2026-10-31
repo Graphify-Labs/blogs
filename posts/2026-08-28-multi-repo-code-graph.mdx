@@ -1,0 +1,98 @@
+---
+title: "Multi-repo code graph: trace code across repositories"
+description: "A multi-repo code graph joins the graphs of several repositories so one query can follow a dependency from an app into the library it uses."
+date: "2026-08-28"
+keyword: multi-repo code graph
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - cross-repo
+  - graph
+  - cli
+---
+
+Graphify is a code knowledge graph for AI coding agents. A multi-repo code graph is the same idea applied to a system that spans several repositories: build a graph per repository, then combine them so a question about a change can cross the boundary between an application and the libraries it depends on.
+
+Most "what breaks if I change this?" answers I've seen stop at the repository boundary, which is exactly where the shared library lives. This post combines two real graphs, [Flask](https://github.com/pallets/flask) and [itsdangerous](https://github.com/pallets/itsdangerous), which Flask uses to sign session cookies. It shows what joins cleanly, what does not yet, and how the hosted app handles the same job.
+
+## How do you build a multi-repo code graph in Graphify?
+
+Go to **Graphs > Cross-Repository** in Graphify and select **Combine repositories**. In the **Combine graphs** dialog, pick two or more indexed repositories and name the graph. That is the whole setup. You then query one graph that holds both repositories instead of switching between them and joining the answers by hand.
+
+1. Index each repository in [Graphify](https://app.graphify.com).
+2. Open **Graphs > Cross-Repository** and select **Combine repositories**.
+3. Pick two or more repositories and name the graph.
+
+The [graph docs](https://docs.graphify.com/platform/graphs.md) cover the details. The rest of this post does the same merge with the open-source CLI, so you can see what the merge links and what it leaves alone.
+
+## Why do you need a multi-repo code graph?
+
+Because real systems are split. A service calls a shared client library, a frontend imports a design system, and a change in one repository breaks another that no single-repo graph can see. A combined graph keeps every repository's nodes and adds the edges between them, so an impact question can follow the dependency instead of stopping at the repository edge.
+
+## How do you merge two graphs with the Graphify CLI?
+
+Build each repository with `graphify update .`, then pass both `graph.json` files to `graphify merge-graphs`. Every node keeps a repository prefix, so `want_bytes()` in itsdangerous cannot collide with a same-named function elsewhere. The merged file can be queried with the same commands as a single graph.
+
+```bash
+uv tool install graphifyy
+(cd flask && graphify update .)
+(cd itsdangerous && graphify update .)
+graphify merge-graphs flask/graphify-out/graph.json itsdangerous/graphify-out/graph.json --out merged.json
+```
+
+```text
+Merged 2 graphs -> 2702 nodes, 4448 edges
+Written to: merged.json
+```
+
+The two inputs had 2,341 and 372 nodes. The merged graph has 2,702, so a few nodes were folded together during the merge, and the edge count is the sum of both graphs.
+
+## What does a cross-repo node look like?
+
+It looks like any other node, with a repository prefix on its ID. Flask's session interface creates its signer in `get_signing_serializer()`. Explaining that node in the merged graph shows the dependency on itsdangerous, with the relation, the confidence tag, and the file and line of every connection, so you can follow the hop across the boundary:
+
+```bash
+graphify explain ".get_signing_serializer()" --graph merged.json
+```
+
+```text
+Node: .get_signing_serializer()
+  ID:        flask::src_flask_sessions_securecookiesessioninterface_get_signing_serializer
+  Source:    src/flask/sessions.py L303
+Connections (5):
+  --> Flask [references] [EXTRACTED] src/flask/sessions.py:L303
+  <-- .save_session() [calls] [EXTRACTED] src/flask/sessions.py:L373
+  <-- SecureCookieSessionInterface [method] [EXTRACTED] src/flask/sessions.py:L303
+  <-- .open_session() [calls] [EXTRACTED] src/flask/sessions.py:L324
+  --> URLSafeTimedSerializer [references] [EXTRACTED] src/flask/sessions.py:L303
+```
+
+## What does merging not join yet?
+
+Name references to an imported class can stay on a stub node. In this merge, Flask's `URLSafeTimedSerializer` reference points at `flask::urlsafetimedserializer`, a placeholder, not at the class in `src/itsdangerous/url_safe.py`. So `graphify path` from the Flask method to that class finds no directed path. I read the stub as a pointer to look up, not a dead end.
+
+
+
+What the merge does link is member calls. The open-source resolver parks a call such as `obj.method()` when the receiver's type lives in another repository, then binds it after the merge when that type resolves to exactly one declaration. An ambiguous name still produces no edge. This rule, documented in the source of [open-source Graphify](https://github.com/Graphify-Labs/graphify), trades a few missing edges for no invented ones.
+
+## Try it
+
+Combine two repositories that depend on each other in [Graphify](https://app.graphify.com). Or run `graphify merge-graphs` locally after `uv tool install graphifyy`. Background reading: [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph) and the [code graph glossary entry](https://graphify.com/glossary/code-graph).
+
+## FAQ
+
+### How many repositories can I merge?
+
+The CLI accepts several graph files. In the hosted app, pick two or more repositories in the **Combine graphs** dialog.
+
+### Do merged nodes clash when two repositories use the same names?
+
+No. Each node ID is prefixed with its repository, as in `flask::...` and `itsdangerous::...`.
+
+### Does merging call an LLM?
+
+No. Merging composes existing graphs and runs the cross-repo call pass. No model is involved.
