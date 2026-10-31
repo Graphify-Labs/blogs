@@ -1,0 +1,93 @@
+---
+title: "How to understand a legacy codebase in a day"
+description: "A one-day plan to understand a legacy codebase: run it, find entry points, map the structure with a code graph, trace one flow, and test before you change."
+date: "2026-06-03"
+keyword: understand legacy codebase
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - onboarding
+  - legacy-code
+  - code-graph
+imgThumb: thumb.png
+imgSocial: social.png
+---
+
+To understand a legacy codebase quickly, run it, find its entry points, map its structure, then trace one real flow end to end. A code graph speeds up the mapping step. Graphify, an open-source CLI, builds one locally from source with no model and no API key.
+
+## What should you do in the first hour?
+
+Get the code running before you read much of it. Clone it, install dependencies, and run the tests or the app once. Note every step that fails, because those notes become your first fix. Then list the entry points: the main script, the HTTP routes, the CLI commands, and any scheduled jobs. Those are where real requests start.
+
+[Atomic Object's guide](https://spin.atomicobject.com/understand-legacy-codebase/) makes the same point: start from what runs, not from the folder tree.
+
+## How do you map the structure without reading every file?
+
+Build a code graph and read its report instead of the folder tree. Graphify parses source with [tree-sitter](https://tree-sitter.github.io/tree-sitter/) and records files, classes, functions, calls and imports as nodes and edges. The report then names the most connected symbols and the clusters they form. That gives you a reading order for the afternoon.
+
+```bash
+uv tool install graphifyy
+graphify update .
+```
+
+The command writes `graphify-out/` with `graph.json`, `GRAPH_REPORT.md` and an interactive `graph.html`. The code is never sent anywhere.
+
+## What does the report show on a real project?
+
+We ran Graphify 0.8.30 on the [httpx](https://github.com/encode/httpx) repository at commit `b5addb6`. The report counted 99 files, 2,174 nodes, 5,620 edges and 177 communities. Its god nodes, the most connected symbols, were `Response` with 179 edges, `URL` with 152 and `Request` with 121.
+
+Those three classes are the core of the library. A newcomer who reads them first will recognise most of the code that follows.
+
+## How do you trace one flow end to end?
+
+Pick one request path and follow it through the graph. `graphify path` prints the shortest chain between two symbols, and `graphify explain` lists one symbol's neighbours with file and line. On httpx, `graphify path "Client" "HTTPTransport"` returned a two-hop chain. Each hop was tagged EXTRACTED, meaning it was read directly from source.
+
+```text
+Client --method [EXTRACTED]--> ._init_proxy_transport() --calls [EXTRACTED]--> HTTPTransport
+```
+
+`graphify explain "._send_single_request()"` showed it at `httpx/_client.py L1001` with eight connections. These included `Client`, `Request`, `Response` and `request_context()`.
+
+## How do you change legacy code safely?
+
+Write tests that pin down current behaviour before you change anything. Michael Feathers calls these characterization tests: they record what the code does, not what it should do. Also read the git history of the files you touch, a step [Code Reading's guide](https://code-reading.org/understanding-legacy-code/) covers too. Commit messages often explain why odd code exists.
+
+Before editing a hub symbol, run `graphify explain` on it to see who depends on it. Treat INFERRED edges as leads to check, not facts.
+
+## What does a one-day plan look like?
+
+| Time | Step | Output |
+|---|---|---|
+| Hour 1 | Run the app and tests | Setup notes |
+| Hour 2 | List entry points | Routes, commands, jobs |
+| Hour 3 | Build the graph, read the report | God nodes and clusters |
+| Afternoon | Trace one flow with `path` and `explain` | A written call chain |
+| End of day | Add one characterization test | A safety net |
+
+## FAQ
+
+### Does Graphify need an API key for code?
+
+No. `graphify update .` parses code locally with tree-sitter and uses no model.
+
+### Can I map only part of a large legacy repo?
+
+Yes. Pass a subfolder, such as `graphify update ./src`, or exclude paths with `.graphifyignore`.
+
+### What is a god node?
+
+It is one of the most connected symbols in the graph. Graphify lists them in `GRAPH_REPORT.md`.
+
+### Should I trust every edge in the graph?
+
+Trust EXTRACTED edges, which come straight from source. Check INFERRED edges by reading the code.
+
+### How do I keep the graph current while I work?
+
+Run `graphify update .` after changes, or `graphify watch .` to rebuild on save.
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. Read the [querying docs](https://docs.graphify.com/open-source/features/querying) and the [code graph glossary entry](https://graphify.com/glossary/code-graph). Related: [code knowledge graph examples](/blog/code-knowledge-graph-examples-5-questions-it-answers-that-grep-cant). See also [how to visualize a codebase as a graph](/blog/how-to-visualize-a-codebase-as-a-graph).
