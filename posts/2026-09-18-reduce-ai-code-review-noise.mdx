@@ -3,6 +3,8 @@ title: "How to reduce AI code review noise on pull requests"
 description: "Reduce AI code review noise: measure which comments get acted on, give the reviewer graph context, and teach it what to skip with PR feedback."
 date: "2026-09-18"
 keyword: reduce ai code review noise
+imgThumb: thumb.png
+imgSocial: social.png
 authors:
   - fahad
 categories:
@@ -12,7 +14,7 @@ tags:
   - ai-review
 ---
 
-To reduce AI code review noise, make every comment earn its place. A reviewer that posts ten comments when one matters trains your team to ignore all ten. The fix is a mix of measurement, better context and feedback that the reviewer learns from.
+To reduce AI code review noise, make every comment earn its place. A reviewer that posts ten comments when one matters trains your team to ignore all ten. The fix is a mix of measurement, better context and feedback that the reviewer learns from. Graphify, a code knowledge graph for AI coding agents, uses all three in its reviews.
 
 ## Why are AI code reviews noisy?
 
@@ -26,6 +28,8 @@ You do not need their pipeline to use the idea. For a sample of pull requests, c
 
 ## What actually cuts the noise?
 
+Split finding issues from checking them. Let the reviewer propose candidates, then keep only findings backed by evidence in the code. Hand style to tools built for it, such as [ESLint](https://eslint.org/) or [Ruff](https://docs.astral.sh/ruff/). Then let feedback mute what your team keeps rejecting.
+
 | Fix | What it removes | Effort |
 | --- | --- | --- |
 | Hand style to linters | Formatting and naming nits | Low |
@@ -36,11 +40,11 @@ You do not need their pipeline to use the idea. For a sample of pull requests, c
 
 ## How does a code graph help?
 
-A reviewer that sees only the diff cannot tell whether a renamed parameter breaks a caller in another package. With a code graph, it can check the callers and drop the guess. Hosted [Graphify](https://app.graphify.com) reviews pull requests using the code graph, so it looks beyond the diff to the callers and dependencies a change can reach. Our post on [change impact analysis with a code graph](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) explains the method.
+A reviewer that sees only the diff cannot tell whether a renamed parameter breaks a caller in another package. With a code graph, it checks the callers and drops the guess. Hosted [Graphify](https://app.graphify.com) reviews pull requests this way, looking beyond the diff. See [change impact analysis with a code graph](https://graphify.com/blog/change-impact-analysis-with-a-code-graph).
 
 ## How do I teach the reviewer what to skip?
 
-Reply on the pull request. Since 20 August, Graphify learns from three commands:
+Reply on the pull request. Feedback works best in the place the finding appears, because the reviewer sees which finding, which rule and which path you meant. Your teammates see the reply too, so the team agrees on what to mute. Since 20 August, Graphify learns from three commands:
 
 - `@graphify wrong <finding>` dismisses a finding that does not apply.
 - `@graphify good <finding>` confirms one that was useful.
@@ -50,11 +54,13 @@ The Learn page in the console shows what has been learned: muted findings, muted
 
 ## Why separate review from verification?
 
-Many review threads are arguments about whether a change altered behavior. A model's opinion cannot settle that. Formal verification can, for supported functions: it either proves the new version matches the old within checked bounds or finds an input that differs. Graphify runs it on GitHub pull requests. With that answer posted, the reviewer can skip "this might change behavior" comments. The [verification docs](https://docs.graphify.com/platform/verification) explain each result.
+Many review threads are arguments about whether a change altered behavior. Opinion cannot settle that. Formal verification can, for supported functions: it either proves the new version matches the old within checked bounds or finds an input that differs. Graphify runs it on GitHub pull requests, so reviewers can skip "this might change behavior" comments. See the [verification docs](https://docs.graphify.com/platform/verification).
 
 ## Try it
 
 Connect a repository at [app.graphify.com](https://app.graphify.com), open a pull request and reply `@graphify wrong` to the first finding you disagree with. Background: [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph).
+
+Prefer to stay local? Run `uv tool install graphifyy` for the open-source CLI. Open-source Graphify is licensed under Apache 2.0. Related reading: [change impact analysis](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) and [shared codebase context for teams](https://graphify.com/blog/shared-codebase-context-for-teams).
 
 ## FAQ
 
