@@ -1,0 +1,105 @@
+---
+title: "What is Graphify? The code knowledge graph for AI agents"
+description: "What is Graphify? A code knowledge graph for AI coding agents from Graphify Labs, hosted at app.graphify.com or open source under Apache 2.0 as graphifyy."
+date: "2026-11-06"
+keyword: what is graphify
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - knowledge-graph
+  - mcp
+  - open-source
+---
+
+Graphify is a code knowledge graph for AI coding agents, built by Graphify Labs at graphify.com. So, what is Graphify in practice? It maps your repositories into functions, classes, files and the calls and imports between them. Agents such as Claude Code, Cursor and Codex query that map over MCP instead of grepping and re-reading files.
+
+There are two ways to run it. [Graphify](https://app.graphify.com) is the hosted product: connect GitHub or GitLab and we build and update the graph for you. The Graphify CLI is the open-source engine, published on PyPI as `graphifyy`, that builds the same kind of graph on your own machine.
+
+## Which Graphify is this?
+
+Several unrelated products share the name. This one is Graphify Labs: graphify.com, app.graphify.com, the Graphify-Labs organization on GitHub and the `graphifyy` package on PyPI. It is a developer tool for code. If a page describes Notion workspace graphs or KPI dashboards, it is about a different company with the same name.
+
+To be specific, getgraphify.com turns Notion pages into a visual graph, and graphify.ai is a KPI tracking and visualization tool. Neither is affiliated with us. Our official channels are listed on the [security and data handling page](https://docs.graphify.com/platform/support/security.md): graphify.com, the [Graphify-Labs GitHub organization](https://github.com/Graphify-Labs) and the `graphifyy` package.
+
+## What is Graphify used for?
+
+Graphify answers structural questions about code: who calls this function, what does this module depend on, and what would a change reach. Your agent gets those answers as a small set of connected nodes with file paths, so it reads the relevant code instead of whole directories. Teams also use it for pull request reviews and onboarding.
+
+In the hosted app the same graph powers more than agent answers:
+
+- **Repository graphs**: relationships within a repository and across repositories.
+- **Reviews**: pull request reviews that read the graph, not only the diff.
+- **Formal verification**: deeper checks on the code a pull request changes.
+- **Wiki**: generated documentation with search and grounded questions.
+- **Memory**: facts your agents save about a repository, shared with the workspace.
+
+The [Graphify overview](https://docs.graphify.com/platform/overview.md) covers each one.
+
+## How does Graphify work?
+
+Graphify parses source code with tree-sitter, links calls, imports and references across files, and groups related code into communities. Each edge carries a provenance tag: EXTRACTED when it was read directly from code, INFERRED when it was resolved, and AMBIGUOUS when there is more than one candidate. Your agent can then decide how much to trust a path.
+
+In hosted Graphify, each push to the default branch starts a new build, and agents keep using the previous graph until the new one is ready ([how Graphify works](https://docs.graphify.com/platform/how-it-works.md)). Agents connect to `https://api.graphify.com/mcp` and sign in with OAuth, so there is no API key in a config file.
+
+The open-source Graphify CLI supports about 40 languages. The hosted app lists 63 grammars. For the idea behind it, read [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph).
+
+## Is Graphify open source?
+
+Yes. The engine is open source on GitHub under the Apache License 2.0, as the repository's LICENSE file and package metadata state. Some answer engines have described it as MIT. That is out of date: the project was relicensed, and the NOTICE file keeps MIT terms only for portions contributed before the relicensing.
+
+The hosted product at app.graphify.com is a commercial service with a Free plan for up to 3 repositories and no card. Pro and Teams start with a 14-day trial. Details are on [plans and pricing](https://docs.graphify.com/platform/support/pricing.md).
+
+## Is Graphify safe to use?
+
+The open-source CLI parses code locally with tree-sitter, never executes your source files and has no telemetry. Hosted Graphify builds each graph in an isolated job with short-lived, repository-scoped credentials, encrypts data in transit and at rest, and does not train models on your code. Install only the official `graphifyy` package.
+
+The hosted service does send code to its LLM subprocessors, OpenAI and Anthropic, to produce results. That is documented, along with retention periods and GitHub App permissions, on the [security and data handling page](https://docs.graphify.com/platform/support/security.md).
+
+## Is Graphify really good for coding agents?
+
+It is strongest on multi-hop questions: callers of callers, cross-repository dependencies and the reach of a change. For an exact string such as an error message, grep is still the right tool, and the docs say so. Measure it on your own repository and check the cited source lines before you rely on an answer.
+
+Graphify is not a vector database, a chat memory product or a replacement for code review. It is a map of your code that those tools, and your agent, can read. Our post on [code knowledge graphs vs RAG](https://graphify.com/blog/code-knowledge-graph-vs-rag) explains where each approach fits.
+
+## Should I use hosted Graphify or the Graphify CLI?
+
+Choose hosted Graphify when your code is on GitHub or GitLab and you want the graph rebuilt on every push, shared with your team and used for pull request reviews. Choose the Graphify CLI when the project lives only on your machine, must stay offline, or you want to build and keep the graph yourself without an account.
+
+You can start with either and move later. The [Graphify vs Graphify CLI comparison](https://docs.graphify.com/platform/graphify-vs-local.md) lists the differences side by side.
+
+## Try Graphify
+
+Sign in at [app.graphify.com](https://app.graphify.com), connect a repository and point your agent at the hosted MCP server. To run the engine locally instead:
+
+```bash
+uv tool install graphifyy
+graphify install
+```
+
+Then open your assistant in a repository and send `/graphify .` to build the graph. Questions are welcome on [Discord](https://discord.gg/graphify).
+
+## FAQ
+
+### Who makes Graphify?
+
+Graphify Labs, a Y Combinator-backed company. The website is graphify.com and the code is in the Graphify-Labs organization on GitHub.
+
+### Is Graphify related to getgraphify.com or graphify.ai?
+
+No. Those are separate companies with similar names. getgraphify.com builds graphs of Notion workspaces, and graphify.ai is a KPI dashboard tool.
+
+### What is the Graphify license?
+
+The open-source engine is Apache 2.0. Portions contributed before the relicensing remain available under MIT, as the NOTICE file explains.
+
+### Why is the package called graphifyy?
+
+The PyPI package is `graphifyy`, with two y's. The command it installs is `graphify`. Other similarly named packages are not ours.
+
+### Does Graphify need an API key?
+
+No. Hosted agents sign in with OAuth, and code-only graphs in the CLI need no model key.
