@@ -1,0 +1,114 @@
+---
+title: "Local vs remote MCP server: when each one fits"
+description: "Local vs remote MCP server: how stdio and Streamable HTTP differ in setup, sign-in, updates and sharing, and how to pick one, with a code graph example."
+date: "2026-08-10"
+keyword: local vs remote mcp server
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - mcp
+  - architecture
+---
+
+A local vs remote MCP server choice comes down to where the server runs. Graphify, a code knowledge graph for AI coding agents, ships both kinds. A local server runs on your machine as a process your AI client starts, and talks over stdio. A remote server runs as a web service, and your client reaches it over Streamable HTTP at a URL. Both speak the same Model Context Protocol (MCP), so the agent sees tools either way.
+
+The choice changes setup, sign-in, updates and who can share the server. This post compares them and shows both forms of one server, a code graph.
+
+## What is the difference between a local and a remote MCP server?
+
+A local MCP server is a subprocess of your client. It reads and writes standard input and output, and it can touch your files directly. A remote MCP server is an independent HTTP service that many clients can call at once. It sits next to the data it serves, and users sign in to it, usually with OAuth.
+
+The [MCP transports specification](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports) defines both. Streamable HTTP replaced the older HTTP+SSE transport.
+
+| | Local (stdio) | Remote (Streamable HTTP) |
+| --- | --- | --- |
+| Runs | As a subprocess of your client | As a hosted web service |
+| Reach | One user on one machine | Anyone with the URL and access |
+| Setup per user | Install a package, set a command | Paste a URL and sign in |
+| Sign-in | Inherits your local permissions | OAuth or a bearer token |
+| Updates | Each user upgrades their copy | The provider deploys once |
+| Local files | Direct access | None, unless synced some other way |
+| Web-based clients | Not reachable | Reachable if public |
+
+## When should I use a local MCP server?
+
+Use a local server when the job is local. That covers reading your working directory, driving a browser on your machine and talking to a database on localhost. It also covers code that must not leave your laptop. A local server needs no account and keeps working offline.
+
+The cost is upkeep. Every user installs and upgrades their own copy, so a team of ten can run ten versions. [Railway's guide](https://docs.railway.com/guides/local-vs-remote-mcp-servers) makes the same point about drift.
+
+## When should I use a remote MCP server?
+
+Use a remote server when the data is shared or already lives in the cloud. Issue trackers, error monitors and team code graphs fit here. Users paste a URL and sign in through the browser. Nobody copies an API key into a JSON file, and access can be revoked in one place.
+
+Remote servers also reach clients that cannot start local processes, such as web-based assistants. The cost is that the service must stay up, and you trust its operator with access.
+
+## One server, both ways: a code graph
+
+Graphify is a code knowledge graph for AI coding agents, and it ships in both forms. That makes it a useful way to see the trade-off.
+
+The **local** form is open-source Graphify. You build the graph on your machine and serve it with `graphify-mcp` over stdio:
+
+```bash
+uv tool install "graphifyy[mcp]"
+graphify-mcp /absolute/path/to/repo/graphify-out/graph.json
+```
+
+You keep it current yourself with `graphify update .`, `graphify watch .` or git hooks. The server reloads `graph.json` when the file changes.
+
+The **remote** form is hosted [Graphify](https://app.graphify.com). You connect a GitHub or GitLab repository, and it rebuilds the graph on each push to the default branch. Agents reach it at `https://api.graphify.com/mcp` and sign in with OAuth. In Claude Code, that is one command:
+
+```bash
+claude mcp add --transport http --scope user graphify https://api.graphify.com/mcp
+```
+
+The [Graphify vs Graphify CLI comparison](https://docs.graphify.com/platform/graphify-vs-local) lists the differences in full.
+
+## Can a local server be shared over HTTP?
+
+Yes. Some local servers can also listen on HTTP for a small team, which gives you a self-hosted remote server. You then own uptime, updates and access control. `graphify-mcp` takes `--transport http` and an `--api-key`, and binds to `127.0.0.1` by default:
+
+```bash
+graphify-mcp graphify-out/graph.json --transport http --port 8099 --api-key "$GRAPHIFY_API_KEY"
+```
+
+That turns your own machine or container into a remote server. You then own uptime, keys and updates. It suits teams that must self-host. The [MCP server quickstart](https://docs.graphify.com/open-source/mcp-server) covers the flags.
+
+## How do I decide?
+
+Ask three questions. Does the tool need local files or processes? Go local. Do several people need the same data, kept current? Go remote. Must code stay on your own hardware? Go local, or self-host the HTTP form. Many teams use both: local for private experiments, remote for shared repositories.
+
+Our explainer on [what a code knowledge graph is](https://graphify.com/blog/what-is-a-code-knowledge-graph) covers what the graph holds in either form.
+
+## Try it
+
+Connect a repository at [app.graphify.com](https://app.graphify.com) to try the remote form. For the local form, run `uv tool install graphifyy` and `graphify install`.
+
+For agent-specific setup, see [how to give Cursor a code knowledge graph](https://graphify.com/blog/how-to-give-cursor-a-code-knowledge-graph) and [how to give Claude Code a code knowledge graph](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph).
+
+Open-source Graphify is licensed under Apache 2.0. Related reading: [code knowledge graphs vs RAG](https://graphify.com/blog/code-knowledge-graph-vs-rag) and [hosted graphs for GitLab](https://graphify.com/blog/gitlab-code-knowledge-graph). Sources: [MCP transports](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports), [MCP authorization](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization).
+
+## FAQ
+
+### Is stdio faster than Streamable HTTP?
+
+Usually, because there is no network hop. For most agent tool calls, the difference is small next to model time.
+
+### Can a stdio MCP server use OAuth?
+
+The MCP specification aims OAuth at HTTP transports. Stdio servers usually take credentials from environment variables instead.
+
+### Do I need to host anything to use a remote MCP server?
+
+No. The provider hosts it. You add the URL to your client and sign in.
+
+### Can I switch from a local to a remote server later?
+
+Yes. It is a configuration change in your client. With Graphify, your local graph keeps working until you switch each assistant.
+
+### Which MCP clients support remote servers?
+
+Claude Code, Cursor and Codex all support Streamable HTTP servers. Check your client's MCP docs for the exact config keys.
