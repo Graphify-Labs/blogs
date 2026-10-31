@@ -1,0 +1,90 @@
+---
+title: "CLAUDE.md and AGENTS.md: tell your agent to use the graph"
+description: "Agents default to grep. A short rule in CLAUDE.md or AGENTS.md tells your agent to use the graph first. Copy-paste rules, CLI hooks, and a check."
+date: "2026-09-23"
+keyword: tell your agent to use the graph
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - agents
+  - claude-code
+  - mcp
+---
+
+Graphify is a code knowledge graph for AI coding agents, but a connected graph only helps if the agent calls it. The reliable fix is a few lines in the instruction file your agent reads at the start of every session, which tell your agent to use the graph before it greps or opens files.
+
+We added a copy-paste rules card to the connect-agent page in [Graphify](https://app.graphify.com) on September 20 for exactly this reason. This post explains why agents skip tools, what a good rule says, the stronger option in the open-source CLI, and how to check it worked.
+
+## Why do agents default to grep?
+
+Because grep is the tool they always have and know best. An agent sees a long tool list, picks the familiar file search, and answers from whatever it opened. Nothing is wrong with the connection. The agent simply was never told when the graph is the better first step, so it treats Graphify as optional.
+
+Instructions files fix that. Claude Code reads `CLAUDE.md`, as described in [Anthropic's memory docs](https://docs.anthropic.com/en/docs/claude-code/memory). Codex and many other agents read [AGENTS.md](https://agents.md). Cursor reads rules in `.cursor/rules/`.
+
+## What should CLAUDE.md say to tell your agent to use the graph?
+
+Say when to call Graphify, which question to ask, and what to do with the answer. Vague rules like "use Graphify when helpful" get ignored. A concrete trigger works: before the first grep or file read in a task, query the graph, then open the files it returns. Keep grep for exact strings.
+
+The rules card in the console gives you text like this, with your repository filled in:
+
+```md
+### Graphify
+This repository is indexed in Graphify. Use the graphify MCP tools
+before you search or read code.
+- Before the first grep, glob or file read in a task, ask Graphify
+  about the task and open the files it returns first.
+- Before you change a function, ask Graphify for its callers.
+- Cite the Graphify result (symbol and file path) in your answer.
+- Use grep for exact strings, such as error messages or config keys.
+- The graph reflects the default branch. Read your own edits from disk.
+```
+
+Commit it, so every teammate's agent reads the same rule.
+
+## What does the open-source CLI add?
+
+Hooks. On top of the instruction block, the Graphify CLI can register hooks that fire right before the agent runs a search or reads a file, and add the graph's answer for that exact search. Instructions at the top of a long session fade; a reminder at the moment of the grep does not.
+
+```bash
+uv tool install graphifyy
+graphify update .
+graphify claude install
+```
+
+`graphify claude install` writes a `## graphify` section to `CLAUDE.md` and registers PreToolUse hooks in `.claude/settings.json`. `graphify codex install` writes an `AGENTS.md` section for Codex, and `graphify cursor install` writes `.cursor/rules/graphify.mdc`. The hooks nudge by default and never block. For Claude Code, setting `GRAPHIFY_HOOK_STRICT=1` blocks the first raw read in a session until the agent has queried the graph.
+
+## How do I check it worked?
+
+Ask a code question without naming Graphify, then read the tool calls. If the first call is a Graphify tool, the rule works. If it is a file search, tighten the trigger. At the end of a task, ask the agent to list every Graphify call it made; the list should match the transcript.
+
+```text
+List every Graphify tool call you made in this session, with what you passed. If you made none, say so.
+```
+
+For the connection itself, see [connect any MCP client](https://graphify.com/blog/connect-any-mcp-client-to-a-code-graph), and for Claude Code specifics, the [Claude Code guide](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph).
+
+## Try it
+
+Copy the rules card from the connect-agent page in [Graphify](https://app.graphify.com) into `CLAUDE.md` or `AGENTS.md`. Working locally, run `uv tool install graphifyy` and `graphify claude install`. The [hosted MCP docs](https://docs.graphify.com/platform/hosted-mcp) cover client setup.
+
+## FAQ
+
+### Should the rule go in CLAUDE.md or AGENTS.md?
+
+Use the file your agent reads. Claude Code reads `CLAUDE.md`; Codex and many others read `AGENTS.md`.
+
+### Will the rule stop my agent from using grep?
+
+No. It changes the first step. Grep stays the right tool for exact strings.
+
+### Do the hosted MCP server and the CLI both have hooks?
+
+No. Hooks are part of the open-source Graphify CLI. With the hosted server, the instruction block does that job.
+
+### How do I undo the CLI install?
+
+Each installer has a matching `uninstall`, such as `graphify claude uninstall`.

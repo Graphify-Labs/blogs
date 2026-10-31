@@ -1,0 +1,88 @@
+---
+title: "GitLab code knowledge graph: index GitLab.com projects"
+description: "Build a GitLab code knowledge graph in Graphify: sign in with GitLab, pick projects, and let your coding agent ask the graph instead of grepping files."
+date: "2026-08-07"
+keyword: GitLab code knowledge graph
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - gitlab
+  - mcp
+  - agents
+---
+
+Graphify is a code knowledge graph for AI coding agents, and since July 29 it reads GitLab as well as GitHub. A GitLab code knowledge graph maps the functions, classes, imports and calls in your GitLab.com projects, so an agent can ask who calls what and get file paths back instead of grepping.
+
+A lot of code-context tools started GitHub-first, and GitLab teams got the second-class setup. This guide walks through connecting GitLab to [Graphify](https://app.graphify.com), what Graphify reads, and how to check your agent is using the graph. If the idea of a code graph is new, start with [what a code knowledge graph is](https://graphify.com/blog/what-is-a-code-knowledge-graph).
+
+## Can I use a GitLab code knowledge graph with my agent?
+
+Yes. Sign in to Graphify with GitLab, choose the projects to index, and Graphify builds a graph for each one. Your agent then connects to the hosted MCP server and queries that graph. GitLab and GitHub projects can sit in the same workspace, so an agent sees both through one connection.
+
+1. Open [app.graphify.com](https://app.graphify.com) and choose **Sign in with GitLab**, or connect GitLab from an existing workspace.
+2. Approve access on GitLab.
+3. Pick the projects Graphify can read. Each one builds its first graph.
+4. Connect your agent to `https://api.graphify.com/mcp` and sign in through the browser.
+
+The [GitLab integration docs](https://docs.graphify.com/integrations/gitlab) list the exact scopes and error messages.
+
+## What does Graphify read from GitLab?
+
+It reads the code on each project's default branch and parses it into nodes and edges: files, functions, classes, imports and calls. Indexing uses a token limited to reading the repository. A push to the default branch starts a new index of that commit, so the graph follows the [default branch](https://docs.gitlab.com/user/project/repository/branches/default/) your team ships from.
+
+Pushes to other branches do not update the graph. That is deliberate. One graph per project, built from the default branch, means every agent and teammate gets the same answer to the same question. Graphify supports projects on GitLab.com; self-managed GitLab instances are not supported.
+
+## How long does indexing take?
+
+It depends on the size of the project: more files and symbols mean a longer first build. You do not need to wait at the screen: each project shows its status in the console, and your agent can query a project as soon as it reaches **Indexed**.
+
+If a project stays out of the list, check that your GitLab account can open it, then connect again. A project with no commits on its default branch has nothing to index yet.
+
+## How do I know my agent is using the GitLab graph?
+
+Ask it a question that only the graph can answer quickly, and watch the tool calls. A good first prompt asks the agent to list the repositories it can see through Graphify. If your GitLab projects appear, the connection works. Then ask who calls a function you know.
+
+```text
+Use Graphify to list my repositories. If the tool fails, show the error.
+```
+
+```text
+Using Graphify, who calls <function> in <project>? Cite file paths.
+```
+
+If the agent reads files instead of calling Graphify, tell it to reach for the graph first. The [Claude Code guide](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph) and the [Cursor guide](https://graphify.com/blog/how-to-give-cursor-a-code-knowledge-graph) show the setup per client.
+
+## Can I combine GitLab and GitHub projects?
+
+Yes. Graphify can combine several repositories into one cross-repository graph, so calls and dependencies can be followed across service boundaries. That helps teams whose frontend lives on GitHub and whose services live on GitLab. Choose **Combine graphs** in the console and pick the projects to merge.
+
+## Try it
+
+Connect a GitLab project in [Graphify](https://app.graphify.com) on the Free plan. If you would rather build a graph on your own machine from a local checkout, the open-source Graphify CLI works on any clone, whichever host it came from:
+
+```bash
+uv tool install graphifyy
+graphify update .
+```
+
+## FAQ
+
+### Does Graphify support self-managed GitLab?
+
+Not today. Graphify connects to projects on GitLab.com.
+
+### Which branch does Graphify index?
+
+The project's default branch. A push to that branch starts a new index of the pushed commit.
+
+### Do I need an API key for my agent?
+
+No. Your agent signs in to the hosted MCP server through the browser, so there is no key to paste into a config file.
+
+### Is the open-source Graphify CLI tied to GitHub?
+
+No. It builds a graph from any local checkout, including a GitLab clone.

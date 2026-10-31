@@ -1,0 +1,72 @@
+---
+title: "Auto-generated codebase wiki: docs that stay current"
+description: "Graphify builds a codebase wiki from your code graph on every index, so docs track the code. What it covers, how to check its claims, and when to use Ask."
+date: "2026-10-14"
+keyword: codebase wiki
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - product
+tags:
+  - wiki
+  - documentation
+  - onboarding
+---
+
+Graphify is a code knowledge graph for AI coding agents, and since October 8 it also writes a codebase wiki for every repository you index. The wiki explains each area of the code in plain language and is rebuilt alongside each index, so it describes the latest build instead of the state of the code when someone last had time to write docs.
+
+This post covers what the wiki in [Graphify](https://app.graphify.com) contains, why generating it from a graph keeps it current, how to check what it says, and when to switch to Ask.
+
+## What is an auto-generated codebase wiki?
+
+It is documentation written from your code, not by hand. Graphify reads the code graph for a repository and produces articles on what each area does, its key components, and the decisions and caveats behind them. You open **Wiki** in the console, pick a repository, and read it like any internal docs site, with an outline for long pages.
+
+For background on the graph underneath, see [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph).
+
+## Why do hand-written docs drift?
+
+Because nobody's job is to update them on every merge. Code changes daily; docs change when someone remembers. After a few months the architecture page describes a module that was split, and new teammates learn the wrong map. The cost is invisible until someone builds on a description that stopped being true.
+
+A generated wiki removes the update step. It is built with each index of the default branch, so it moves when the code moves.
+
+## How do I check what the codebase wiki says?
+
+Follow its sources. Each article links the source files it was written from, and a **How we know** panel shows where its claims came from. If a sentence matters, such as before you change the code it describes, open the file and confirm it. Treat the wiki as a map that points at the code.
+
+That habit is the same one we recommend for agents: [grounded answers](https://graphify.com/blog/grounded-answers-confidence-tags) are useful because you can trace them.
+
+## When should I use Ask instead of the wiki?
+
+When your question spans the code instead of one article. The wiki is good for orientation: what lives where, and how a subsystem fits together. For a specific question, such as which paths reach a function, use **Ask the wiki instead** from search, or open Ask, and get an answer grounded in the graph with citations.
+
+Search finds words inside articles. Ask follows the graph, so it answers questions that no article was written for.
+
+## Who is the codebase wiki for?
+
+Anyone new to a repository, and anyone explaining it. It suits onboarding a teammate, reviewing a service you do not own, or preparing a design discussion. Because the wiki and your agents read the same graph, what a person reads in the wiki and what an agent retrieves over MCP agree.
+
+The pattern resembles [docs as code](https://www.writethedocs.org/guide/docs-as-code/), with one difference: here the code is also the author.
+
+## Try it
+
+Index a repository in [Graphify](https://app.graphify.com) and open **Wiki** once the build finishes. If you work locally with the open-source Graphify CLI, install it with `uv tool install graphifyy`. The [wiki docs](https://docs.graphify.com/platform/wiki) explain every panel.
+
+## FAQ
+
+### Do I have to write anything for the wiki?
+
+No. Graphify generates it from the indexed repository.
+
+### How current is the wiki?
+
+It is built alongside each index, so it describes the latest build of the repository.
+
+### Does the wiki replace my READMEs?
+
+No. It complements them. Keep design intent and how-to guides in your own docs.
+
+### Can I ask the wiki a question?
+
+Yes. Use **Ask the wiki instead** for an answer grounded in the graph.
