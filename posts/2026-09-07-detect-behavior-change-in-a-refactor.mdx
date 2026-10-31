@@ -1,0 +1,100 @@
+---
+title: "How to detect a behavior change in a refactor PR"
+description: "Detect behavior change in a refactor PR: find what the change reaches, check changed functions against their old versions, and turn differences into tests."
+date: "2026-09-07"
+keyword: detect behavior change refactor
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - refactoring
+  - formal-verification
+  - code-review
+---
+
+To detect a behavior change in a refactor, compare what the code does before and after the change, not only how it looks. A refactor is supposed to keep behavior the same. In practice, small edits slip in: a changed default, a reordered condition, a new rounding rule. This guide shows a workflow that finds them before merge, using Graphify, a code knowledge graph for AI coding agents, plus tests.
+
+## Why do refactors change behavior by accident?
+
+Refactors touch many lines, and reviewers skim large diffs. Martin Fowler [defines refactoring](https://martinfowler.com/bliki/DefinitionOfRefactoring.html) as a change to internal structure "without changing its observable behavior." That last part is the hard part. A diff shows moved text, not the callers that rely on an edge case.
+
+Common causes include changed boundary checks (`<` to `<=`), reordered side effects, different handling of empty or null input, and integer versus float math.
+
+## Step 1: How do I find what the refactor can reach?
+
+Start with the blast radius. List every caller of the functions you changed, since those are the places a behavior change shows up. Text search misses calls through aliases and interfaces, so use a call graph. With the Graphify CLI, build the graph once and ask for the affected nodes:
+
+```bash
+uv tool install graphifyy
+graphify extract . --code-only
+graphify affected "parse_invoice" --depth 2
+```
+
+The result lists the functions and files that call `parse_invoice`, directly or through one more hop. Our guide on [change impact analysis with a code graph](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) covers this step in more depth.
+
+## Step 2: How do I check that changed functions still behave the same?
+
+Run differential checks on each changed function: run the old and new versions on the same inputs and compare results. Research tools such as [SafeRefactor](https://doi.org/10.1109/MS.2010.63) automate this by generating tests for both versions. There are three practical ways, from cheapest to strongest:
+
+| Method | What it shows | Cost |
+| --- | --- | --- |
+| Existing tests | Behavior on inputs someone already chose | Already paid |
+| Property-based tests comparing old and new | Agreement on many random inputs | Moderate: keep the old version around |
+| Differential formal verification | Proof of equivalence within bounds, or a distinguishing input | Low with a tool that runs on the PR |
+
+A property-based test runs both versions side by side. With [Hypothesis](https://hypothesis.readthedocs.io/) in Python, it looks like this:
+
+```python
+from hypothesis import given, strategies as st
+from billing import legacy_round, new_round
+
+@given(st.decimals(allow_nan=False, allow_infinity=False))
+def test_round_unchanged(x):
+    assert new_round(x) == legacy_round(x)
+```
+
+Formal verification goes further, because it reasons about every input in the checked range. Hosted [Graphify](https://app.graphify.com) runs it on GitHub pull requests. For supported functions, it compares the changed version with the previous one. It either proves they behave the same within the checked range or finds a concrete input that gives a different result. Read [the verification docs](https://docs.graphify.com/platform/verification) for the background.
+
+## Step 3: What do I do with a difference?
+
+Treat a distinguishing input as a question, not a failure. Some refactors change behavior on purpose, such as a bug fix folded into a cleanup. Reproduce the input with both versions, confirm the old and new values, and ask the author which one is right. Then decide:
+
+- **Intended.** Note the change in the PR description and add the input as a test of the new behavior.
+- **Not intended.** Fix the refactor, and add the input as a regression test.
+
+Either way, the input becomes a permanent test, so the same difference cannot slip back in later.
+
+## Step 4: How do I keep reviewers focused?
+
+Give reviewers the evidence up front. List the changed functions, the callers from Step 1 and the result for each function from Step 2. When nothing changed, reviewers can skim. When something did, they know where to look. Graphify's [pull request reviews](https://docs.graphify.com/platform/reviews) also read the code graph.
+
+## Try it
+
+Connect a GitHub repository at [app.graphify.com](https://app.graphify.com), open a refactor PR and read the verification run. To start locally, `uv tool install graphifyy` gives you `graphify affected`. For the graph itself, read [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph).
+
+Open-source Graphify is licensed under Apache 2.0. Related reading: [change impact analysis](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) and [multi-repo code graphs](https://graphify.com/blog/multi-repo-code-graph).
+
+## FAQ
+
+### Can tests alone catch every behavior change in a refactor?
+
+No. Tests cover the inputs they were written for. A change on an untested input passes silently.
+
+### What if a function is too complex to verify?
+
+A careful tool says it cannot analyze the function instead of passing it. Review those functions by hand and lean on tests.
+
+### Does an equivalence proof mean the refactor is safe?
+
+It means the function behaves as before within the checked bounds. Side effects outside the function and untouched callers still need review.
+
+### How deep should I look for affected callers?
+
+Two hops is a good default. Go deeper for shared utilities that many modules call.
+
+### Should I keep the old implementation around for testing?
+
+Only while the PR is open. Once the property test passes, add the key inputs as plain tests and delete the copy.

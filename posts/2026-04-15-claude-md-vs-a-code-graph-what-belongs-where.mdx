@@ -1,0 +1,92 @@
+---
+title: "CLAUDE.md best practices: what belongs vs a code graph"
+description: "CLAUDE.md best practices: keep rules and commands in the file, and move codebase structure into a code knowledge graph rebuilt from source."
+date: "2026-04-15"
+keyword: claude.md best practices
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - claude-code
+  - claude-md
+  - context
+imgThumb: thumb.png
+imgSocial: social.png
+---
+
+CLAUDE.md is a markdown file that Claude Code loads into context at the start of every session, as [Anthropic's memory docs](https://docs.anthropic.com/en/docs/claude-code/memory) describe. The best practice is to keep it short and limited to instructions Claude cannot work out alone. Codebase structure, such as which module calls which, belongs in a code knowledge graph that Graphify, an open-source CLI, rebuilds from the source.
+
+## What are CLAUDE.md best practices?
+
+Write CLAUDE.md for rules, not description. Good entries are build and test commands, code style, branch habits, and hard "never do this" lines. Anthropic's [memory guide](https://docs.anthropic.com/en/docs/claude-code/memory) says to be specific and to structure entries as short bullet points under headings. Review the file when the project changes.
+
+Every line costs tokens on every session. A file that grows into a wiki becomes expensive and quietly out of date. Anthropic's [best practices post](https://www.anthropic.com/engineering/claude-code-best-practices) suggests tuning CLAUDE.md like a prompt: keep what changes behavior and cut the rest.
+
+## What goes in CLAUDE.md and what goes in a code graph?
+
+Put stable human decisions in CLAUDE.md. Put facts that can be derived from the code in a graph. The test is simple: if the code changes, would the entry need editing? If yes, it should be generated, not written by hand.
+
+| Content | CLAUDE.md | Code graph |
+|---|---|---|
+| Build, test, lint commands | Yes | No |
+| Style rules and conventions | Yes | No |
+| "Never edit generated files" | Yes | No |
+| Which function calls which | No | Yes |
+| What a module imports | No | Yes |
+| Most connected classes | No | Yes |
+| Why a design was chosen | Short pointer | Yes, from docs and comments |
+
+## Why not describe the architecture in CLAUDE.md?
+
+A hand-written architecture section is a snapshot. It is accurate the day it is written. After a few refactors it describes code that no longer exists, and Claude follows it anyway. It also loads on every session, even when the task never touches that part of the system.
+
+A graph built from the code has neither problem. It is regenerated from the source, and the agent reads only the part it needs.
+
+## How does Graphify connect the two?
+
+Graphify is an open-source CLI that builds a code knowledge graph from a repository. Code is parsed locally with tree-sitter. Docs and comments can be added to the same graph, so a `# WHY:` note attaches to the function it explains.
+
+`graphify claude install` adds a small section to your CLAUDE.md. That section tells Claude to read `graphify-out/GRAPH_REPORT.md` before answering architecture questions. The report lists the most connected nodes, the clusters, and suggested questions. CLAUDE.md stays short. It holds the pointer, and the graph holds the map.
+
+The same command installs a PreToolUse hook in Claude Code's settings. Before a search runs, the hook reminds Claude that the graph exists. For a specific question, Claude can run `graphify query`, `graphify path "A" "B"`, or `graphify explain "Name"`.
+
+## How do you keep the graph current?
+
+Run `graphify hook install` once. It adds git hooks that rebuild the code graph after each commit and checkout. The rebuild uses the local parser, so it needs no model call. For docs and papers, run `/graphify . --update` to re-extract only the files that changed.
+
+## A worked split
+
+Imagine a service with a payments module. CLAUDE.md says: run tests with `make test`, never call the payments API from tests, and use the shared logger. The graph answers: what calls `charge_card`, and what does it import? The first set is policy. The second is fact, and it changes every week.
+
+## Should you use nested CLAUDE.md files?
+
+Yes, in larger repositories. Claude Code reads the CLAUDE.md in the folder you start from and its parents. A CLAUDE.md inside a subdirectory loads when Claude works on files in that folder. Put repository-wide rules at the root and package-specific commands in each package.
+
+Nested files keep each one short. They still describe rules, not structure. Callers, imports and dependencies stay in the graph, where they are read on demand instead of loaded every session.
+
+## FAQ
+
+### How long should CLAUDE.md be?
+
+As short as it can be while still changing behavior. Anthropic recommends concise bullets. If an entry restates what the code already shows, move it out.
+
+### Can I have more than one CLAUDE.md?
+
+Yes. Claude Code reads memory files at several levels, including the project root and your home directory. Keep shared team rules in the project file.
+
+### Does graphify claude install overwrite my CLAUDE.md?
+
+No. It adds a marked section and leaves the rest alone. `graphify claude uninstall` removes that section.
+
+### Should I commit graphify-out to git?
+
+You can. Committing it lets everyone start with the same map. The README suggests ignoring the local manifest and cost files.
+
+### Is a code graph the same as RAG?
+
+No. A code graph stores explicit relationships parsed from the code. RAG retrieves text chunks by similarity. See [Graphify vs RAG](https://graphify.com/vs/rag).
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`, then run `graphify install` and `graphify claude install` in your project. For the context side of this, read [what fills the Claude Code context window](/blog/claude-code-context-window-what-fills-it-and-how-to-keep-it-lean). Setup details are in the [installation docs](https://docs.graphify.com/open-source/installation).
