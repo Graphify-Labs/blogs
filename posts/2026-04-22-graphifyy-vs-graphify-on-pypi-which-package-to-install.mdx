@@ -13,6 +13,17 @@ tags:
   - pypi
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Is graphifyy the official Graphify package?"
+    answer: "Yes. The README and the PyPI project page both point to the Graphify repository."
+  - question: "Why does the command say graphify, not graphifyy?"
+    answer: "The package name and the command name are separate. The package declares a graphify command when it installs."
+  - question: "Can I install graphifyy with uv?"
+    answer: "Yes. uv tool install graphifyy installs it as an isolated tool and adds it to PATH."
+  - question: "What Python version does graphifyy need?"
+    answer: "Python 3.10 or newer."
+  - question: "I installed the wrong package. What now?"
+    answer: "Uninstall the single-y package, then install graphifyy. Run graphify --help to confirm."
 ---
 
 The Graphify CLI is published on PyPI as `graphifyy`, spelled with two y's. Install it with `uv tool install graphifyy`, `pipx install graphifyy`, or `pip install graphifyy`. The command you run afterwards is still `graphify`. A PyPI package with the single-y name is a different project and is not affiliated with Graphify.

@@ -13,6 +13,15 @@ tags:
   - agents
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Is grep output always the biggest cost?"
+    answer: "No. File reads are often larger. Grep starts the chain that leads to them."
+  - question: "Does a semantic index fix this?"
+    answer: "It helps find relevant text. It does not store who calls whom, so structural questions still need reads."
+  - question: "Will the graph be stale after edits?"
+    answer: "Run graphify update . after edits, or install the git hook with graphify hook install."
+  - question: "Does Graphify work with Codex and Cursor?"
+    answer: "Yes. See graphify codex install and graphify cursor install."
 ---
 
 AI agent grep token cost is the share of a coding agent's context spent on search results and the file reads that follow them. Agents find code by text search, and every match, plus every file opened to check a match, is billed as input. On structural questions, a code graph can return the answer without that loop. Graphify, an open-source CLI, replaces many of those searches with graph queries.

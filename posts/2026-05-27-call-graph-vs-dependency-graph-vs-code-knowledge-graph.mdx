@@ -13,6 +13,15 @@ tags:
   - code-graph
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Is a dependency graph the same as an import graph?"
+    answer: "At the module level, mostly. Package dependency graphs also include third-party packages from manifests."
+  - question: "Are static call graphs accurate?"
+    answer: "They are approximations. Dynamic dispatch and reflection hide some calls."
+  - question: "Does Graphify trace runtime calls?"
+    answer: "No. It builds a static graph from source."
+  - question: "Which is better for impact analysis?"
+    answer: "Both help. Calls show behaviour, and imports show what loads. Graphify's affected follows both."
 ---
 
 The call graph vs dependency graph difference is about granularity and meaning. A call graph links functions: an edge means one function calls another. A dependency graph links modules or packages: an edge means one needs the other to build or run. Both are useful, and a code knowledge graph can hold both. Graphify, an open-source CLI, builds a code knowledge graph that holds both kinds of edges.

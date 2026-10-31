@@ -13,6 +13,17 @@ tags:
   - code-graph
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Does Graphify need an API key for code?"
+    answer: "No. graphify update . parses code locally with tree-sitter and uses no model."
+  - question: "Can I map only part of a large legacy repo?"
+    answer: "Yes. Pass a subfolder, such as graphify update ./src, or exclude paths with .graphifyignore."
+  - question: "What is a god node?"
+    answer: "It is one of the most connected symbols in the graph. Graphify lists them in GRAPH_REPORT.md."
+  - question: "Should I trust every edge in the graph?"
+    answer: "Trust EXTRACTED edges, which come straight from source. Check INFERRED edges by reading the code."
+  - question: "How do I keep the graph current while I work?"
+    answer: "Run graphify update . after changes, or graphify watch . to rebuild on save."
 ---
 
 To understand a legacy codebase quickly, run it, find its entry points, map its structure, then trace one real flow end to end. A code graph speeds up the mapping step. Graphify, an open-source CLI, builds one locally from source with no model and no API key.

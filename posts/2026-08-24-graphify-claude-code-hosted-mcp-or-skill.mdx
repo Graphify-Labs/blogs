@@ -13,6 +13,15 @@ tags:
   - claude-code
   - mcp
   - cli
+faq:
+  - question: "Does Graphify work with Claude Code on Windows?"
+    answer: "Yes. graphify install detects Windows and installs the PowerShell version of the skill. The hosted MCP server works the same on every OS."
+  - question: "Do I need an API key for Graphify in Claude Code?"
+    answer: "No. Hosted MCP uses OAuth in the browser. Local code-only graphs need no key."
+  - question: "Can Claude Code use Graphify across several repositories?"
+    answer: "Yes. Hosted Graphify can combine repositories in one workspace, so Claude Code can follow calls across them."
+  - question: "Does the local skill send my code anywhere?"
+    answer: "Code is parsed locally and sent nowhere. Claude Code itself sends what it reads to Anthropic under its own terms."
 ---
 
 Graphify is a code knowledge graph that Claude Code can query instead of grepping through your repository. There are two ways to set up Graphify Claude Code support: connect the hosted MCP server, or install the local skill from the open-source Graphify CLI. Both work. They suit different teams, and this guide helps you pick one.

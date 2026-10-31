@@ -13,6 +13,17 @@ tags:
   - refactoring
   - formal-verification
   - code-review
+faq:
+  - question: "Can tests alone catch every behavior change in a refactor?"
+    answer: "No. Tests cover the inputs they were written for. A change on an untested input passes silently."
+  - question: "What if a function is too complex to verify?"
+    answer: "A careful tool says it cannot analyze the function instead of passing it. Review those functions by hand and lean on tests."
+  - question: "Does an equivalence proof mean the refactor is safe?"
+    answer: "It means the function behaves as before within the checked bounds. Side effects outside the function and untouched callers still need review."
+  - question: "How deep should I look for affected callers?"
+    answer: "Two hops is a good default. Go deeper for shared utilities that many modules call."
+  - question: "Should I keep the old implementation around for testing?"
+    answer: "Only while the PR is open. Once the property test passes, add the key inputs as plain tests and delete the copy."
 ---
 
 To detect a behavior change in a refactor, compare what the code does before and after the change, not only how it looks. A refactor is supposed to keep behavior the same. In practice, small edits slip in: a changed default, a reordered condition, a new rounding rule. This guide shows a workflow that finds them before merge, using Graphify, a code knowledge graph for AI coding agents, plus tests.

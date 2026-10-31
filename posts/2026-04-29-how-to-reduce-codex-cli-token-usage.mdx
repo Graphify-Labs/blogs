@@ -13,6 +13,17 @@ tags:
   - context
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Why does Codex use $graphify instead of /graphify?"
+    answer: "Codex calls skills with a $ prefix. Run $graphify . in Codex. Other assistants use the slash form."
+  - question: "Does Graphify send my code to OpenAI?"
+    answer: "Not for code. Code is parsed locally with tree-sitter. Docs, PDFs, and images go through your assistant's model for extraction."
+  - question: "Does /compact reduce cost?"
+    answer: "It replaces detailed history with a summary, so later turns send less. Some detail is lost, so give it a short note about what to keep."
+  - question: "Will the hook stop Codex from running commands?"
+    answer: "No. It adds a reminder that the graph exists. Codex can still search when the graph does not answer the question."
+  - question: "Does a graph help on a small repository?"
+    answer: "Less. If the whole project fits in context, a map adds structure but saves little."
 ---
 
 Codex token usage is the number of input and output tokens the Codex CLI spends on a task. Most of it is input: instructions, conversation history, and the output of shell commands Codex runs to explore your code. You reduce it by keeping instructions short, starting fresh sessions, and giving Codex a map so it runs fewer searches. Graphify, an open-source CLI, can cut the share spent reading files by answering structure questions from a graph.

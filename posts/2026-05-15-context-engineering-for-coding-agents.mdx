@@ -13,6 +13,15 @@ tags:
   - tokens
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Is context engineering the same as prompt engineering?"
+    answer: "No. Prompt engineering covers the instructions. Context engineering covers everything in the window, including tools and retrieved data."
+  - question: "Does a bigger context window remove the need?"
+    answer: "No. Anthropic's post notes that recall degrades as context grows, so more tokens are not free."
+  - question: "What should go in CLAUDE.md?"
+    answer: "Stable facts: commands, conventions, and pointers. See CLAUDE.md vs a code graph."
+  - question: "Is a code graph a form of RAG?"
+    answer: "No. RAG retrieves similar text chunks. A code graph stores explicit relationships and returns them by traversal."
 ---
 
 Context engineering for coding agents is the practice of deciding what goes into the model's context window on each step. That covers instructions, tool definitions, chat history, and the code the agent retrieves. The goal is the smallest set of high-signal tokens that lets the agent do the task. Graphify, an open-source CLI, supplies one of those sources: a local code graph.

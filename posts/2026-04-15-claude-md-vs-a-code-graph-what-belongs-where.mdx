@@ -13,6 +13,17 @@ tags:
   - context
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "How long should CLAUDE.md be?"
+    answer: "As short as it can be while still changing behavior. Anthropic recommends concise bullets. If an entry restates what the code already shows, move it out."
+  - question: "Can I have more than one CLAUDE.md?"
+    answer: "Yes. Claude Code reads memory files at several levels, including the project root and your home directory. Keep shared team rules in the project file."
+  - question: "Does graphify claude install overwrite my CLAUDE.md?"
+    answer: "No. It adds a marked section and leaves the rest alone. graphify claude uninstall removes that section."
+  - question: "Should I commit graphify-out to git?"
+    answer: "You can. Committing it lets everyone start with the same map. The README suggests ignoring the local manifest and cost files."
+  - question: "Is a code graph the same as RAG?"
+    answer: "No. A code graph stores explicit relationships parsed from the code. RAG retrieves text chunks by similarity. See Graphify vs RAG."
 ---
 
 CLAUDE.md is a markdown file that Claude Code loads into context at the start of every session, as [Anthropic's memory docs](https://docs.anthropic.com/en/docs/claude-code/memory) describe. The best practice is to keep it short and limited to instructions Claude cannot work out alone. Codebase structure, such as which module calls which, belongs in a code knowledge graph that Graphify, an open-source CLI, rebuilds from the source.

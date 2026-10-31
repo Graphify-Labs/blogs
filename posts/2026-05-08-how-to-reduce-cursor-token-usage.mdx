@@ -13,6 +13,17 @@ tags:
   - context
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Does the Graphify rule add many tokens?"
+    answer: "No. It is a few lines. The report it points to is read when an architecture question comes up."
+  - question: "Does Cursor's own indexing do the same thing?"
+    answer: "Cursor's codebase index helps find relevant text. A code graph adds explicit relationships, such as who calls a function, with tags that show how each was found."
+  - question: "Do I need to rebuild the graph after every edit?"
+    answer: "The rule asks Cursor to run graphify update . after code edits. You can also run graphify hook install to rebuild on every commit."
+  - question: "Can I remove the rule later?"
+    answer: "Yes. Run graphify cursor uninstall to delete .cursor/rules/graphify.mdc."
+  - question: "Does Graphify send code to a model?"
+    answer: "Not for code. Docs, PDFs, and images go through the model your Cursor chat uses."
 ---
 
 To reduce Cursor token usage, cut what goes into each request: old chat history, long always-on rules, and the results of broad codebase searches. Start a new chat per task, keep rules short, point Cursor at exact files, and give the agent a code map. The map means fewer search-and-read loops, which are where most tokens go. Graphify, an open-source CLI, adds a code graph that Cursor can query instead of reading whole files.

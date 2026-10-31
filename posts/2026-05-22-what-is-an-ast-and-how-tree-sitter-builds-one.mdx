@@ -13,6 +13,15 @@ tags:
   - code-graph
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Does tree-sitter need the code to compile?"
+    answer: "No. It tolerates syntax errors and still produces a tree for the rest of the file."
+  - question: "Is tree-sitter the same as a language server?"
+    answer: "No. A language server type-checks and resolves symbols. Tree-sitter parses syntax only."
+  - question: "Which languages does Graphify parse?"
+    answer: "The languages docs list supported extensions."
+  - question: "Why are some edges INFERRED?"
+    answer: "Because syntax alone did not prove the link. See Graphify's edge tags."
 ---
 
 Tree-sitter is a parser that turns source code into a syntax tree. A code graph is built by parsing each source file into a syntax tree, walking that tree, and recording what it finds. Definitions become nodes. Calls, imports, and inheritance become edges. Because the parser reads syntax directly, no language model is needed for this step. Graphify, an open-source CLI, builds its code graph this way.

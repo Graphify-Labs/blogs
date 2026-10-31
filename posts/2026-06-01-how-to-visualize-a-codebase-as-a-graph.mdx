@@ -13,6 +13,17 @@ tags:
   - exports
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Does visualization need an API key?"
+    answer: "No. Building a code graph and its HTML view runs locally."
+  - question: "Can I visualize only part of a repo?"
+    answer: "Yes. Pass a subfolder, such as graphify update ./src, or exclude paths with .graphifyignore."
+  - question: "Why is the HTML slow on a huge repo?"
+    answer: "Browsers struggle with many thousands of nodes. Use --no-viz and export GraphML for Gephi."
+  - question: "Can I query the graph in Neo4j?"
+    answer: "Yes. Load cypher.txt or use --neo4j-push, then query with Cypher."
+  - question: "Does the view update when code changes?"
+    answer: "Run graphify update . again. graphify watch . rebuilds on code changes."
 ---
 
 To visualize a codebase graph, parse the repository into nodes and edges, then render them. Graphify, an open-source CLI, does both. One command builds the graph locally and writes an interactive `graph.html`. Export flags produce SVG, GraphML, an Obsidian vault, or Neo4j Cypher.

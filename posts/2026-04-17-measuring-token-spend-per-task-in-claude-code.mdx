@@ -13,6 +13,17 @@ tags:
   - measurement
 imgThumb: thumb.png
 imgSocial: social.png
+faq:
+  - question: "Is /cost exact?"
+    answer: "It reports the usage Claude Code recorded for the session, with an estimated price. Use your provider's billing console for invoiced amounts."
+  - question: "Why do the same tasks cost different amounts on different runs?"
+    answer: "Agents choose different search paths on different runs. Repeat each task and compare medians, not single runs."
+  - question: "What tasks make a good test set?"
+    answer: "Real questions you ask often, such as \"where is X handled\" or \"what breaks if I change Y\". Avoid toy tasks that fit in one file."
+  - question: "Does the graph-building step count toward cost?"
+    answer: "Yes, the first extraction of docs, PDFs, and images uses your assistant's model. Code parsing is local. Include the build in your totals."
+  - question: "What should I report to my team?"
+    answer: "The task list, model, date, median tokens per task before and after, and success rate. Add that results vary by codebase."
 ---
 
 Claude Code token tracking means recording how many input and output tokens a task used, so you can compare one way of working with another. Session totals are easy to get. The useful number is per task: the same job, run the same way, measured before and after a change such as adding a code graph. This guide measures how Graphify, an open-source code graph CLI, changes those numbers.

@@ -12,6 +12,17 @@ categories:
 tags:
   - codex
   - mcp
+faq:
+  - question: "Where is the Codex MCP config file?"
+    answer: "In ~/.codex/config.toml. A project can also have .codex/config.toml, which Codex reads only in trusted projects."
+  - question: "Does Codex support remote MCP servers?"
+    answer: "Yes. Codex supports Streamable HTTP servers with a url key, and OAuth sign-in through codex mcp login."
+  - question: "Do the Codex CLI and IDE extension share MCP servers?"
+    answer: "Yes. They read the same configuration, so you set a server up once."
+  - question: "Do I need an API key for Graphify in Codex?"
+    answer: "No. The hosted server uses OAuth. The local server reads a graph file and needs no key for code-only graphs."
+  - question: "How do I remove an MCP server from Codex?"
+    answer: "Run codex mcp remove <name>, or delete its table from config.toml."
 ---
 
 A Codex MCP server is a tool server that OpenAI's Codex connects to through the Model Context Protocol (MCP). It gives the agent new tools, such as a code graph, an issue tracker or a database. Codex supports two kinds: local servers it starts as a process, and remote servers it reaches over Streamable HTTP.

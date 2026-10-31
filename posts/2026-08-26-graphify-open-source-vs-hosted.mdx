@@ -13,6 +13,17 @@ tags:
   - open-source
   - mcp
   - cli
+faq:
+  - question: "Is open-source Graphify the same engine as hosted Graphify?"
+    answer: "Both build the same kind of code graph. Hosted Graphify adds managed builds, sign-in, reviews and verification around it."
+  - question: "Does hosted Graphify support GitLab?"
+    answer: "Yes. You can sign in with GitLab and connect GitLab repositories. Formal verification runs on GitHub pull requests."
+  - question: "Is the Graphify CLI free for commercial use?"
+    answer: "Yes. It is licensed under Apache 2.0."
+  - question: "Does hosted Graphify need the CLI?"
+    answer: "No. Hosted Graphify builds the graph for you. Your agent only needs the MCP URL."
+  - question: "Can I move from the CLI to hosted later?"
+    answer: "Yes. Connect the repository in the console, then point each agent at the hosted server. The local graph keeps working until you switch."
 ---
 
 Graphify open source vs hosted is a choice between two ways to run the same code knowledge graph. Open-source Graphify is the `graphifyy` package on PyPI, under Apache 2.0, and it builds the graph on your machine. Hosted [Graphify](https://app.graphify.com) indexes your GitHub or GitLab repositories and serves the graph to your agents over MCP.

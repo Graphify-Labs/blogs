@@ -12,6 +12,17 @@ categories:
 tags:
   - mcp
   - architecture
+faq:
+  - question: "Is stdio faster than Streamable HTTP?"
+    answer: "Usually, because there is no network hop. For most agent tool calls, the difference is small next to model time."
+  - question: "Can a stdio MCP server use OAuth?"
+    answer: "The MCP specification aims OAuth at HTTP transports. Stdio servers usually take credentials from environment variables instead."
+  - question: "Do I need to host anything to use a remote MCP server?"
+    answer: "No. The provider hosts it. You add the URL to your client and sign in."
+  - question: "Can I switch from a local to a remote server later?"
+    answer: "Yes. It is a configuration change in your client. With Graphify, your local graph keeps working until you switch each assistant."
+  - question: "Which MCP clients support remote servers?"
+    answer: "Claude Code, Cursor and Codex all support Streamable HTTP servers. Check your client's MCP docs for the exact config keys."
 ---
 
 A local vs remote MCP server choice comes down to where the server runs. Graphify, a code knowledge graph for AI coding agents, ships both kinds. A local server runs on your machine as a process your AI client starts, and talks over stdio. A remote server runs as a web service, and your client reaches it over Streamable HTTP at a URL. Both speak the same Model Context Protocol (MCP), so the agent sees tools either way.

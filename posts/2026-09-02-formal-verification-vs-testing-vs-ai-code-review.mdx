@@ -13,6 +13,17 @@ tags:
   - formal-verification
   - testing
   - code-review
+faq:
+  - question: "Is formal verification better than testing?"
+    answer: "Neither is better overall. Verification covers every input in its bounds for a property. Tests check expected behavior and integration. Use both."
+  - question: "Can AI code review replace unit tests?"
+    answer: "No. A review is an opinion about code. It does not execute the code, so it cannot confirm behavior."
+  - question: "Does formal verification prove my requirements are met?"
+    answer: "Differential verification does not. It proves the new code matches the old code. Requirements still need tests and review."
+  - question: "What should I do with a distinguishing input?"
+    answer: "Reproduce it, decide whether the change was intended, and add it as a regression test either way."
+  - question: "Do Graphify's review settings affect verification?"
+    answer: "No. Learning only changes which advisory review findings show. Verification verdicts stay as computed."
 ---
 
 Formal verification vs testing is a question about evidence. Unit tests run your code on inputs you chose and check the outputs. Formal verification uses a solver to reason about all inputs in a range at once. AI code review is a third kind of check: a model reads the change and gives an opinion. Each catches problems the others miss. Graphify, a code knowledge graph for AI coding agents, runs the last two on pull requests.

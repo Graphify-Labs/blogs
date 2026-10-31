@@ -12,6 +12,17 @@ categories:
 tags:
   - cursor
   - mcp
+faq:
+  - question: "How many MCP servers should Cursor run?"
+    answer: "Three to five active servers is a good range. More tools make the agent slower to choose and more likely to pick the wrong one."
+  - question: "Where does Cursor store MCP settings?"
+    answer: "In ~/.cursor/mcp.json for all projects, or .cursor/mcp.json inside a repository for that project only."
+  - question: "Does Graphify work in Cursor without an API key?"
+    answer: "Yes. The hosted server uses OAuth sign-in in the browser. The local server reads a graph file on your disk."
+  - question: "Is a code graph the same as Cursor's codebase index?"
+    answer: "No. The index finds similar text. A code graph follows calls, imports and references between files, so it finds connected code."
+  - question: "Can I commit Cursor's MCP config for my team?"
+    answer: "Yes. Commit .cursor/mcp.json with the hosted URL. Each teammate signs in with their own account."
 ---
 
 The best MCP servers for Cursor give its agent context it cannot get from the open files. Cursor already indexes your workspace and searches it. An MCP (Model Context Protocol) server is worth adding when it brings in something new: how your code connects, your pull requests, current library docs, a browser or production errors. Graphify, a code knowledge graph for AI coding agents, covers the first of those jobs.
