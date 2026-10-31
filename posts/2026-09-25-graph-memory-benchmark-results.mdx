@@ -1,0 +1,92 @@
+---
+title: "Graph memory benchmark: LOCOMO and LongMemEval"
+description: "A graph memory benchmark for open-source Graphify: LOCOMO and LongMemEval recall and QA accuracy, the harness, and how to measure token savings."
+date: "2026-09-25"
+keyword: graph memory benchmark
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - benchmarks
+  - memory
+  - retrieval
+---
+
+Graphify is a code knowledge graph for AI coding agents, and the same graph doubles as agent memory. A graph memory benchmark asks whether that structure retrieves the right facts better than the alternatives. Open-source Graphify publishes results on two public long-conversation benchmarks, along with the harness used to run them, so the numbers can be checked rather than taken on trust.
+
+I don't trust a benchmark I can't rerun, so this one comes with the harness. This post walks through the results, where Graphify leads and where it does not, and a quick way to measure token savings on your own repository.
+
+## What do LOCOMO and LongMemEval measure?
+
+Both test memory over long histories. [LOCOMO](https://arxiv.org/abs/2402.17753) holds very long multi-session conversations with questions whose answers sit far back in the history. [LongMemEval](https://arxiv.org/abs/2410.10813) tests recall, temporal reasoning and knowledge updates across sessions. Recall@10 checks whether the right evidence is in the top ten results; QA accuracy checks the final answer.
+
+## How did open-source Graphify score?
+
+On LOCOMO with 300 questions, recall@10 was 0.497, against 0.048 and 0.149 for the two memory-layer systems tested. QA accuracy was 45.3%: behind one memory layer at 49.7% and ahead of the other at 27.3%. On LongMemEval-S with 50 questions, QA accuracy was 76%, tied with dense RAG. Building the index used zero LLM credits.
+
+| Benchmark | Metric | Open-source Graphify | Others |
+| - | - | - | - |
+| LOCOMO (n=300) | recall@10 | 0.497 | memory layers: 0.149, 0.048 |
+| LOCOMO (n=300) | QA accuracy | 45.3% | memory layers: 49.7%, 27.3% |
+| LongMemEval-S (n=50) | QA accuracy | 76% | tied with dense RAG |
+
+Source: the benchmark table in the [open-source Graphify README](https://github.com/Graphify-Labs/graphify) and [BENCHMARKS.md](https://github.com/Graphify-Labs/graphify/blob/main/BENCHMARKS.md).
+
+## Why does retrieval lead while QA accuracy does not?
+
+Retrieval and answering are separate steps. The graph plus hybrid retrieval puts the right evidence in the top ten far more often, which is what recall@10 measures. Turning that evidence into a correct answer also depends on the answering prompt and model. On LOCOMO QA, a memory-layer system scored higher, and the table shows that rather than hiding it.
+
+## How was the graph memory benchmark run?
+
+Every system ran as an adapter in one harness, with one shared model (Kimi K2.6), the same token budgets and the same grader. The judge was blind-validated against a second independent judge at 90.6% agreement, Cohen's kappa 0.81. Sample sizes are in the table, and BENCHMARKS.md lists the commands.
+
+Small samples deserve care. Fifty LongMemEval questions are enough to show a tie, not to separate close systems. Read the results as a direction, then run the harness on your own data.
+
+## How do you measure token savings on your own repository?
+
+Run `graphify benchmark` in a built repository. It compares the tokens needed to read the whole corpus with the tokens a graph query returns for a fixed set of sample questions. It is a quick estimate of context savings, not an accuracy test, and the ratio grows with repository size.
+
+```bash
+uv tool install graphifyy
+graphify update .
+graphify benchmark
+```
+
+On [itsdangerous](https://github.com/pallets/itsdangerous):
+
+```text
+  Corpus:          18,600 words → ~24,800 tokens (naive)
+  Graph:           372 nodes, 695 edges
+  Avg query cost:  ~3,205 tokens
+  Reduction:       7.7x fewer tokens per query
+```
+
+On [Flask](https://github.com/pallets/flask):
+
+```text
+  Corpus:          117,050 words → ~156,066 tokens (naive)
+  Graph:           2,341 nodes, 3,753 edges
+  Avg query cost:  ~1,234 tokens
+  Reduction:       126.5x fewer tokens per query
+```
+
+## Try it
+
+Index a repository in [Graphify](https://app.graphify.com) and point your agent at the hosted MCP server; the [hosted MCP docs](https://docs.graphify.com/platform/hosted-mcp.md) cover setup. To rerun the numbers yourself, `uv tool install graphifyy` and follow BENCHMARKS.md. Related reading: [knowledge graph vs RAG](https://graphify.com/blog/code-knowledge-graph-vs-rag) and the [knowledge graph glossary entry](https://graphify.com/glossary/knowledge-graph).
+
+## FAQ
+
+### Is Graphify best on every metric?
+
+No. It leads LOCOMO retrieval recall, ties on LongMemEval-S, and trails one memory-layer system on LOCOMO QA accuracy.
+
+### Can I reproduce the numbers?
+
+Yes. BENCHMARKS.md in the open-source repository documents the harness, adapters, judge and commands.
+
+### Does `graphify benchmark` measure answer quality?
+
+No. It estimates tokens saved per query on sample questions. Use the LOCOMO and LongMemEval harness for accuracy.
