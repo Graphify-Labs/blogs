@@ -1,0 +1,104 @@
+---
+title: "Graphify with Google Antigravity: set up a code graph"
+description: "Set up Graphify with Google Antigravity: the local graphifyy skill, rule and workflow, or the hosted Graphify MCP server with OAuth. Commands and files."
+date: "2026-09-21"
+keyword: graphify with google antigravity
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - antigravity
+  - mcp
+  - cli
+---
+
+Graphify is a code knowledge graph that coding agents query instead of grepping, and using Graphify with Google Antigravity takes a few minutes. Antigravity's agents are good at writing code. On a large repository, they still need to know how files connect. A graph gives them callers, imports and paths with file locations, so they read less and guess less.
+
+You can set it up two ways: the local skill from the open-source Graphify CLI, or the hosted Graphify MCP server.
+
+## How do I use Graphify with Google Antigravity?
+
+Install the open-source package with `uv tool install graphifyy`, then run `graphify antigravity install` in your project. That adds a Graphify skill, an always-on rule and a workflow. Send `/graphify .` in Antigravity to build the graph. For hosted graphs, add `https://api.graphify.com/mcp` as a remote MCP server instead.
+
+The sections below show each path, the files it writes and how to check it worked.
+
+## Graphify with Google Antigravity, locally
+
+Run these in the root of your repository:
+
+```bash
+uv tool install graphifyy
+graphify antigravity install
+```
+
+The installer writes three things:
+
+- **Skill**: `~/.gemini/config/skills/graphify/SKILL.md`, plus a `references/` folder the skill loads on demand. This is global, so every workspace sees it.
+- **Rule**: `.agents/rules/graphify.md` in the project, so Antigravity checks the graph before answering questions about the codebase.
+- **Workflow**: `.agents/workflows/graphify.md` in the project, which gives you the `/graphify` command.
+
+On Windows, the installer detects the OS and uses the PowerShell version of the skill. Then open Antigravity in the repository and send `/graphify .`. The graph lands in `graphify-out/`, and code is parsed on your machine with tree-sitter.
+
+## Add the local MCP server
+
+The skill covers most questions. For full graph navigation tools, the installer also prints an MCP entry to add to `~/.gemini/antigravity/mcp_config.json`:
+
+```json
+"graphify": {
+  "command": "uv",
+  "args": ["run", "--with", "graphifyy", "--with", "mcp", "-m", "graphify.serve", "${workspace.path}/graphify-out/graph.json"]
+}
+```
+
+Put it inside the file's `mcpServers` object and restart Antigravity. Google's [Antigravity MCP documentation](https://antigravity.google/docs/mcp) explains where the settings live. Our guide to an [MCP server for your codebase](https://graphify.com/blog/mcp-server-for-your-codebase) covers the local tools.
+
+## Can Google Antigravity use hosted Graphify?
+
+Yes. Antigravity can add a remote MCP server, and hosted Graphify is one at `https://api.graphify.com/mcp`, using Streamable HTTP. The first connection opens your browser to sign in with OAuth, so no API key goes in a config file. You need a Graphify workspace with at least one repository indexed first.
+
+Steps:
+
+1. Connect a repository at [app.graphify.com](https://app.graphify.com) and wait until it shows Indexed.
+2. In Antigravity's MCP settings, add a server named `graphify` with the URL above. Keep your other servers.
+3. Complete the browser sign-in and choose the workspace.
+4. Ask Antigravity to list your Graphify workspaces and repositories.
+
+The [other MCP clients guide](https://docs.graphify.com/integrations/other-agents) has a setup prompt you can paste into Antigravity, which reads the current guide and stops so you sign in yourself.
+
+## Which setup should I pick for Antigravity?
+
+Pick the local skill for a project that lives on your machine or must stay offline. Pick hosted Graphify when the code is on GitHub or GitLab and you want the graph rebuilt on every push and shared with your team. Do not configure both in one project, or Antigravity will see two sets of Graphify tools.
+
+The open-source CLI supports about 40 languages. [What is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph) explains what the graph contains.
+
+## Try it
+
+Start hosted on the Free plan at [app.graphify.com](https://app.graphify.com), or go local:
+
+```bash
+uv tool install graphifyy
+graphify antigravity install
+```
+
+Questions are welcome on [Discord](https://discord.gg/graphify).
+
+## FAQ
+
+### Is Google Antigravity officially supported by Graphify?
+
+Yes. `antigravity` is a built-in platform in the Graphify CLI installer, and the hosted MCP server works with any remote MCP client.
+
+### Should I commit the .agents folder?
+
+Commit `.agents/rules/graphify.md` and `.agents/workflows/graphify.md` if your team uses Antigravity. The skill itself sits in your home directory.
+
+### Does Graphify send my code to Google?
+
+The CLI parses code locally. Antigravity sends what it reads to its own model provider under its own terms.
+
+### Do I need an API key?
+
+No. Hosted Graphify uses OAuth, and local code-only graphs need no key.
