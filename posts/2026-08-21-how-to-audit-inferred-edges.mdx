@@ -1,0 +1,112 @@
+---
+title: "How to audit inferred edges in a code graph"
+description: "Inferred edges in a code graph are hops a resolver worked out rather than read. Count them, find their source, and check them before you trust a path."
+date: "2026-08-21"
+keyword: inferred edges
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - confidence-tags
+  - provenance
+  - graph
+---
+
+Graphify is a code knowledge graph for AI coding agents, and every edge in it carries a tag that says how it was established. This post is a practical audit of inferred edges: how many a real graph has, where they come from in a build that calls no model, and how to check the ones that sit on a path you care about.
+
+My rule is simple: I don't let an agent act on a hop I can't trace to a line of code. That means knowing which hops are inferred. The [confidence tags](https://graphify.com/blog/grounded-answers-confidence-tags) post explains what EXTRACTED, INFERRED and AMBIGUOUS mean. Here we measure them on two public Python projects, [itsdangerous](https://github.com/pallets/itsdangerous) and [Flask](https://github.com/pallets/flask), built with open-source Graphify in AST-only mode.
+
+## How do you audit inferred edges in Graphify?
+
+Search the graph with `prov: inferred` to show only inferred edges, then open each node on the path you care about. The stats bar gives you Extracted, Inferred, Synthesized and Observed counts up front. Each node panel shows its tag and its Outgoing and Incoming connections, so you can check one hop at a time.
+
+1. Open your repository's graph in [Graphify](https://app.graphify.com) and read the counts in the stats bar.
+2. Type `prov: inferred` in the graph search. Add `path:` to stay inside one directory, or `kind:` to narrow by node type.
+3. Open a node and read its tag and its Outgoing and Incoming connections.
+4. Open the source line for any inferred hop that sits on a path you plan to change.
+
+## How many inferred edges does a code-only graph have?
+
+A small share. In the itsdangerous graph, 62 of 695 edges are INFERRED and 633 are EXTRACTED, about 9%. In the Flask graph, 291 of 3,753 edges are INFERRED, under 8%. Both graphs were built with `graphify update .`, which parses code with tree-sitter and calls no model.
+
+You can count them straight from `graphify-out/graph.json`:
+
+```bash
+python3 -c "import json,collections; g=json.load(open('graphify-out/graph.json')); print(collections.Counter(e['confidence'] for e in g['links']))"
+```
+
+```text
+Counter({'EXTRACTED': 633, 'INFERRED': 62})
+```
+
+## Where do inferred edges come from without an LLM?
+
+They come from the resolver, not a model. When the parser can attach a call to a target but cannot prove it from the syntax tree alone, it records the edge as INFERRED with `_origin: ast` and a confidence score of 0.85.
+
+Common causes are method calls on a receiver whose type is not declared locally, and functions passed as arguments.
+
+Grouping the inferred edges by relation shows the pattern:
+
+```text
+itsdangerous  uses: 33, calls: 29
+flask         indirect_call: 126, uses: 102, calls: 48, references: 15
+```
+
+The largest group in Flask is `indirect_call`. One example is in the tutorial app:
+
+```text
+init_app() indirect_call close_db()  examples/tutorial/flaskr/db.py L55  context: argument
+```
+
+At that line, `init_app()` passes `close_db` to `app.teardown_appcontext(...)`. Flask calls it later, at the end of a request. No line of code says `close_db()` inside `init_app()`, yet the dependency is real. The tag says the resolver worked it out from the argument, which is exactly what you want to know before you follow that hop.
+
+## Which inferred edges should you check first?
+
+Check the ones on the path you are about to act on. An inferred edge in a test helper rarely matters. An inferred edge between a public API and the function you plan to change decides whether your impact list is complete.
+
+Run `graphify explain` on each node in the path and read the tag next to every connection.
+
+```bash
+graphify explain "base64_decode()"
+```
+
+```text
+Connections (14):
+  <-- .verify_signature() [calls] [EXTRACTED] src/itsdangerous/signer.py:L230
+...
+```
+
+Every hop here is EXTRACTED with a file and line, so the path can be read in the source directly. When a hop shows INFERRED, open that line and confirm the receiver type or the callback registration yourself.
+
+## What should an agent do with an inferred edge?
+
+Treat it as a lead, not a fact. A well-behaved agent cites EXTRACTED edges with their file and line and opens the source before it relies on an INFERRED one. The [Graphify docs](https://docs.graphify.com/concepts/provenance.md) suggest the same rule for humans: read the tag before you trust the hop.
+
+## Try it
+
+Index a repository in [Graphify](https://app.graphify.com) and search `prov: inferred`. The [graph docs](https://docs.graphify.com/platform/graphs.md) cover the rest of the search syntax. Or build a graph locally:
+
+```bash
+uv tool install graphifyy
+graphify update .
+graphify explain "your_function()"
+```
+
+More background lives in the [glossary](https://graphify.com/glossary/confidence-tags) and on [graphify.com](https://graphify.com).
+
+## FAQ
+
+### Are inferred edges wrong?
+
+Usually not. They are dependencies the resolver could not prove from syntax alone, such as callbacks and calls on untyped receivers. They deserve a check, not deletion.
+
+### Does a code-only build ever produce AMBIGUOUS edges?
+
+It can, when a name resolves to more than one definition. Neither graph in this post had any.
+
+### Can I export only the inferred edges?
+
+Yes. Filter `graph.json` on `confidence == "INFERRED"` as shown above, or search with `prov: inferred` in the hosted graph.
