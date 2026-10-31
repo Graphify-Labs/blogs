@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getPosts, loadAuthors, parsePost } from "./posts";
+import { getPosts, isPublished, loadAuthors, parsePost, todayIST } from "./posts";
 import type { Author } from "./posts";
 
 const authors: Record<string, Author> = {
@@ -119,5 +119,28 @@ describe("parsePost", () => {
     const badCategory = raw.replace("guides", "news");
     expect(() => parsePost("2026-10-02-a-note.mdx", badCategory, authors)).toThrow(/unknown category/);
     expect(() => parsePost("2026-10-02-categories.mdx", raw, authors)).toThrow(/reserved/);
+  });
+});
+
+describe("featured, faq and dates", () => {
+  const authors = loadAuthors();
+  const head = (extra: string) => `---\ntitle: T\ndescription: D\ndate: "2026-10-02"\nauthors:\n  - ${Object.keys(authors)[0]}\ncategories:\n  - guides\n${extra}---\n\nBody.\n`;
+  it("reads featured and faq", () => {
+    const post = parsePost("2026-10-02-x.mdx", head("featured: true\nfaq:\n  - question: Q?\n    answer: A.\n"), authors);
+    expect(post.featured).toBe(true);
+    expect(post.faq).toEqual([{ question: "Q?", answer: "A." }]);
+  });
+  it("rejects a bad featured or faq", () => {
+    expect(() => parsePost("2026-10-02-x.mdx", head('featured: "yes"\n'), authors)).toThrow(/featured/);
+    expect(() => parsePost("2026-10-02-x.mdx", head("faq:\n  - question: Q?\n"), authors)).toThrow(/faq/);
+  });
+  it("keeps exactly one featured post in posts/", () => {
+    expect(getPosts().filter((p) => p.featured).map((p) => p.slug)).toEqual(["graphify-octoverse-2026"]);
+  });
+  it("hides a post until its IST date", () => {
+    expect(todayIST(new Date("2026-11-05T18:29:00Z"))).toBe("2026-11-05");
+    expect(todayIST(new Date("2026-11-05T18:31:00Z"))).toBe("2026-11-06");
+    expect(isPublished({ date: "2026-11-06" }, "2026-11-05")).toBe(false);
+    expect(isPublished({ date: "2026-11-05" }, "2026-11-05")).toBe(true);
   });
 });
