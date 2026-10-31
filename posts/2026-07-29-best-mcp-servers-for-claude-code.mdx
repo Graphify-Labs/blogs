@@ -1,0 +1,111 @@
+---
+title: "Best MCP servers for Claude Code: a code graph first"
+description: "The best MCP servers for Claude Code by job: code structure, repos, docs, browser and errors. What each adds, when to skip it and how to add one."
+date: "2026-07-29"
+keyword: best mcp servers claude code
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - claude-code
+  - mcp
+---
+
+The best MCP servers for Claude Code are the ones that show it something it cannot already see. Claude Code already reads, edits and searches files. An MCP (Model Context Protocol) server earns its place when it adds a new source: your repository's structure, your issues, live docs, a browser or production errors.
+
+This guide groups servers by the job they do. It also says when to skip one, because every server adds tool descriptions to the context before you type a word.
+
+## Which MCP servers should Claude Code have?
+
+Start with three to five servers that match your daily work. A typical set is a code graph for structure, GitHub for pull requests and issues, a docs server for fast-moving libraries, and Playwright for frontend work. Add Sentry or a read-only database server only when you debug production or SQL.
+
+| Job | Example server | Runs | Add it when | Skip it when |
+| --- | --- | --- | --- | --- |
+| Code structure | Graphify | Hosted (OAuth) or local (stdio) | The repo is too big to read end to end | The project is a few files |
+| Repos, PRs, issues | GitHub MCP | Hosted (OAuth) | You review or triage on GitHub | `gh` in the terminal already covers it |
+| Library docs | Context7 | Hosted or local | You use libraries that change often | Your stack is stable |
+| Browser | Playwright MCP | Local | You build UI and want the agent to check it | You only read pages |
+| Errors | Sentry MCP | Hosted (OAuth) | You triage production issues | You have no Sentry project |
+
+Lists from [Dupple](https://dupple.com/learn/best-mcp-servers-claude-code) and [Nimbalyst](https://nimbalyst.com/blog/best-claude-code-mcp-servers/) land on a similar core. They also advise against filesystem and memory servers in Claude Code, which has its own file tools.
+
+## Why does a code graph come first?
+
+A code graph answers structural questions in one call: who calls this function, what imports this module, and what sits between two classes. Without one, Claude Code answers by running search after search and reading whole files. That costs tokens and still misses callers that use a different name.
+
+[Graphify](https://app.graphify.com) is a code knowledge graph for AI coding agents. It parses your code with tree-sitter and links calls, imports and references across files. Each answer comes back as a small set of nodes with file paths. Our explainer on [what a code knowledge graph is](https://graphify.com/blog/what-is-a-code-knowledge-graph) covers the model.
+
+Grep is still right for an exact string, such as an error message. The graph is for questions about how code connects.
+
+## How do I add a remote MCP server to Claude Code?
+
+Use `claude mcp add` with `--transport http`. Claude Code's [MCP documentation](https://code.claude.com/docs/en/mcp) recommends HTTP for remote servers, and it supports OAuth sign-in in the browser. Hosted Graphify works this way:
+
+```bash
+claude mcp add --transport http --scope user graphify https://api.graphify.com/mcp
+```
+
+Start Claude Code, run `/mcp`, choose graphify and select Authenticate. Your browser opens to sign in. No API key goes in a config file. Then check the connection from a terminal:
+
+```bash
+claude mcp list
+```
+
+To share the server with your team, commit an `.mcp.json` file at the repository root instead:
+
+```json
+{
+  "mcpServers": {
+    "graphify": {
+      "type": "http",
+      "url": "https://api.graphify.com/mcp"
+    }
+  }
+}
+```
+
+You need a repository connected at app.graphify.com first. The [Claude Code integration docs](https://docs.graphify.com/integrations/claude-code) cover scopes.
+
+## Can I run a code graph server locally instead?
+
+Yes. The open-source Graphify CLI ships `graphify-mcp`, a local server over stdio. Build a graph, install the MCP extra and register it with an absolute path:
+
+```bash
+uv tool install "graphifyy[mcp]"
+claude mcp add --transport stdio graphify -- graphify-mcp /absolute/path/to/repo/graphify-out/graph.json
+```
+
+The local server exposes ten tools, including `query_graph`, `get_neighbors` and `shortest_path`. Use it when code must stay on your machine. The [MCP server quickstart](https://docs.graphify.com/open-source/mcp-server) has the full tool list.
+
+## How many MCP servers is too many?
+
+Past about five or six servers, tool lists grow long and the agent picks tools less reliably. Each server's tool descriptions load into context up front. Prefer servers with a small, focused tool set, and turn off the ones you did not use this week.
+
+Check credentials as well. Give each server the narrowest scope that works, and prefer read-only modes for databases. Treat any server that fetches outside content as a prompt-injection risk, as the Claude Code docs warn.
+
+## Try it
+
+Connect a repository at [app.graphify.com](https://app.graphify.com) and run the `claude mcp add` command above. Prefer local? Run `uv tool install graphifyy`, then `graphify install`. Our guide on [giving Claude Code a code knowledge graph](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph) shows the questions to ask first.
+
+## FAQ
+
+### What is the best MCP server for Claude Code?
+
+It depends on the job. For large codebases, a code graph helps most because it answers structural questions. For pull request work, add GitHub's server.
+
+### Do MCP servers slow Claude Code down?
+
+They can. Every tool description takes context, and long tool lists make selection harder. Keep a small active set.
+
+### Does Graphify need an API key in Claude Code?
+
+No. The hosted server signs you in with OAuth in the browser. Local code-only graphs need no key.
+
+### Should I use user scope or project scope?
+
+Use `--scope user` for servers you want everywhere. Commit `.mcp.json` for servers the whole team should share in one repository.
+
+### Is a memory MCP server worth adding?
+
+Usually not in Claude Code, which has its own memory files. Add one only if you need memory shared across several clients.
