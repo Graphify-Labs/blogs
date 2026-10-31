@@ -1,0 +1,89 @@
+---
+title: "Call graph vs dependency graph: what each one shows"
+description: "Call graph vs dependency graph: one links functions that call each other, the other links modules or packages that depend on each other. A comparison."
+date: "2026-05-27"
+keyword: call graph vs dependency graph
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - call-graph
+  - dependency-graph
+  - code-graph
+imgThumb: thumb.png
+imgSocial: social.png
+---
+
+The call graph vs dependency graph difference is about granularity and meaning. A call graph links functions: an edge means one function calls another. A dependency graph links modules or packages: an edge means one needs the other to build or run. Both are useful, and a code knowledge graph can hold both. Graphify, an open-source CLI, builds a code knowledge graph that holds both kinds of edges.
+
+## What is a call graph?
+
+A call graph is a directed graph where nodes are procedures and an edge from A to B means A calls B. [Wikipedia's call graph article](https://en.wikipedia.org/wiki/Call_graph) separates static call graphs, built from source, from dynamic ones, recorded while a program runs. Static graphs over-approximate or miss calls in dynamic languages. Dynamic graphs only show paths that ran.
+
+## What is a dependency graph?
+
+A dependency graph shows what depends on what. In code, that usually means modules importing modules, or packages requiring packages. Package managers use one to decide install order. Build tools use one to decide what to rebuild. Tools like `pipdeptree` for Python or `npm ls` for Node print a package dependency tree.
+
+## How do they compare?
+
+| | Call graph | Dependency graph |
+|---|---|---|
+| Nodes | Functions, methods | Files, modules, packages |
+| Edge means | A calls B | A imports or requires B |
+| Built from | Call expressions, or runtime traces | Import statements, manifests |
+| Answers | How does a request flow? | What does this module pull in? |
+| Typical use | Debugging, impact of a change | Builds, cycles, upgrades |
+| Granularity | Fine | Coarse |
+
+## When do you need a call graph?
+
+Use a call graph to follow behaviour. "Which code runs when a request hits this endpoint?" is a call graph question. So is "who calls this function I want to change?" Imports cannot answer it, because importing a module says nothing about which function runs.
+
+## When do you need a dependency graph?
+
+Use a dependency graph for structure. Finding import cycles, planning a package upgrade, or splitting a monolith all start from module dependencies. A call graph is often too detailed for this.
+
+## Can one graph hold both?
+
+Yes. A code knowledge graph stores several edge types in one place. Graphify, an open-source CLI, records `calls`, `imports`, `imports_from`, `inherits`, and more from a tree-sitter parse. Its `affected` command walks those relations in reverse. At version 0.8.21 it lists the relations it follows:
+
+```text
+Relations: calls, references, imports, imports_from, re_exports, inherits, extends, implements, uses, mixes_in, embeds
+```
+
+Build and query it locally:
+
+```bash
+uv tool install graphifyy
+graphify update .
+graphify affected "verify()"
+```
+
+## When do the call graph and dependency graph disagree?
+
+They disagree when code depends on a contract instead of a concrete class. With an interface or dependency injection, a caller imports the interface. At run time it calls whichever implementation was injected. The dependency graph shows the interface. A static call graph cannot always know which implementation runs.
+
+In that case, treat call edges to implementations as leads and check the wiring code.
+
+## FAQ
+
+### Is a dependency graph the same as an import graph?
+
+At the module level, mostly. Package dependency graphs also include third-party packages from manifests.
+
+### Are static call graphs accurate?
+
+They are approximations. Dynamic dispatch and reflection hide some calls.
+
+### Does Graphify trace runtime calls?
+
+No. It builds a static graph from source.
+
+### Which is better for impact analysis?
+
+Both help. Calls show behaviour, and imports show what loads. Graphify's `affected` follows both.
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. Read the [code graph glossary entry](https://graphify.com/glossary/code-graph) and the [querying docs](https://docs.graphify.com/open-source/features/querying). Related: [code knowledge graph examples](/blog/code-knowledge-graph-examples-5-questions-it-answers-that-grep-cant). See also [tree-sitter](/blog/what-is-an-ast-and-how-tree-sitter-builds-one).
