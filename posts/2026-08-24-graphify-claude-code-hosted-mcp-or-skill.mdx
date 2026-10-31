@@ -1,0 +1,117 @@
+---
+title: "Graphify Claude Code setup: hosted MCP or local skill?"
+description: "Graphify Claude Code setup two ways: the hosted MCP server with OAuth, or the local graphifyy skill with hooks. What each does and how to choose."
+date: "2026-08-24"
+keyword: graphify claude code
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - claude-code
+  - mcp
+  - cli
+---
+
+Graphify is a code knowledge graph that Claude Code can query instead of grepping through your repository. There are two ways to set up Graphify Claude Code support: connect the hosted MCP server, or install the local skill from the open-source Graphify CLI. Both work. They suit different teams, and this guide helps you pick one.
+
+Our earlier guide on [how to give Claude Code a code knowledge graph](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph) explains why a graph helps. This one is about the choice.
+
+## Should I use hosted MCP or the local skill with Claude Code?
+
+Use the hosted MCP server when your code is on GitHub or GitLab and you want graphs rebuilt on every push and shared with teammates. Use the local skill when the code lives only on your machine, must stay offline, or you want no account. Many developers start local on one project, then move team repositories to hosted.
+
+| | Hosted MCP | Local skill |
+| --- | --- | --- |
+| Setup | One `claude mcp add` command and OAuth | `uv tool install graphifyy`, then `graphify claude install` |
+| Graph built by | Graphify, on every push to the default branch | You, with `/graphify .` |
+| Where the graph lives | Your Graphify workspace | `graphify-out/` in the repository |
+| Shared with a team | Yes | Through git, if you commit it |
+| Extras | Pull request reviews, formal verification on GitHub, combined repositories | Fully offline code-only builds |
+
+## Graphify Claude Code setup with hosted MCP
+
+First connect a repository at [app.graphify.com](https://app.graphify.com) and wait for its status to show Indexed. Then add the server to Claude Code:
+
+```bash
+claude mcp add --transport http --scope user graphify https://api.graphify.com/mcp
+```
+
+`--scope user` makes it available in every project. To share it with your team instead, commit an `.mcp.json` file at the repository root:
+
+```json
+{
+  "mcpServers": {
+    "graphify": {
+      "type": "http",
+      "url": "https://api.graphify.com/mcp"
+    }
+  }
+}
+```
+
+Start Claude Code, run `/mcp`, choose graphify and select Authenticate. Your browser opens for sign-in. There is no API key. The [Claude Code integration docs](https://docs.graphify.com/integrations/claude-code) cover scopes and a default repository setting.
+
+## Set up the local Graphify skill
+
+Install the package and register it with Claude Code:
+
+```bash
+uv tool install graphifyy
+graphify claude install
+```
+
+That writes a Graphify section to `CLAUDE.md` and registers PreToolUse hooks in `.claude/settings.json`. The hooks remind Claude Code to check the graph before it runs a search or reads files. Then open Claude Code in the repository and send:
+
+```text
+/graphify .
+```
+
+The graph lands in `graphify-out/`. Code is parsed on your machine with tree-sitter. Add `--project` to the install command to write the skill into the repository so teammates get it too. Anthropic's [Claude Code MCP documentation](https://code.claude.com/docs/en/mcp) explains how servers and scopes work if you also want the local MCP server.
+
+## How do I check that Graphify is working in Claude Code?
+
+For hosted MCP, run `claude mcp list` in a terminal and look for graphify marked Connected. Then ask Claude Code to list your Graphify repositories. For the local skill, confirm `graphify-out/graph.json` exists after `/graphify .`, and ask a structural question. Answers should cite file paths you can open.
+
+Good test prompts:
+
+- "Use Graphify to show what calls the function that parses config."
+- "What would change if I renamed this class?"
+- "Which modules depend on the payments package?"
+
+Open the cited lines before you trust an answer.
+
+## What if Claude Code shows two sets of Graphify tools?
+
+Usually the server is configured twice, for example a user-scope entry plus a project `.mcp.json` entry, or the hosted server plus a local one. Keep one per project. The hosted and local servers use different tool names, so duplicates are easy to spot in `/mcp`. Remove the extra entry with `claude mcp remove graphify`.
+
+For other errors, the docs have a troubleshooting table for sign-in, missing repositories and scope problems. Our post on [change impact analysis with a code graph](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) shows questions worth asking once it works.
+
+## Try it
+
+Connect a repository at [app.graphify.com](https://app.graphify.com) and run the `claude mcp add` command above. Or go local:
+
+```bash
+uv tool install graphifyy
+graphify claude install
+```
+
+## FAQ
+
+### Does Graphify work with Claude Code on Windows?
+
+Yes. `graphify install` detects Windows and installs the PowerShell version of the skill. The hosted MCP server works the same on every OS.
+
+### Do I need an API key for Graphify in Claude Code?
+
+No. Hosted MCP uses OAuth in the browser. Local code-only graphs need no key.
+
+### Can Claude Code use Graphify across several repositories?
+
+Yes. Hosted Graphify can combine repositories in one workspace, so Claude Code can follow calls across them.
+
+### Does the local skill send my code anywhere?
+
+Code is parsed locally and sent nowhere. Claude Code itself sends what it reads to Anthropic under its own terms.
