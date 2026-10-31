@@ -3,6 +3,8 @@ title: "Best MCP servers for Cursor, grouped by the job they do"
 description: "The best MCP servers for Cursor: a code graph, GitHub, docs, browser and errors. What each adds, what to skip, and how to add one to mcp.json."
 date: "2026-08-03"
 keyword: best mcp servers cursor
+imgThumb: thumb.png
+imgSocial: social.png
 authors:
   - fahad
 categories:
@@ -12,7 +14,7 @@ tags:
   - mcp
 ---
 
-The best MCP servers for Cursor give its agent context it cannot get from the open files. Cursor already indexes your workspace and searches it. An MCP (Model Context Protocol) server is worth adding when it brings in something new: how your code connects, your pull requests, current library docs, a browser or production errors.
+The best MCP servers for Cursor give its agent context it cannot get from the open files. Cursor already indexes your workspace and searches it. An MCP (Model Context Protocol) server is worth adding when it brings in something new: how your code connects, your pull requests, current library docs, a browser or production errors. Graphify, a code knowledge graph for AI coding agents, covers the first of those jobs.
 
 Pick by job, not by popularity. Each server's tools load into the agent's context, so a short list beats a long one.
 
@@ -38,7 +40,7 @@ Cursor's index finds code that looks like your question. A code graph finds code
 
 ## How do I add an MCP server to Cursor?
 
-Add it to `~/.cursor/mcp.json` for every project, or `.cursor/mcp.json` for one repository. A remote server needs only its URL. Hosted Graphify looks like this:
+Add it to `~/.cursor/mcp.json` for every project, or `.cursor/mcp.json` for one repository. A remote server needs only its URL, and Cursor opens a browser sign-in the first time it connects. You can also install many servers in one click from Cursor's MCP settings. Hosted Graphify looks like this:
 
 ```json
 {
@@ -53,14 +55,14 @@ Add it to `~/.cursor/mcp.json` for every project, or `.cursor/mcp.json` for one 
 Open Cursor's MCP settings. The server shows "Needs login" until you sign in through the browser with OAuth. Then start a new agent chat and paste this test prompt:
 
 ```text
-Use Graphify's list_repositories tool and show the repositories I can access. If the tool fails, report the error instead of guessing.
+Use Graphify to list the repositories you can see. If the tool fails, report the error instead of guessing.
 ```
 
 Connect a repository at app.graphify.com before you test. The [Cursor integration docs](https://docs.graphify.com/integrations/cursor) cover project scope and a default repository.
 
 ## Can Cursor use a local code graph instead?
 
-Yes. The open-source Graphify CLI ships a local MCP server, `graphify-mcp`, that runs over stdio. Build a graph with the CLI, then point Cursor at it with an absolute path:
+Yes. The open-source Graphify CLI ships a local MCP server, `graphify-mcp`, that runs over stdio. It needs no account and keeps code on your machine. Open-source Graphify is licensed under Apache 2.0. Build a graph with the CLI, then point Cursor at it with an absolute path:
 
 ```json
 {
@@ -84,6 +86,8 @@ Then watch your tool count. If the agent starts calling the wrong tool, turn ser
 ## Try it
 
 Sign in at [app.graphify.com](https://app.graphify.com), connect a repository and add the `mcp.json` entry above. To stay local, run `uv tool install graphifyy` and `graphify install --platform cursor`. Our guide on [giving Cursor a code knowledge graph](https://graphify.com/blog/how-to-give-cursor-a-code-knowledge-graph) covers what to ask first.
+
+Related reading: [what a code knowledge graph is](https://graphify.com/blog/what-is-a-code-knowledge-graph), [giving Cursor a code knowledge graph](https://graphify.com/blog/how-to-give-cursor-a-code-knowledge-graph) and [codebase context tools compared](https://graphify.com/blog/best-codebase-context-tools-for-ai-coding-assistants-2026).
 
 ## FAQ
 
