@@ -1,0 +1,79 @@
+---
+title: "What is differential formal verification?"
+description: "Differential formal verification checks a changed function against its previous version: it proves they match within bounds or finds an input that differs."
+date: "2026-08-31"
+keyword: differential formal verification
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - formal-verification
+  - code-review
+---
+
+Differential formal verification is a way to check a code change by comparing the new version of a function with the old one. Instead of proving that code meets a written specification, it proves that two implementations behave the same. When they do not, it produces a concrete input where their outputs differ.
+
+That makes it a good fit for pull requests. Most changes are refactors, cleanups or fixes, and the question a reviewer asks is "did behavior change, and was that intended?"
+
+## What does differential formal verification check?
+
+It checks equivalence: for every input in the checked range, do the old and new functions return the same result? The previous implementation acts as the specification. There are two useful outcomes. Either the tool proves the two match within its bounds, or it returns a distinguishing input, sometimes called a witness, with the old and new values.
+
+Researchers call this idea regression verification or equivalence checking. Microsoft Research's [SymDiff](https://www.microsoft.com/en-us/research/project/symdiff-differential-program-verifier/) is a well-known differential program verifier. KIT's [llrêve](https://formal.kastel.kit.edu/projects/improve/reve/) checks two programs for equivalence by reducing the question to logic a solver can decide.
+
+## How is it different from classic formal verification?
+
+Classic formal verification proves that a program satisfies a specification someone wrote, such as "this sort always returns an ordered list." Writing that specification is often the hardest part. Differential verification skips it. The old code is the reference, so any team can apply it to any change of a supported function.
+
+| | Classic formal verification | Differential formal verification |
+| --- | --- | --- |
+| Reference | A written specification | The previous version of the code |
+| Question | Does the code meet the spec? | Did behavior change? |
+| Setup cost | High: write and maintain specs | Low: the old code already exists |
+| Proves requirements are met | Yes, for specified properties | No |
+| Typical output | Proof or counterexample to the spec | Proof of equivalence or a distinguishing input |
+
+## What are its limits?
+
+It is function-level and relative. If the old code had a bug, an equivalence proof says the new code has the same bug. It does not show that the application does what users need. Proofs also hold only within the checked bounds, such as input sizes or loop depths the tool explores.
+
+Some functions fall outside what a tool can model, for example ones that depend heavily on I/O or external services. A good tool says so and declines, rather than reporting a pass. Read every result with its scope.
+
+## How does differential verification help code review?
+
+It turns a vague question into evidence. When a pull request claims to be "just a refactor," a proof of equivalence backs that up. When behavior did change, the distinguishing input shows exactly how, and it can become a regression test. Reviewers then spend their time on whether the change was intended.
+
+Since 11 August, hosted [Graphify](https://app.graphify.com) runs formal verification on GitHub pull requests. For supported functions, it compares the changed version with the previous one. It either proves they behave the same within the checked range or finds a concrete input that gives a different result. The [verification docs](https://docs.graphify.com/platform/verification) describe how to read each run.
+
+## Is it the same as AI code review?
+
+No. An AI reviewer gives opinions about code: style, risk and likely bugs. Those are advisory and can be wrong. A verification result comes from a solver or execution, and the distinguishing input can be rerun. The two work well together. A review points to something worth a look, and verification says whether behavior changed.
+
+Graphify keeps them separate. Its reviews read the code graph to see callers a change can reach, while verification checks the changed functions themselves. Our post on [change impact analysis with a code graph](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) covers the graph side.
+
+## Try it
+
+Connect a GitHub repository at [app.graphify.com](https://app.graphify.com) and open a pull request that changes a function. For background on the graph, read [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph).
+
+## FAQ
+
+### Does differential verification replace tests?
+
+No. Tests check expected behavior on chosen inputs. Differential verification checks that behavior did not change. Use both.
+
+### What is a distinguishing input?
+
+An input where the old and new functions return different results. It shows exactly how behavior changed and can become a test.
+
+### Can it prove my code is correct?
+
+Not on its own. It proves the new code matches the old code within bounds. If the old code was wrong, so is the new one.
+
+### What happens with functions it cannot analyze?
+
+A careful tool abstains and reports why. An abstention is not a pass, so review those functions by hand.
+
+### Which languages does Graphify verify?
+
+Verification covers supported functions only. The verification docs list what is in scope, and unsupported functions are reported as such.
