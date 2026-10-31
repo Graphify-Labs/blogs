@@ -1,0 +1,107 @@
+---
+title: "Is Graphify open source? License, data and safety"
+description: "Is Graphify open source? Yes, under Apache 2.0. Here is what the CLI and hosted Graphify do with your code, what they store, and how to spot the real package."
+date: "2026-11-27"
+keyword: is graphify open source
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - product
+tags:
+  - open-source
+  - security
+  - pypi
+---
+
+Graphify is a code knowledge graph for AI coding agents, and people ask two things before they install it. Is Graphify open source, and is it safe to point at private code? The short answers are yes and yes, with details that matter. This post walks through the license, the data paths for both products and the official channels.
+
+Graphify comes in two forms. The Graphify CLI is the open-source engine you run on your machine. [Graphify](https://app.graphify.com) is the hosted product that builds graphs from your GitHub or GitLab repositories. They handle data differently, so we cover each one.
+
+## Is Graphify open source?
+
+Yes. The engine lives in the Graphify-Labs organization on GitHub and is licensed under the Apache License 2.0. The LICENSE file and the package metadata both say Apache-2.0. The NOTICE file adds one detail: portions contributed under MIT before the relicensing remain available under those terms, so the MIT text is kept in the repository.
+
+Apache 2.0 is a permissive license. You can use, modify and redistribute the code, including commercially, as long as you keep the notices. It also includes an explicit patent grant, which MIT does not. The [Apache License 2.0 text](https://www.apache.org/licenses/LICENSE-2.0) is short enough to read in one sitting.
+
+The hosted app is a commercial service built on the same engine. It has a Free plan for up to 3 repositories with no card, and paid plans listed on [plans and pricing](https://docs.graphify.com/platform/support/pricing.md).
+
+## Is the Graphify CLI safe to run on private code?
+
+The Graphify CLI parses source code locally with tree-sitter and never executes your files. It sends nothing to Graphify and has no telemetry. A code-only build, `graphify extract . --code-only`, makes no network calls at all. Documents, PDFs and images are different: they go to the model backend you configure.
+
+Here is what that looks like in practice:
+
+- **Code**: parsed on your machine. Nothing leaves it.
+- **Docs, PDFs and images**: sent for semantic extraction to your assistant's model or the backend you set. Set `GRAPHIFY_BACKEND=none`, or use a local Ollama model, to keep them local too.
+- **Secrets**: credential-shaped strings are redacted from labels before they are written to `graph.json`.
+- **MCP server**: uses stdio by default. The HTTP transport is opt-in and binds to `127.0.0.1` unless you pass `--host 0.0.0.0`.
+- **Query log**: queries are logged locally to `~/.cache/graphify-queries.log`. Set `GRAPHIFY_QUERY_LOG_DISABLE=1` to turn it off.
+
+The full threat model is in the repository's SECURITY.md. Our post on [how the tree-sitter code graph is built](https://graphify.com/blog/tree-sitter-code-graph-for-ai-agents) shows what the parser reads.
+
+## What does hosted Graphify do with my code?
+
+Hosted Graphify reads repositories you select through a GitHub App with read access, builds each graph in an isolated job with short-lived, repository-scoped credentials, and stores the graph for your workspace. It does not train models on your code. Data is encrypted in transit and at rest, and assistants see only the workspace they signed in to.
+
+To produce results such as reviews and wiki pages, the service sends code to its LLM subprocessors, OpenAI and Anthropic. Under their API terms, nobody trains on it. The [security and data handling page](https://docs.graphify.com/platform/support/security.md) lists retention too:
+
+| Data | How long it is kept |
+| --- | --- |
+| Repository graphs, wiki and review results | Until you delete them, then removed from active systems within 30 days. Backups expire on a 90-day cycle. |
+| Raw memory trails | Deleted 14 days after they are distilled into notes. |
+| Operational logs and usage telemetry | Up to 12 months. |
+
+Graphify maintains a SOC 2 Type II program, and current evidence is on the [Trust Center](https://trust.graphify.com). One more point: an assistant you connect sends what it retrieves to its own model provider, under that assistant's terms.
+
+## How do I know I have the real Graphify?
+
+The official package on PyPI is `graphifyy`, with two y's, and it installs a command named `graphify`. The only official channels are graphify.com, the Graphify-Labs organization on GitHub and that PyPI package. Look-alike sites and similarly named packages exist, so check the address before you install or sign in anywhere.
+
+Install it like this:
+
+```bash
+uv tool install graphifyy
+```
+
+The [installation guide](https://docs.graphify.com/installation.md) covers `pipx` and upgrades. Other companies also use the name for unrelated products, such as Notion graph tools and KPI dashboards. Our [what is Graphify](https://graphify.com/blog/what-is-graphify) post explains which is which.
+
+## Which should I choose for sensitive code?
+
+If code must never leave your network, use the Graphify CLI with a code-only build or a local model backend. If your code is already on GitHub or GitLab and you want graphs shared with your team and rebuilt on every push, hosted Graphify fits. Enterprise customers can ask about a self-hosted deployment.
+
+The [Graphify vs Graphify CLI comparison](https://docs.graphify.com/platform/graphify-vs-local.md) lists what each one can do.
+
+## Try it
+
+Start on the Free plan at [app.graphify.com](https://app.graphify.com), or run the engine locally:
+
+```bash
+uv tool install graphifyy
+graphify extract . --code-only
+```
+
+To report a vulnerability, use GitHub's private vulnerability reporting on the Graphify repository, not a public issue.
+
+## FAQ
+
+### Was Graphify ever MIT licensed?
+
+Yes. Earlier contributions were made under MIT and remain available under those terms, per the NOTICE file. The project today is Apache 2.0.
+
+### Does the Graphify CLI collect telemetry?
+
+No. It logs queries to a local file only, and you can turn that off with `GRAPHIFY_QUERY_LOG_DISABLE=1`.
+
+### Does Graphify train AI models on my code?
+
+No. Hosted Graphify does not train models on your code, and its LLM subprocessors do not either under their API terms.
+
+### Can hosted Graphify change my repository?
+
+Read access lets it index a repository, not change it. Applying a suggested fix needs contents write access, which you grant separately.
+
+### Can I install Graphify with pip?
+
+Yes, but name the right package: `graphifyy`, with two y's. A package without the second y is not ours. Use `uv tool install graphifyy` or `pipx install graphifyy`.
