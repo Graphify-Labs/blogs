@@ -1,0 +1,105 @@
+---
+title: "MCP server for your codebase: graph tools for agents"
+description: "An MCP server for your codebase gives a coding agent graph tools for nodes, paths and pull request impact, so it asks the graph instead of reading files."
+date: "2026-09-04"
+keyword: MCP server for your codebase
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - mcp
+  - agents
+  - cli
+---
+
+Graphify is a code knowledge graph for AI coding agents, and the Model Context Protocol is how an agent reaches it. An MCP server for your codebase turns questions such as "who calls this?" into tool calls that return nodes, edges, files and lines, instead of a loop of file reads and text searches that spends the context window.
+
+I got tired of watching agents grep the same file five times to find one caller. A graph tool answers that in one call. This post runs open-source Graphify's MCP server against a real graph of [itsdangerous](https://github.com/pallets/itsdangerous) and shows the tools it exposes, what they return, and when to use the hosted server instead. The protocol itself is specified at [modelcontextprotocol.io](https://modelcontextprotocol.io).
+
+## How do you connect Graphify's hosted MCP server?
+
+Add a server named `graphify` with the URL `https://api.graphify.com/mcp` to your agent's MCP config, then sign in through the browser when the agent first connects. Graphify indexes your GitHub repositories and keeps the graph fresh, so there is no local build to run. For CI or headless agents, use the API token option instead.
+
+1. Index a repository in [Graphify](https://app.graphify.com).
+2. In your agent, add an MCP server named `graphify` with URL `https://api.graphify.com/mcp`.
+3. Sign in through the browser when prompted.
+4. Ask the agent who calls a function and check that it uses the graph tools.
+
+The [hosted MCP docs](https://docs.graphify.com/platform/hosted-mcp.md) cover client-specific setup. The rest of this post runs the open-source server locally so you can see the tools and their raw output.
+
+## What is an MCP server for your codebase?
+
+It is a process that loads a graph of your repository and exposes it to any MCP client as tools. The agent calls a tool with a symbol or a question, and the server answers from the graph with structured text. The agent decides when to call it, so the graph is used only when structure matters.
+
+## How do you run the Graphify MCP server locally?
+
+Install the MCP extra, build a graph, and point `graphify-mcp` at `graphify-out/graph.json`. Over stdio, one agent launches the server itself. Over Streamable HTTP, several clients share one graph. On localhost the server starts without auth, so add `--api-key` before anyone else can reach it.
+
+```bash
+uv tool install "graphifyy[mcp]"
+graphify update .
+graphify-mcp graphify-out/graph.json --transport http --port 8099
+```
+
+```text
+graphify MCP server (streamable-http) on http://127.0.0.1:8099/mcp - no auth (set --api-key to require one)
+```
+
+For Claude Code over stdio, the [MCP server quickstart](https://docs.graphify.com/open-source/mcp-server.md) uses:
+
+```bash
+claude mcp add --transport stdio graphify -- graphify-mcp /absolute/path/to/repo/graphify-out/graph.json
+```
+
+## Which tools does the server expose?
+
+Ten. A `tools/list` call against the server above returns `query_graph`, `get_node`, `get_neighbors`, `get_community`, `god_nodes`, `graph_stats`, `shortest_path`, `list_prs`, `get_pr_impact` and `triage_prs`. The first seven read structure. The last three apply the graph to open pull requests, which is where impact questions usually start.
+
+`get_node` returns one symbol with its location and degree:
+
+```text
+Node: want_bytes()
+  ID: src_itsdangerous_encoding_want_bytes
+  Source: src/itsdangerous/encoding.py L11
+  Type: code
+  Community: Signer
+  Degree: 23
+```
+
+`shortest_path` returns the hops with their relation and confidence tag:
+
+```text
+Shortest path (1 hops):
+  .verify_signature() --calls [EXTRACTED]--> want_bytes()
+```
+
+## How does the server handle ambiguous names and large answers?
+
+It says so instead of guessing. Asking for a path from `.verify_signature()` returned "matches 2 nodes", listing both IDs at lines 24 and 227 of `signer.py`, and asked for the full ID. `query_graph` keeps to a token budget and reports truncation, such as "showing 67 of 182 nodes", with the budget needed to return everything.
+
+That behaviour matters for agents. A silent wrong match sends the agent down the wrong path; an explicit ambiguity costs one extra call. A truncation notice tells the agent to narrow the question rather than assume the answer is complete.
+
+## When should you use the hosted MCP server instead?
+
+When you want the graph built, refreshed and shared for you. I run the local server for experiments on one checkout. For a team, or for agents working on code that changes daily, the hosted server at `https://api.graphify.com/mcp` saves the rebuild step and gives everyone the same graph, with browser sign-in for people and an API token for CI.
+
+## Try it
+
+Start with the hosted server at [app.graphify.com](https://app.graphify.com). To run it yourself, `uv tool install graphifyy` gives you the CLI, and `uv tool install "graphifyy[mcp]"` adds the server. Client-specific guides: [Claude Code](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph) and [Cursor](https://graphify.com/blog/how-to-give-cursor-a-code-knowledge-graph).
+
+## FAQ
+
+### Does the local MCP server send my code anywhere?
+
+No. It reads a `graph.json` built on your machine from tree-sitter syntax trees and answers locally.
+
+### stdio or HTTP?
+
+Use stdio for one agent on one machine. Use HTTP with `--api-key` when a team or several agents should read one graph.
+
+### Why did my agent get "Ambiguous" back?
+
+Two nodes share the label. Pass the node ID the server lists, or include the class in the name you ask for.
