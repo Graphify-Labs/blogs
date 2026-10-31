@@ -1,0 +1,95 @@
+---
+title: "What is an MCP server? A developer's guide"
+description: "What is an MCP server: a program that exposes tools, resources, and prompts to an AI app over the Model Context Protocol. How it works, with an example."
+date: "2026-04-20"
+keyword: what is mcp server
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - mcp
+  - agents
+imgThumb: thumb.png
+imgSocial: social.png
+---
+
+An MCP server is a program that exposes tools, data, or prompts to an AI application through the Model Context Protocol. The AI app, called the host, connects to the server through a client. The model can then call the server's tools, such as querying a database or a code graph, without custom glue code for each app. Graphify, an open-source CLI, can run one that serves a code graph to your agent.
+
+## What is an MCP server, in plain terms?
+
+An MCP server is an adapter between a model and a system. It describes what it offers in a standard format, and any MCP-capable host can use it. The [Model Context Protocol site](https://modelcontextprotocol.io/introduction) compares MCP to a USB-C port for AI applications: one connector, many devices.
+
+Before MCP, each assistant needed its own plugin format. With MCP, one server can work in several hosts, such as Claude Code, Cursor, and other clients that implement the protocol.
+
+## What can an MCP server expose?
+
+The protocol defines three main building blocks. The [server concepts page](https://modelcontextprotocol.io/docs/learn/server-concepts) describes them.
+
+| Building block | What it is | Who decides to use it |
+|---|---|---|
+| Tools | Functions the model can call, with typed inputs | The model |
+| Resources | Read-only data, such as files or records | The application |
+| Prompts | Reusable templates for common tasks | The user |
+
+Most developer servers start with tools. A tool has a name, a description, and a JSON schema for its arguments. The model reads the description and decides when to call it.
+
+## How does a host talk to an MCP server?
+
+Messages use JSON-RPC 2.0. The [specification](https://modelcontextprotocol.io/specification) defines two standard transports. With stdio, the host starts the server as a local process and talks over standard input and output. With Streamable HTTP, the server runs as a web service and can serve many clients.
+
+Local developer tools usually use stdio. Nothing listens on a network port, and the server runs with your user's permissions.
+
+## When should you build or add an MCP server?
+
+Add one when a model needs repeated, structured access to something. A single shell command works for a one-off check. A server is better when the model will call the same capability many times in a session, and you want typed inputs and short, predictable outputs.
+
+Keep tool outputs small. Every result goes into the model's context window. A tool that returns a whole file defeats the point.
+
+## What does an MCP server for a code graph look like?
+
+Graphify is an open-source CLI that builds a code knowledge graph from a repository. It can also serve that graph over MCP on stdio. Install the extra with `uv tool install "graphifyy[mcp]"` or `pip install "graphifyy[mcp]"`, build a graph, then start the server:
+
+```bash
+python -m graphify.serve graphify-out/graph.json
+```
+
+The server exposes four tools: `query_graph`, `get_node`, `get_neighbors`, and `shortest_path`. An agent can ask for the neighbors of a function or the path between two classes. It gets a few lines of structure back, instead of reading files to find them.
+
+To register it, add the command to your host's MCP configuration. Each host documents its own file location, so follow the host's MCP guide.
+
+## What are the security basics?
+
+An MCP server can do whatever its code allows. Run servers you trust, from sources you can read. Prefer read-only tools where possible. Check what a server sends over the network. The Graphify server reads a local `graph.json` and has no telemetry.
+
+## What is the difference between an MCP host, client and server?
+
+The host is the AI application, such as Claude Code or an IDE. Inside the host, one MCP client keeps a connection to each server. The server is the program that exposes tools, resources and prompts. One host can run many clients, each talking to a different server.
+
+The server can run locally over stdio or remotely over HTTP. The host decides which servers to start and which tools the model may call.
+
+## FAQ
+
+### Is MCP only for Claude?
+
+No. Anthropic introduced it as an open protocol, and other hosts implement it. Check your tool's documentation for MCP support.
+
+### What language do I write an MCP server in?
+
+Any language that can speak JSON-RPC. Official SDKs exist for several languages, including Python and TypeScript.
+
+### Is an MCP server the same as an API?
+
+Not exactly. It wraps capabilities in a standard format that models can discover. It often calls an API underneath.
+
+### Do I need MCP to use Graphify?
+
+No. Assistants can read `GRAPH_REPORT.md` and run `graphify query` in a shell. MCP is optional for repeated tool access.
+
+### Does a stdio server open a network port?
+
+No. The host starts it as a child process and talks over standard input and output.
+
+## Try it
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`, run `graphify install`, and build your first graph. The [MCP server glossary entry](https://graphify.com/glossary/mcp-server) goes further. For keeping tool output small, see [what fills the Claude Code context window](/blog/claude-code-context-window-what-fills-it-and-how-to-keep-it-lean). See also [measuring token spend per task](/blog/measuring-token-spend-per-task-in-claude-code). Setup details are in the [installation docs](https://docs.graphify.com/open-source/installation).
