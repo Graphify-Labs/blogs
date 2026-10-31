@@ -1,0 +1,130 @@
+---
+title: "Cline MCP server setup with Graphify, step by step"
+description: "Cline MCP server setup: add a remote Streamable HTTP server or a local stdio server in cline_mcp_settings.json, sign in, and test it with Graphify."
+date: "2026-08-12"
+keyword: cline mcp server setup
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - cline
+  - mcp
+---
+
+A Cline MCP server setup connects Cline, the open-source coding agent, to tools through the Model Context Protocol (MCP). Cline supports local servers that it starts as a process and remote servers it reaches at a URL. This guide adds Graphify, a code knowledge graph, both ways, so Cline can ask how your code connects instead of reading file after file.
+
+You need Cline in VS Code or another supported editor, and a repository to try it on.
+
+## How do I add an MCP server to Cline?
+
+Open the Cline panel and click the MCP Servers icon. Use the **Remote Servers** tab to add a hosted server by URL, or open **Configure**, then **Configure MCP Servers**, to edit `cline_mcp_settings.json` directly. For remote servers, choose Streamable HTTP as the transport. Cline's [MCP overview](https://docs.cline.bot/mcp/mcp-overview) documents both paths.
+
+## Add hosted Graphify as a remote server
+
+Connect a GitHub or GitLab repository at [app.graphify.com](https://app.graphify.com) first, and wait until it shows Indexed. Then, in the Remote Servers tab:
+
+1. Enter `graphify` as the server name.
+2. Enter `https://api.graphify.com/mcp` as the URL.
+3. Choose **Streamable HTTP**.
+4. Click **Add Server**.
+
+Or add the same entry in the JSON file:
+
+```json
+{
+  "mcpServers": {
+    "graphify": {
+      "type": "streamableHttp",
+      "url": "https://api.graphify.com/mcp",
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
+```
+
+On first connect, your browser opens to sign in with OAuth. There is no API key to paste. The [other MCP clients guide](https://docs.graphify.com/integrations/other-agents) covers the hosted server for any remote client.
+
+## Why does the type field matter in Cline?
+
+If you leave out `"type": "streamableHttp"`, Cline treats a URL entry as the legacy SSE transport. A server that supports only Streamable HTTP then fails to connect, often with a `405` error. Write the value exactly, in camelCase. GitHub's [Cline install guide](https://github.com/github/github-mcp-server/blob/main/docs/installation-guides/install-cline.md) calls out the same mistake.
+
+## Add a local Graphify server instead
+
+Use the local form when code must stay on your machine. Install the open-source Graphify CLI with the MCP extra and build a graph:
+
+```bash
+uv tool install "graphifyy[mcp]"
+graphify extract . --code-only
+```
+
+The graph lands in `graphify-out/graph.json`. A code-only build parses your code with tree-sitter and makes no model calls. Then add a stdio entry with an absolute path:
+
+```json
+{
+  "mcpServers": {
+    "graphify": {
+      "command": "graphify-mcp",
+      "args": ["/absolute/path/to/repo/graphify-out/graph.json"],
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
+```
+
+The local server exposes ten tools, including `query_graph`, `get_neighbors` and `shortest_path`. Keep the graph current with `graphify update .` after changes. See the [MCP server quickstart](https://docs.graphify.com/open-source/mcp-server).
+
+| | Remote (hosted Graphify) | Local (Graphify CLI) |
+| --- | --- | --- |
+| Config | `type`, `url` | `command`, `args` |
+| Sign-in | OAuth in the browser | None |
+| Graph updates | Each push to the default branch | `graphify update .` or git hooks |
+| Best for | Shared repositories on GitHub or GitLab | Private or offline projects |
+
+## How do I test the connection?
+
+Check that the server shows a green status in the MCP Servers panel and lists its tools. A red status usually means a wrong URL, a missing `type` field or an expired sign-in. Then start a new task and send a prompt that must call the server:
+
+```text
+Use Graphify to list the repositories you can see. If the tool fails, report the error instead of guessing.
+```
+
+For the local server, ask Cline to call `graph_stats` instead. Once that works, try a real question: "What calls the function that loads config, and which files are they in?"
+
+## Should I auto-approve Graphify tools?
+
+Graph tools only read, so auto-approving them saves clicks. Add tool names to `autoApprove` once you trust the setup. Keep approval on for servers that can write, such as ones that edit issues or databases. Our post on [what a code knowledge graph is](https://graphify.com/blog/what-is-a-code-knowledge-graph) explains what the read tools return.
+
+## Try it
+
+Connect a repository at [app.graphify.com](https://app.graphify.com) and add the remote entry above. For local use, run `uv tool install "graphifyy[mcp]"`. Questions are welcome on [Discord](https://discord.gg/graphify).
+
+Using other agents too? See [how to give Cursor a code knowledge graph](https://graphify.com/blog/how-to-give-cursor-a-code-knowledge-graph) and [best codebase context tools for AI coding assistants](https://graphify.com/blog/best-codebase-context-tools-for-ai-coding-assistants-2026).
+
+Open-source Graphify is licensed under Apache 2.0. Related reading: [the Cursor setup](https://graphify.com/blog/how-to-give-cursor-a-code-knowledge-graph) and [the Claude Code setup](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph). Sources: [Cline MCP configuration](https://docs.cline.bot/mcp/configuring-mcp-servers), [MCP specification](https://modelcontextprotocol.io/specification/2025-06-18).
+
+## FAQ
+
+### Where is cline_mcp_settings.json?
+
+Open it from the Cline panel: MCP Servers, Configure, then Configure MCP Servers. The Cline CLI uses `~/.cline/data/settings/cline_mcp_settings.json`.
+
+### Why does Cline show a 405 error for a remote server?
+
+The entry is probably missing `"type": "streamableHttp"`, so Cline tried legacy SSE. Add the type and reconnect.
+
+### Does Graphify need an API key in Cline?
+
+No. The hosted server uses OAuth in the browser, and the local server reads a file on your disk.
+
+### Can Cline use Graphify across several repositories?
+
+Yes. With hosted Graphify, the server can see every repository in your workspace that you have access to.
+
+### Does the local server send my code anywhere?
+
+No. `graphify-mcp` reads a graph file on your machine. Cline sends what it reads to your chosen model provider.

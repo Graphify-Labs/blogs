@@ -1,0 +1,95 @@
+---
+title: "Code knowledge graph example: 5 questions grep can't answer"
+description: "Code knowledge graph example walkthrough: five questions a graph of calls and imports answers, from call chains to what an edit might break."
+date: "2026-05-25"
+keyword: code knowledge graph example
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - code-graph
+  - examples
+  - queries
+imgThumb: thumb.png
+imgSocial: social.png
+---
+
+This code knowledge graph example walkthrough shows what a graph of a repository's functions, classes, calls, and imports is for in daily work. Each example is a question, the command that answers it, and what comes back. All of them use Graphify, an open-source CLI, at version 0.8.18. Grep matches text, so it cannot answer any of these five directly.
+
+## How do you set up the code knowledge graph example?
+
+Install Graphify and build a code graph from any repository. The build parses code locally with tree-sitter, so it needs no model and no API key. It writes `graphify-out/` with `graph.json`, `GRAPH_REPORT.md`, and an interactive HTML view. The examples below use a small two-file demo project and Graphify 0.8.18:
+
+```bash
+uv tool install graphifyy
+graphify update .
+```
+
+The build parses code locally with tree-sitter. It writes `graphify-out/graph.json`, `GRAPH_REPORT.md`, and `graph.html`. The examples below use a two-file project: `handle` in `app.py` calls `check_token`, imported from `auth.py`, and `check_token` calls `verify`.
+
+## Which code knowledge graph example questions matter most?
+
+Five questions come up again and again when you work in an unfamiliar repository. How does one function reach another? What is this symbol connected to? What breaks if I change it? How does a feature work? What are the core parts? The table maps each question to the Graphify command that answers it.
+
+| Question | Command |
+|---|---|
+| How does A reach B? | `graphify path "A" "B"` |
+| What does this function connect to? | `graphify explain "X"` |
+| What breaks if I change this? | `graphify affected "X"` |
+| How does a feature work? | `graphify query "<question>"` |
+| What are the core parts? | Read `GRAPH_REPORT.md` |
+
+## Example 1: how does a request reach a function?
+
+`graphify path` prints the shortest chain of edges between two symbols, with the relation and confidence tag on each hop. That answers how a request travels from an entry point to the code you care about. Grep can find each name, but it cannot show the chain between them. Run it with two names:
+
+```bash
+graphify path "handle()" "verify()"
+```
+
+This returns the shortest chain of edges between the two, with a tag on each hop. On the demo project, the chain runs through `check_token()` in two hops.
+
+## Example 2: what is this function connected to?
+
+`graphify explain "check_token()"` prints the node's source file, line, community, and every connection, each with its relation and confidence tag. It is a quick substitute for opening several files to see who uses a function and what it uses. Run it before you rename or move a function.
+
+## Example 3: what might an edit break?
+
+`graphify affected "verify()"` walks edges in reverse to find dependents. The default depth is 2, and `--depth` changes it. On the demo project it lists `check_token()` at `auth.py:L1`. Treat the list as a starting point for review, not a guarantee, and read any INFERRED edges yourself.
+
+## Example 4: how does a feature work?
+
+`graphify query "how is the token checked?" --budget 800` runs a traversal from the nodes that best match the question. It returns the relevant nodes and edges as text. The budget caps output at about 800 tokens, so an agent can call it cheaply. Raise the budget for broader questions.
+
+## Example 5: what are the core parts of the codebase?
+
+`GRAPH_REPORT.md` lists god nodes, the most connected symbols, plus communities, which are clusters of closely linked code. It also flags surprising connections across clusters. Coding agents can read it before searching files. Open `graph.html` in a browser to see the same clusters visually.
+
+## Can the graph answer questions about classes?
+
+Yes. Classes are nodes, and methods hang off them with `method` edges. We tested a two-file project on Graphify 0.8.18: `Child` in `child.py` subclasses `Base` from `base.py`. `graphify explain "Base"` listed `Child` with a `uses [INFERRED]` edge, plus the `.run()` method and the import from `child.py`.
+
+The cross-file subclass link is INFERRED, so open `child.py` to confirm it before a refactor.
+
+## FAQ
+
+### Do these examples need an API key?
+
+No. Code graphs build and query locally.
+
+### Can a coding agent run these commands?
+
+Yes. Run `graphify claude install`, `graphify codex install`, or `graphify cursor install` to point your agent at the graph.
+
+### How do I keep the graph current?
+
+Run `graphify update .` after edits, or `graphify hook install` for a git hook.
+
+### What if a name matches several nodes?
+
+Use the label exactly as the graph shows it, such as `.send()` for a method.
+
+## Get started
+
+Graphify is open source on [GitHub](https://github.com/Graphify-Labs/graphify). Install it with [uv](https://docs.astral.sh/uv/): `uv tool install graphifyy`. Read the [querying docs](https://docs.graphify.com/open-source/features/querying) and the [blast radius glossary entry](https://graphify.com/glossary/blast-radius). Related: [tree-sitter and ASTs](/blog/what-is-an-ast-and-how-tree-sitter-builds-one). See also [GraphRAG](/blog/what-is-graphrag-and-does-code-need-it). Code is parsed with [tree-sitter](https://tree-sitter.github.io/tree-sitter/).
