@@ -1,0 +1,76 @@
+---
+title: "How to keep a code graph fresh on every push"
+description: "A stale graph gives agents stale answers. How to keep a code graph fresh: hosted indexing on every default-branch push, plus git hooks and watch mode locally."
+date: "2026-10-21"
+keyword: keep a code graph fresh
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - indexing
+  - git-hooks
+  - cli
+---
+
+Graphify is a code knowledge graph for AI coding agents, and a graph is only as good as the commit it describes. If you want to keep a code graph fresh, the rule is simple: rebuild it when the code changes, automatically, so no one has to remember. This post shows how that works in the hosted product and in the open-source CLI.
+
+An agent that reads a graph from last month will confidently point at functions that moved. Freshness is not a nice-to-have; it decides whether answers are true.
+
+## How does Graphify keep a code graph fresh on every push?
+
+It indexes on push. When you push to a repository's default branch, Graphify indexes that commit and updates the graph your agents, reviews and wiki read. There is one graph per repository, and it tracks the default branch. You do not schedule anything or click rebuild after merging; the push is the trigger.
+
+See [GitLab's default branch docs](https://docs.gitlab.com/user/project/repository/branches/default/) or your GitHub settings if you are unsure which branch that is.
+
+## What about new repositories and permission changes?
+
+They sync on their own. Repositories you create after installing the GitHub App appear in Graphify, and permission changes on GitHub show up without reconnecting. If you want to see a change right away, **Sync** on **Repositories** re-reads GitHub on demand, so you never wait on a background refresh to pick up a new service.
+
+Connected a repository by mistake, or started a huge one? You can cancel a running index from the console.
+
+## What happens when I rebuild an unchanged repository?
+
+Graphify tells you. When nothing has changed since the last build, the rebuild is skipped and the console says so, instead of quietly returning the previous build. That makes it clear the graph is already current, and that a missing change has not been pushed to the default branch yet.
+
+Builds also show how many nodes each build added or removed, so you can see the graph move with the code.
+
+## How do I keep a local code graph fresh with the CLI?
+
+Install git hooks. The open-source Graphify CLI ships `graphify hook install`, which rebuilds the graph after commits, checkouts, merges and rewrites, using standard [git hooks](https://git-scm.com/docs/githooks). Your local graph then follows your branch as you work, without a manual update step, and `graphify hook uninstall` removes them.
+
+```bash
+uv tool install graphifyy
+graphify update .
+graphify hook install
+```
+
+## When should I use watch mode instead?
+
+When you want updates between commits. `graphify watch .` watches the working tree and rebuilds as files change, which suits long editing sessions where an agent queries the graph often. Hooks fit most workflows because commits are natural checkpoints. Watch mode fits when uncommitted edits matter to what the agent asks next.
+
+For agent setup with the CLI, see the [Claude Code guide](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph).
+
+## Try it
+
+Connect a repository in [Graphify](https://app.graphify.com) and push to its default branch; the graph follows. Locally, run `uv tool install graphifyy` and `graphify hook install`. The [indexing docs](https://docs.graphify.com/concepts/index-a-repository) explain builds in detail, and [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph) covers the basics.
+
+## FAQ
+
+### Does Graphify index feature branches?
+
+The hosted graph tracks each repository's default branch. Use the CLI for a local graph of your branch.
+
+### Do I need to rebuild after every merge?
+
+No. A push to the default branch triggers indexing.
+
+### Will the git hooks slow down my commits?
+
+They start the rebuild in the background after the commit, so the commit itself does not wait.
+
+### How do I remove the hooks?
+
+Run `graphify hook uninstall`.
