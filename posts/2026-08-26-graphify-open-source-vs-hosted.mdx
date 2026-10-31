@@ -3,6 +3,8 @@ title: "Graphify open source vs hosted: which one to use"
 description: "Graphify open source vs hosted: how the Graphify CLI and hosted Graphify differ in builds, updates, sign-in, pull requests and teams, and how to pick."
 date: "2026-08-26"
 keyword: graphify open source vs hosted
+imgThumb: thumb.png
+imgSocial: social.png
 authors:
   - fahad
 categories:
@@ -50,7 +52,7 @@ graphify install
 
 ## What does hosted Graphify add?
 
-Hosted Graphify removes the build and upkeep. Connect a repository, and every push to the default branch starts a new build. Agents keep using the previous graph until the new one is ready. Teammates sign in to the same workspace, and since 10 August a teammate can request access to a GitHub organization that is already connected.
+Hosted Graphify removes the build and upkeep. Connect a repository, and every push to the default branch starts a new build. Teammates sign in to the same workspace, and since 10 August a teammate can request access to a GitHub organization that is already connected.
 
 It also adds pull request work that needs a server. Reviews read the graph, not only the diff, so they reach callers a change can affect. Formal verification compares each supported changed function with its previous version. It either proves they behave the same within checked bounds or finds a concrete input that differs. Since 20 August, replies such as `@graphify wrong <finding>` teach reviews what to skip. See [pull request reviews](https://docs.graphify.com/platform/reviews).
 
@@ -65,6 +67,8 @@ Our explainer on [what a code knowledge graph is](https://graphify.com/blog/what
 Sign in at [app.graphify.com](https://app.graphify.com), connect a repository and add `https://api.graphify.com/mcp` to your agent. To run it locally, use `uv tool install graphifyy`. Questions are welcome on [Discord](https://discord.gg/graphify).
 
 For setup in one agent, see [how to give Claude Code a code knowledge graph](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph).
+
+Related reading: [hosted graphs for GitLab](https://graphify.com/blog/gitlab-code-knowledge-graph) and [auditing inferred edges](https://graphify.com/blog/how-to-audit-inferred-edges). Sources: [Graphify on GitHub](https://github.com/Graphify-Labs/graphify), [graphifyy on PyPI](https://pypi.org/project/graphifyy/), [MCP specification](https://modelcontextprotocol.io/specification/2025-06-18).
 
 ## FAQ
 
