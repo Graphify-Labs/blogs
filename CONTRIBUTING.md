@@ -34,6 +34,7 @@ imgSocial: og.png
 | Field | Required | Notes |
 | --- | --- | --- |
 | `title` | yes | Sentence case |
+| `seoTitle` | no | Only when `title` is over 60 characters. Search results and the browser tab show it; the page keeps `title` |
 | `description` | yes | One sentence. This is the meta description and the index summary |
 | `date` | yes | `YYYY-MM-DD`, quoted, same as the filename |
 | `updated` | no | `YYYY-MM-DD`, quoted. The day you changed the facts. See [7. Search](#7-search) |
