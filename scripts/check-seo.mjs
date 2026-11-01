@@ -113,9 +113,12 @@ export function lintPost(filename, raw) {
     }
   }
 
-  const titleLength = [...title].length;
+  // The site drops " · Graphify" when it would not fit, so only the title
+  // itself (or the shorter seoTitle shown in search) has to fit.
+  const seoTitle = typeof data.seoTitle === "string" ? data.seoTitle : "";
+  const titleLength = [...(seoTitle || title)].length;
   if (titleLength > LIMITS.title) {
-    add("warning", field("title"), `The title is ${titleLength} characters. Search results cut titles near ${LIMITS.title}, and the site adds " · Graphify".`);
+    add("warning", field(seoTitle ? "seoTitle" : "title"), `The ${seoTitle ? "seoTitle" : "title"} is ${titleLength} characters. Search results cut titles near ${LIMITS.title}. Set a shorter seoTitle; the page keeps the full title.`);
   }
   const descriptionLength = [...description].length;
   if (descriptionLength < LIMITS.descriptionMin || descriptionLength > LIMITS.descriptionMax) {
