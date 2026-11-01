@@ -14,6 +14,8 @@ tags:
 imgThumb: thumb.png
 imgSocial: social.png
 faq:
+  - question: "Can I trust inferred edges in a code graph?"
+    answer: "Treat them as leads to verify, not facts. EXTRACTED edges come straight from the parsed code. INFERRED and AMBIGUOUS edges are labelled so you can filter them out or check them before relying on them, for example before a refactor or when an agent uses the graph to plan a change."
   - question: "Is an INFERRED edge usually wrong?"
     answer: "No. Most inferred edges are right. The tag means the link was matched or judged rather than read directly, so check it before relying on it."
   - question: "Can I filter a graph to EXTRACTED edges only?"
@@ -83,6 +85,10 @@ The report opens with a one-line summary of the whole graph. On our demo, Graphi
 The same report lists INFERRED edges under its surprising connections, so you can start reviewing there.
 
 ## FAQ
+
+### Can I trust inferred edges in a code graph?
+
+Treat them as leads to verify, not facts. EXTRACTED edges come straight from the parsed code. INFERRED and AMBIGUOUS edges are labelled so you can filter them out or check them before relying on them, for example before a refactor or when an agent uses the graph to plan a change.
 
 ### Is an INFERRED edge usually wrong?
 

@@ -14,6 +14,8 @@ tags:
 imgThumb: thumb.png
 imgSocial: social.png
 faq:
+  - question: "Why does my agent keep grepping and re-reading the same files?"
+    answer: "It has no map of the codebase, so every question starts with a search, and each grep result and file read lands in context. Over a long session that adds up quickly. A prebuilt code graph answers where-is and who-calls questions directly, so the agent opens only the files it needs."
   - question: "Is grep output always the biggest cost?"
     answer: "No. File reads are often larger. Grep starts the chain that leads to them."
   - question: "Does a semantic index fix this?"
@@ -77,6 +79,10 @@ Search in two steps. First run `rg -l pattern` to list only matching file names.
 For questions about callers or impact, skip grep and ask the graph.
 
 ## FAQ
+
+### Why does my agent keep grepping and re-reading the same files?
+
+It has no map of the codebase, so every question starts with a search, and each grep result and file read lands in context. Over a long session that adds up quickly. A prebuilt code graph answers where-is and who-calls questions directly, so the agent opens only the files it needs.
 
 ### Is grep output always the biggest cost?
 

@@ -13,6 +13,8 @@ tags:
   - change-impact
   - code-review
 faq:
+  - question: "What breaks if I change this function?"
+    answer: "That set is the function's blast radius: every caller, importer and test that reaches it, directly or through other code. A graph query lists them in one call. It is the case people worry about most, such as refactoring a function that is called from a dozen places across several modules."
   - question: "What is the blast radius of a code change?"
     answer: "It is all the code that a change can affect, through direct and indirect calls, imports and references."
   - question: "How many hops should I check?"
@@ -99,6 +101,10 @@ Sign in at [app.graphify.com](https://app.graphify.com) and connect a repository
 Related reading: [change impact analysis](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) and [an MCP server for your codebase](https://graphify.com/blog/mcp-server-for-your-codebase). Sources: [tree-sitter](https://tree-sitter.github.io/tree-sitter/), [MCP specification](https://modelcontextprotocol.io/specification/2025-06-18).
 
 ## FAQ
+
+### What breaks if I change this function?
+
+That set is the function's blast radius: every caller, importer and test that reaches it, directly or through other code. A graph query lists them in one call. It is the case people worry about most, such as refactoring a function that is called from a dozen places across several modules.
 
 ### What is the blast radius of a code change?
 

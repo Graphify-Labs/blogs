@@ -13,6 +13,8 @@ tags:
   - code-review
   - ai-review
 faq:
+  - question: "Why are most AI code review comments noise?"
+    answer: "Reviewers that only see the diff cannot tell what the change touches, so they guess and flag style or hypothetical issues. Ground comments in the code graph and in the change's real dependents, track which comments lead to a fix, and mute the rules that never do. Precision matters more than comment volume."
   - question: "What is a good precision target for AI code review?"
     answer: "Measure your own baseline first. BitsAI-CR reports 75.0% precision in production, which is a useful reference point."
   - question: "Should I turn off AI review for small pull requests?"
@@ -74,6 +76,10 @@ Connect a repository at [app.graphify.com](https://app.graphify.com), open a pul
 Prefer to stay local? Run `uv tool install graphifyy` for the open-source CLI. Open-source Graphify is licensed under Apache 2.0. Related reading: [change impact analysis](https://graphify.com/blog/change-impact-analysis-with-a-code-graph) and [shared codebase context for teams](https://graphify.com/blog/shared-codebase-context-for-teams).
 
 ## FAQ
+
+### Why are most AI code review comments noise?
+
+Reviewers that only see the diff cannot tell what the change touches, so they guess and flag style or hypothetical issues. Ground comments in the code graph and in the change's real dependents, track which comments lead to a fix, and mute the rules that never do. Precision matters more than comment volume.
 
 ### What is a good precision target for AI code review?
 
