@@ -14,6 +14,8 @@ tags:
 imgThumb: thumb.png
 imgSocial: social.png
 faq:
+  - question: "Why is my Claude Code bill so high, and how do I see it per task?"
+    answer: "Most spend comes from the context the agent reads, not the answer it writes. Run /cost at the end of each task and log it next to the task name. Repeat the same task set before and after any change, so you compare like with like instead of guessing from a monthly total."
   - question: "Is /cost exact?"
     answer: "It reports the usage Claude Code recorded for the session, with an estimated price. Use your provider's billing console for invoiced amounts."
   - question: "Why do the same tasks cost different amounts on different runs?"
@@ -72,6 +74,10 @@ Claude Code writes each session as JSONL files under `~/.claude/projects/`. Each
 To isolate one task, note the session file it ran in. Then sum input, output and cache tokens for just that session.
 
 ## FAQ
+
+### Why is my Claude Code bill so high, and how do I see it per task?
+
+Most spend comes from the context the agent reads, not the answer it writes. Run /cost at the end of each task and log it next to the task name. Repeat the same task set before and after any change, so you compare like with like instead of guessing from a monthly total.
 
 ### Is /cost exact?
 

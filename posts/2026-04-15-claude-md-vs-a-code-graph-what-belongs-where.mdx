@@ -14,6 +14,8 @@ tags:
 imgThumb: thumb.png
 imgSocial: social.png
 faq:
+  - question: "Should I write a giant CLAUDE.md or use a code graph?"
+    answer: "Keep CLAUDE.md short: conventions, commands and decisions the agent cannot infer from code. Put structure, meaning what calls what and what depends on what, in a graph the agent queries on demand. That way the structure is not loaded on every request, and it stays accurate as the code changes."
   - question: "How long should CLAUDE.md be?"
     answer: "As short as it can be while still changing behavior. Anthropic recommends concise bullets. If an entry restates what the code already shows, move it out."
   - question: "Can I have more than one CLAUDE.md?"
@@ -77,6 +79,10 @@ Yes, in larger repositories. Claude Code reads the CLAUDE.md in the folder you s
 Nested files keep each one short. They still describe rules, not structure. Callers, imports and dependencies stay in the graph, where they are read on demand instead of loaded every session.
 
 ## FAQ
+
+### Should I write a giant CLAUDE.md or use a code graph?
+
+Keep CLAUDE.md short: conventions, commands and decisions the agent cannot infer from code. Put structure, meaning what calls what and what depends on what, in a graph the agent queries on demand. That way the structure is not loaded on every request, and it stays accurate as the code changes.
 
 ### How long should CLAUDE.md be?
 

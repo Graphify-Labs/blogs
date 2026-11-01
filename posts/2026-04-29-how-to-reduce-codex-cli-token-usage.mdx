@@ -14,6 +14,8 @@ tags:
 imgThumb: thumb.png
 imgSocial: social.png
 faq:
+  - question: "How do I stop Codex CLI eating tokens on a big repo?"
+    answer: "Keep sessions short and scoped to one task, name exact paths in your prompt, and let Codex query a code graph instead of running repeated searches and file reads. Measure one fixed task before and after the change, so you know whether it actually helped on your codebase rather than trusting a headline percentage."
   - question: "Why does Codex use $graphify instead of /graphify?"
     answer: "Codex calls skills with a $ prefix. Run $graphify . in Codex. Other assistants use the slash form."
   - question: "Does Graphify send my code to OpenAI?"
@@ -84,6 +86,10 @@ Yes. Reasoning models produce internal reasoning tokens before they answer. Open
 For routine edits, a lower reasoning effort can cut usage. Keep higher effort for hard design or debugging work.
 
 ## FAQ
+
+### How do I stop Codex CLI eating tokens on a big repo?
+
+Keep sessions short and scoped to one task, name exact paths in your prompt, and let Codex query a code graph instead of running repeated searches and file reads. Measure one fixed task before and after the change, so you know whether it actually helped on your codebase rather than trusting a headline percentage.
 
 ### Why does Codex use $graphify instead of /graphify?
 

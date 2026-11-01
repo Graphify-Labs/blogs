@@ -14,6 +14,8 @@ tags:
 imgThumb: thumb.png
 imgSocial: social.png
 faq:
+  - question: "How do I give an AI agent context on a monorepo without loading everything?"
+    answer: "Build a graph for each package, merge them, and let the agent query only the package and the neighbours a task touches, instead of attaching whole folders. Keep build output out of reach with ignore files, and keep each package's instruction file short so it does not load on every request."
   - question: "Does Graphify need an API key for code?"
     answer: "No. Code is parsed locally with tree-sitter and no model."
   - question: "How do I stop the agent reading build output?"
@@ -75,6 +77,10 @@ Yes. Graphify 0.8.31 also keeps a global graph at `~/.graphify/global-graph.json
 | Global | `graphify global add graph.json` | Code spans several repos |
 
 ## FAQ
+
+### How do I give an AI agent context on a monorepo without loading everything?
+
+Build a graph for each package, merge them, and let the agent query only the package and the neighbours a task touches, instead of attaching whole folders. Keep build output out of reach with ignore files, and keep each package's instruction file short so it does not load on every request.
 
 ### Does Graphify need an API key for code?
 

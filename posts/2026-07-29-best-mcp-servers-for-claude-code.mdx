@@ -13,6 +13,8 @@ tags:
   - claude-code
   - mcp
 faq:
+  - question: "Which MCP server helps Claude Code understand a large codebase?"
+    answer: "Pick one that returns structure, such as callers, imports and dependencies, rather than raw file text, so each answer stays small. Graphify serves a code knowledge graph over MCP. Whatever you try, compare options on your own repository with a fixed list of real questions before adopting one for the team."
   - question: "What is the best MCP server for Claude Code?"
     answer: "It depends on the job. For large codebases, a code graph helps most because it answers structural questions. For pull request work, add GitHub's server."
   - question: "Do MCP servers slow Claude Code down?"
@@ -104,6 +106,10 @@ Connect a repository at [app.graphify.com](https://app.graphify.com) and run the
 Related reading: [giving Claude Code a code knowledge graph](https://graphify.com/blog/how-to-give-claude-code-a-code-knowledge-graph) and [code knowledge graphs vs RAG](https://graphify.com/blog/code-knowledge-graph-vs-rag).
 
 ## FAQ
+
+### Which MCP server helps Claude Code understand a large codebase?
+
+Pick one that returns structure, such as callers, imports and dependencies, rather than raw file text, so each answer stays small. Graphify serves a code knowledge graph over MCP. Whatever you try, compare options on your own repository with a fixed list of real questions before adopting one for the team.
 
 ### What is the best MCP server for Claude Code?
 

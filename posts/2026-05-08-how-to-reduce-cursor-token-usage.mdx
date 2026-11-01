@@ -14,6 +14,8 @@ tags:
 imgThumb: thumb.png
 imgSocial: social.png
 faq:
+  - question: "Why does Cursor burn through my tokens so fast?"
+    answer: "Long threads, whole-repo context and agent loops that open many files to find one symbol are the usual causes. Start a fresh chat per task, add build and generated folders to .cursorignore, and give the agent a code graph to query, so it asks where a symbol lives instead of reading files to look."
   - question: "Does the Graphify rule add many tokens?"
     answer: "No. It is a few lines. The report it points to is read when an architecture question comes up."
   - question: "Does Cursor's own indexing do the same thing?"
@@ -82,6 +84,10 @@ Yes. A `.cursorignore` file keeps build output, vendored code and large generate
 Keep the graph tool on. It replaces many searches with one small answer.
 
 ## FAQ
+
+### Why does Cursor burn through my tokens so fast?
+
+Long threads, whole-repo context and agent loops that open many files to find one symbol are the usual causes. Start a fresh chat per task, add build and generated folders to .cursorignore, and give the agent a code graph to query, so it asks where a symbol lives instead of reading files to look.
 
 ### Does the Graphify rule add many tokens?
 
