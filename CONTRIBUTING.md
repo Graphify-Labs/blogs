@@ -142,7 +142,7 @@ Most readers arrive from a search result or an AI answer. Most of the work happe
 
 **Freshness.** When you change the facts in an old post, set `updated` to that day and leave `date` alone. A typo fix is not an update.
 
-**Lead post.** `featured: true` pins a post as the blog lead whatever its date. Only one post may set it; move the flag rather than adding a second.
+**Lead post.** `featured: true` pins a post as the blog lead whatever its date. To pin more than one, give them numbers: `featured: true` (or `1`) leads, `featured: 2` comes next, and so on. Two posts can't share a number. Everything else follows newest first.
 
 **FAQ.** An optional `faq` list of `question` / `answer` pairs becomes FAQPage structured data. Each answer must also appear in the post body, word for word or close to it.
 
