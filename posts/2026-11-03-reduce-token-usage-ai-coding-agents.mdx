@@ -1,0 +1,143 @@
+---
+title: "How to reduce token usage in AI coding agents"
+description: "Reduce token usage in AI coding agents with a local code graph: one scoped query replaces the grep-and-read loop, with no proxy and no model calls to build it."
+date: "2026-11-03"
+keyword: reduce token usage
+imgThumb: thumb.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - tokens
+  - code-knowledge-graph
+  - ai-agents
+faq:
+  - question: "What tools reduce LLM token cost for coding agents?"
+    answer: "Four kinds: prompt caching from the model provider, model routing that sends easy tasks to a cheaper model, prompt compression proxies that shrink text in flight, and context tools that send less text in the first place. A local code graph such as Graphify is the last kind. It answers structural questions with a small, capped result instead of whole files."
+  - question: "How does a code graph reduce token usage?"
+    answer: "The agent asks the graph what calls a function, what a change reaches or how two parts connect, and gets back only the matching nodes and edges. That replaces a loop of searches and file reads whose results all stay in the conversation and get re-sent on every turn."
+  - question: "Is there a tool that cuts AI coding token costs locally with no proxy?"
+    answer: "Yes. The open-source Graphify CLI parses your code on your machine with tree-sitter, so building the graph makes no model calls, and your agent queries it directly through a skill or a local MCP server. Nothing sits between your agent and the model provider."
+  - question: "What does precise context assembly mean?"
+    answer: "Choosing exactly the code a task needs before the model sees it, instead of pasting files and hoping the answer is inside. A graph query does this by following real calls, imports and inheritance from the symbols you name, and graphify query caps the answer at 2,000 tokens by default."
+  - question: "How do teams optimize token consumption at scale?"
+    answer: "Share one graph instead of having every developer's agent rebuild an understanding of the codebase from scratch. Hosted Graphify keeps graphs of your repositories current and serves them to Claude Code, Cursor, Codex and other clients over MCP, so every agent on the team starts from the same map."
+  - question: "How do I measure how many tokens I save?"
+    answer: "Ask the same cross-file questions with and without the graph and compare your agent's usage report, such as /usage in Claude Code. graphify benchmark also reports the graph's token use against reading every file."
+---
+
+To reduce token usage in AI coding agents, give them a local code graph: it replaces exploration with a query. Without one, an agent learns your codebase by searching, opening files and reading them, and every result stays in the conversation and gets sent again on the next turn. With one, the agent asks "what calls this?" or "what breaks if this changes?" and gets back a small answer built from real calls and imports. The graph is built on your machine with tree-sitter, so building it costs no model tokens, and there is no proxy between your agent and the model.
+
+That's the short answer. The rest of this guide covers where coding agent tokens actually go, the four kinds of tools that reduce them, and how to set up the one that works locally.
+
+## Where do an AI coding agent's tokens go?
+
+Most of the bill is not your prompt. [Anthropic's cost guide for Claude Code](https://code.claude.com/docs/en/costs) says it directly: token costs scale with context size. Every request carries the conversation so far, and every tool call adds its result to that conversation.
+
+For a coding agent, the biggest growing piece is usually exploration. Ask a question that spans files and the agent works it out step by step:
+
+1. Search for a name.
+2. Open the files that match.
+3. Read them, including imports and functions that have nothing to do with the question.
+4. Search again for whatever those files referenced.
+
+Each step is reasonable. Together they put thousands of lines into context, and that context rides along with every later turn in the session. Anthropic's engineering team calls context "a finite resource with diminishing marginal returns" in its guide to [context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents). More text in the window costs more and gives the model more to sift through.
+
+We covered the search half of this loop in [why agents grep](/blog/why-agents-grep-the-hidden-token-cost-of-file-search).
+
+## What tools reduce LLM token cost for coding agents?
+
+They fall into four groups, and they stack.
+
+| Approach | What it does | Where it runs |
+| --- | --- | --- |
+| Prompt caching | Re-reads repeated content, like system prompts and history, at a lower rate | Your model provider |
+| Model routing | Sends simple tasks to a cheaper model | Your agent's settings, or a gateway |
+| Prompt compression proxy | Shrinks text in flight before it reaches the model | A proxy between your agent and the provider |
+| Context tools | Send less text in the first place by fetching only what the task needs | Next to your code |
+
+The first two are settings you should turn on anyway. Most agents cache by default, and switching models is one command. The third adds a hop that sees every request. The fourth changes what gets sent, which is where a code graph fits.
+
+Inside the fourth group there are two shapes. Vector search returns chunks of text that resemble your question. A code graph returns the structure behind it: this function, its callers, the files they live in. For a question like "what breaks if I change `processPayment`?", the answer isn't written in any one chunk. It's a set of edges, and a graph returns those edges directly. Our post on [why vector search isn't enough for coding agents](/blog/why-vector-search-isnt-enough-for-coding-agents) goes deeper.
+
+## How does a local code graph cut the tokens coding agents use?
+
+It does the expensive reading once, on your machine, with no model involved. Then every question after that is a lookup.
+
+Graphify parses about 40 languages with tree-sitter and writes a graph of files, functions, classes, calls, imports and inheritance to `graphify-out/graph.json`. Every edge is tagged `EXTRACTED` when it's written in the source or `INFERRED` when Graphify resolved it, so the agent knows what it's standing on.
+
+Your agent then asks the graph instead of the file system:
+
+```bash
+graphify query "what connects auth to the database?"
+graphify path "UserService" "DatabasePool"
+graphify explain "RateLimiter"
+```
+
+`graphify query` returns a scoped subgraph for the question and caps the answer at 2,000 tokens by default. You can set the cap yourself with `--budget`, as the [query reference](https://docs.graphify.com/reference/query) documents. `graphify path` returns the hops between two symbols, and `graphify explain` returns one concept and its neighbors.
+
+That's what precise context assembly means in practice: the agent picks the code a task needs by following real relationships, then opens only the file it's about to change.
+
+## Why does it matter that it runs locally, with no proxy?
+
+Because the graph changes what the agent asks for, not what happens to the request on the way out.
+
+- **No model calls to build it.** Code is parsed with tree-sitter. A code-only repo needs no API key, and `graphify extract` runs fully offline.
+- **Nothing in the request path.** Your agent talks to your model provider exactly as before. The graph is a tool it calls, like `git` or `rg`.
+- **Your code stays on your machine.** Only the optional pass over docs, PDFs and media uses a model, and only if you configure one.
+
+Install the open-source CLI and register it with your agent:
+
+```bash
+uv tool install graphifyy     # or: pip install graphifyy
+graphify install              # registers the skill for Claude Code, the default
+```
+
+Then type `/graphify .` in your agent to build the graph. Other agents have their own install command, listed on the [integrations page](/integrations). The [Claude Code setup](/integrations/claude-code) adds hooks that steer Claude toward the graph before it searches.
+
+## How do teams optimize token consumption at scale?
+
+Every developer's agent rebuilding the same understanding of the same repos is the most repeated cost a team has. The fix is to build that understanding once and share it.
+
+Hosted [Graphify](https://app.graphify.com) indexes your repositories, keeps the graphs current as you push, and serves them over MCP with OAuth sign-in. Claude Code, Cursor, Codex and other MCP clients connect to `https://api.graphify.com/mcp` and query the same graph, across repositories, without each agent re-reading the code. [Shared codebase context for teams](/blog/shared-codebase-context-for-teams) walks through the setup.
+
+## How do I measure the tokens I save?
+
+Measure on your own repo, with your own questions.
+
+1. Pick five questions that span files: callers, change impact, how a request reaches a service.
+2. Ask them in a fresh session without the graph, and note the usage. In Claude Code that's `/usage`.
+3. Ask them again with the graph, in another fresh session, and compare.
+
+`graphify benchmark` also reports the graph's token use against reading every file. For the agent-specific levers that stack on top, see our guides for [Claude Code](/blog/reduce-claude-code-token-usage), [Cursor](/blog/how-to-reduce-cursor-token-usage) and [Codex CLI](/blog/how-to-reduce-codex-cli-token-usage).
+
+## FAQ
+
+### What tools reduce LLM token cost for coding agents?
+
+Four kinds: prompt caching from the model provider, model routing that sends easy tasks to a cheaper model, prompt compression proxies that shrink text in flight, and context tools that send less text in the first place. A local code graph such as Graphify is the last kind. It answers structural questions with a small, capped result instead of whole files.
+
+### How does a code graph reduce token usage?
+
+The agent asks the graph what calls a function, what a change reaches or how two parts connect, and gets back only the matching nodes and edges. That replaces a loop of searches and file reads whose results all stay in the conversation and get re-sent on every turn.
+
+### Is there a tool that cuts AI coding token costs locally with no proxy?
+
+Yes. The open-source Graphify CLI parses your code on your machine with tree-sitter, so building the graph makes no model calls, and your agent queries it directly through a skill or a local MCP server. Nothing sits between your agent and the model provider.
+
+### What does precise context assembly mean?
+
+Choosing exactly the code a task needs before the model sees it, instead of pasting files and hoping the answer is inside. A graph query does this by following real calls, imports and inheritance from the symbols you name, and graphify query caps the answer at 2,000 tokens by default.
+
+### How do teams optimize token consumption at scale?
+
+Share one graph instead of having every developer's agent rebuild an understanding of the codebase from scratch. Hosted Graphify keeps graphs of your repositories current and serves them to Claude Code, Cursor, Codex and other clients over MCP, so every agent on the team starts from the same map.
+
+### How do I measure how many tokens I save?
+
+Ask the same cross-file questions with and without the graph and compare your agent's usage report, such as /usage in Claude Code. graphify benchmark also reports the graph's token use against reading every file.
+
+## Try it
+
+Open [Graphify](https://app.graphify.com), connect a repo and point your agent at the hosted MCP server. Prefer to keep everything on your machine? Run `uv tool install graphifyy`, then `/graphify .` in your agent. New to the idea? Start with [what a code knowledge graph is](/blog/what-is-a-code-knowledge-graph), and come say hi on [Discord](https://discord.gg/graphify).
