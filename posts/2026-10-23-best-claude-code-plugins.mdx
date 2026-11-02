@@ -1,0 +1,136 @@
+---
+title: "Best Claude Code plugins in 2026, picked by job"
+description: "The best Claude Code plugins in 2026 by job: everyday dev, code review, game development and dependency graphs, plus how to install them and keep context lean."
+date: "2026-10-23"
+keyword: best claude code plugins
+imgThumb: thumb.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - claude-code
+  - plugins
+faq:
+  - question: "What are the best Claude Code plugins in 2026?"
+    answer: "Start from the job. For everyday work, feature-dev, code-review and the language server plugin for your main language. For game development, Unity's or Epic's Unreal plugin plus the C#, C++ or Lua language server. For a big codebase, add a code graph such as Graphify so Claude can ask what calls what before it reads files."
+  - question: "How do I install a Claude Code plugin?"
+    answer: "Run /plugin in Claude Code and open the Discover tab, or run /plugin install followed by the plugin name and @claude-plugins-official. The official Anthropic marketplace is available by default."
+  - question: "What should I install in Claude Code for game development?"
+    answer: "Install the plugin for your engine, unity from Unity Technologies or unreal-engine-skills-for-claude-code from Epic Games, then the language server for your scripting language: csharp-lsp, clangd-lsp or lua-lsp. Add a code graph to trace how scripts, scenes and systems call each other."
+  - question: "How do I give my coding assistant access to dependency graphs?"
+    answer: "Connect a tool that builds the graph and lets the assistant query it. Graphify parses your code with tree-sitter into a graph of calls, imports and inheritance, then serves it to Claude Code as a skill or over MCP. Claude can then ask for callers, paths between symbols or what a change reaches."
+  - question: "Do Claude Code plugins use up context?"
+    answer: "Some do. Each skill's name and description is loaded on every turn, and the official marketplace shows a context cost estimate for each plugin. Install the few you use and disable the rest."
+  - question: "Is Graphify a Claude Code plugin?"
+    answer: "Graphify installs as a Claude Code skill with graphify install, or as a hosted MCP server with one claude mcp add command. Claude Code supports skills and MCP servers directly, so there's nothing else to install."
+---
+
+The best Claude Code plugins are the few that match the job you do every day. A plugin bundles skills, agents, hooks, MCP servers or language servers into one install, so a good one gives Claude a new ability in a single command. For everyday development, start with `feature-dev`, `code-review` and the language server for your main language. For game development, add your engine's plugin and its scripting language server. For a large codebase, give Claude a dependency graph it can query, such as Graphify, so it can see how the code connects before it reads files.
+
+Everything below is in Anthropic's official marketplace, which Claude Code includes by default, unless noted.
+
+## How do you install a Claude Code plugin?
+
+Run `/plugin` inside Claude Code and open the **Discover** tab to browse, or install by name:
+
+```text
+/plugin install code-review@claude-plugins-official
+```
+
+If the official marketplace is missing, add it with `/plugin marketplace add anthropics/claude-plugins-official`. Anthropic's [plugin install guide](https://code.claude.com/docs/en/plugins/install) covers scopes and updates.
+
+One thing to check before you install: context cost. Each skill a plugin adds puts its name and description in Claude's context on every turn, and the marketplace shows an estimate for each plugin. Anthropic's page on [measuring plugin cost](https://code.claude.com/docs/en/plugins/measure) explains how to read it. Fewer, well-chosen plugins keep sessions fast and cheap.
+
+## Best Claude Code plugins for everyday development
+
+| Plugin | What it adds | Install it if |
+| --- | --- | --- |
+| `feature-dev` | A guided workflow from exploring the code to designing and building a feature | You build features end to end |
+| `code-review` | Review agents for a pull request | You review PRs in Claude Code |
+| `pr-review-toolkit` | Focused reviewers for tests, comments, types and error handling | You want a deeper review pass |
+| `security-guidance` | Warnings when an edit looks risky | You touch auth, input handling or infra |
+| `commit-commands` | Commands to commit, push and open a PR | You ship from the terminal |
+| `typescript-lsp`, `pyright-lsp`, `rust-analyzer-lsp` | Language servers for go-to-definition and diagnostics | You work in that language |
+| `context7` | Current library docs pulled into the session | You use fast-moving frameworks |
+| `playwright` | Browser control for testing and checks | You build web UIs |
+| `superpowers` | A set of skills for planning, debugging and test-first work | You want structured workflows |
+| `skill-creator` | Help writing your own skills | You want to package your team's habits |
+
+Language server plugins are the quiet winners here. They give Claude real diagnostics and symbol lookups instead of guesses, and they cost little context.
+
+## Claude Code for game development: what should you install?
+
+Pick the plugin for your engine, then the language server for your scripting language.
+
+- **Unity:** the `unity` plugin from Unity Technologies, plus `csharp-lsp` for C# scripts.
+- **Unreal Engine:** `unreal-engine-skills-for-claude-code` from Epic Games, plus `clangd-lsp` for C++.
+- **Lua-scripted engines and mods:** `lua-lsp`.
+- **Godot:** there's no Godot plugin in the official marketplace yet, so use a community Godot MCP server and vet it before adding it.
+
+Game projects get large fast, and the hard questions span systems: what fires when the player takes damage, which scripts touch the save system, what a change to the input handler reaches. A code graph answers those with a path instead of a file-by-file search. The Graphify CLI parses C#, C++, Lua and Luau, so it covers the main scripting languages in Unity, Unreal and Roblox projects.
+
+## How do you give Claude Code access to dependency graphs?
+
+Give it a tool that builds the graph and lets Claude query it. Graphify parses your code with tree-sitter into a graph of files, functions, calls, imports and inheritance, on your machine with no model calls. Claude then asks it questions:
+
+```bash
+graphify query "what calls PaymentService?"
+graphify path "LoginController" "SessionStore"
+graphify explain "RateLimiter"
+```
+
+Graphify connects to Claude Code without a plugin, because Claude Code loads skills and MCP servers directly. Use the open-source CLI locally:
+
+```bash
+uv tool install graphifyy     # or: pip install graphifyy
+graphify install              # adds the /graphify skill to Claude Code
+```
+
+Or connect hosted Graphify, which keeps graphs of your repositories current and signs you in with OAuth:
+
+```bash
+claude mcp add --transport http --scope user graphify https://api.graphify.com/mcp
+```
+
+The [Graphify for Claude Code page](/integrations/claude-code) shows both setups, and [how to give Claude Code a code knowledge graph](/blog/how-to-give-claude-code-a-code-knowledge-graph) walks through the first session. For package dependencies, as opposed to code dependencies, the `sonatype-guide` plugin checks the libraries you pull in.
+
+## Plugins, MCP servers or skills: which do you need?
+
+They overlap, so it helps to keep them straight:
+
+- **A skill** is instructions and scripts Claude loads when they're relevant.
+- **An MCP server** connects Claude to an outside tool or data source.
+- **A plugin** packages skills, agents, hooks, MCP servers and language servers into one install.
+
+If a tool you want ships as an MCP server, you can add it directly. Our list of the [best MCP servers for Claude Code](/blog/best-mcp-servers-for-claude-code) covers those, and [hosted MCP or skill](/blog/graphify-claude-code-hosted-mcp-or-skill) helps you pick a Graphify setup.
+
+## FAQ
+
+### What are the best Claude Code plugins in 2026?
+
+Start from the job. For everyday work, feature-dev, code-review and the language server plugin for your main language. For game development, Unity's or Epic's Unreal plugin plus the C#, C++ or Lua language server. For a big codebase, add a code graph such as Graphify so Claude can ask what calls what before it reads files.
+
+### How do I install a Claude Code plugin?
+
+Run /plugin in Claude Code and open the Discover tab, or run /plugin install followed by the plugin name and @claude-plugins-official. The official Anthropic marketplace is available by default.
+
+### What should I install in Claude Code for game development?
+
+Install the plugin for your engine, unity from Unity Technologies or unreal-engine-skills-for-claude-code from Epic Games, then the language server for your scripting language: csharp-lsp, clangd-lsp or lua-lsp. Add a code graph to trace how scripts, scenes and systems call each other.
+
+### How do I give my coding assistant access to dependency graphs?
+
+Connect a tool that builds the graph and lets the assistant query it. Graphify parses your code with tree-sitter into a graph of calls, imports and inheritance, then serves it to Claude Code as a skill or over MCP. Claude can then ask for callers, paths between symbols or what a change reaches.
+
+### Do Claude Code plugins use up context?
+
+Some do. Each skill's name and description is loaded on every turn, and the official marketplace shows a context cost estimate for each plugin. Install the few you use and disable the rest.
+
+### Is Graphify a Claude Code plugin?
+
+Graphify installs as a Claude Code skill with graphify install, or as a hosted MCP server with one claude mcp add command. Claude Code supports skills and MCP servers directly, so there's nothing else to install.
+
+## Try it
+
+Open [Graphify](https://app.graphify.com), connect a repo and add the MCP server to Claude Code. To stay local, run `uv tool install graphifyy` and `graphify install`. Questions? Find us on [Discord](https://discord.gg/graphify).
