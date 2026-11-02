@@ -1,7 +1,7 @@
 ---
 title: "How to reduce token usage in AI coding agents"
 description: "Reduce token usage in AI coding agents with a local code graph: one scoped query replaces the grep-and-read loop, with no proxy and no model calls to build it."
-date: "2026-11-03"
+date: "2026-07-22"
 keyword: reduce token usage
 imgThumb: thumb.png
 authors:
@@ -22,7 +22,7 @@ faq:
   - question: "What does precise context assembly mean?"
     answer: "Choosing exactly the code a task needs before the model sees it, instead of pasting files and hoping the answer is inside. A graph query does this by following real calls, imports and inheritance from the symbols you name, and graphify query caps the answer at 2,000 tokens by default."
   - question: "How do teams optimize token consumption at scale?"
-    answer: "Share one graph instead of having every developer's agent rebuild an understanding of the codebase from scratch. Hosted Graphify keeps graphs of your repositories current and serves them to Claude Code, Cursor, Codex and other clients over MCP, so every agent on the team starts from the same map."
+    answer: "Build the map once and reuse it instead of having every session rediscover the codebase. A Graphify graph persists between sessions and updates incrementally as code changes, and hosted Graphify, which opened at app.graphify.com this week, indexes your GitHub repositories into graphs for you."
   - question: "How do I measure how many tokens I save?"
     answer: "Ask the same cross-file questions with and without the graph and compare your agent's usage report, such as /usage in Claude Code. graphify benchmark also reports the graph's token use against reading every file."
 ---
@@ -59,7 +59,7 @@ They fall into four groups, and they stack.
 
 The first two are settings you should turn on anyway. Most agents cache by default, and switching models is one command. The third adds a hop that sees every request. The fourth changes what gets sent, which is where a code graph fits.
 
-Inside the fourth group there are two shapes. Vector search returns chunks of text that resemble your question. A code graph returns the structure behind it: this function, its callers, the files they live in. For a question like "what breaks if I change `processPayment`?", the answer isn't written in any one chunk. It's a set of edges, and a graph returns those edges directly. Our post on [why vector search isn't enough for coding agents](/blog/why-vector-search-isnt-enough-for-coding-agents) goes deeper.
+Inside the fourth group there are two shapes. Vector search returns chunks of text that resemble your question. A code graph returns the structure behind it: this function, its callers, the files they live in. For a question like "what breaks if I change `processPayment`?", the answer isn't written in any one chunk. It's a set of edges, and a graph returns those edges directly. Our post on [why graphs beat vectors](/blog/why-graphs-beat-vectors) goes deeper.
 
 ## How does a local code graph cut the tokens coding agents use?
 
@@ -98,9 +98,11 @@ Then type `/graphify .` in your agent to build the graph. Other agents have thei
 
 ## How do teams optimize token consumption at scale?
 
-Every developer's agent rebuilding the same understanding of the same repos is the most repeated cost a team has. The fix is to build that understanding once and share it.
+The most repeated cost on a team is every developer's agent rediscovering the same codebase, session after session. The fix is to build the map once and keep reusing it.
 
-Hosted [Graphify](https://app.graphify.com) indexes your repositories, keeps the graphs current as you push, and serves them over MCP with OAuth sign-in. Claude Code, Cursor, Codex and other MCP clients connect to `https://api.graphify.com/mcp` and query the same graph, across repositories, without each agent re-reading the code. [Shared codebase context for teams](/blog/shared-codebase-context-for-teams) walks through the setup.
+A Graphify graph persists between sessions, so the mapping is paid for once. `/graphify . --update` re-extracts only the files that changed, and `graphify hook install` keeps the graph current on every commit. For code that spans services, `graphify merge-graphs` joins several repositories into one graph your agent can query across.
+
+[Graphify](https://app.graphify.com), the hosted version, opened this week. Sign in, connect GitHub, and it indexes each repository you choose into a code graph you can explore in the console.
 
 ## How do I measure the tokens I save?
 
@@ -110,7 +112,7 @@ Measure on your own repo, with your own questions.
 2. Ask them in a fresh session without the graph, and note the usage. In Claude Code that's `/usage`.
 3. Ask them again with the graph, in another fresh session, and compare.
 
-`graphify benchmark` also reports the graph's token use against reading every file. For the agent-specific levers that stack on top, see our guides for [Claude Code](/blog/reduce-claude-code-token-usage), [Cursor](/blog/how-to-reduce-cursor-token-usage) and [Codex CLI](/blog/how-to-reduce-codex-cli-token-usage).
+`graphify benchmark` also reports the graph's token use against reading every file. For the agent-specific levers that stack on top, see our guides for [Claude Code](/blog/measuring-token-spend-per-task-in-claude-code), [Cursor](/blog/how-to-reduce-cursor-token-usage) and [Codex CLI](/blog/how-to-reduce-codex-cli-token-usage).
 
 ## FAQ
 
@@ -132,7 +134,7 @@ Choosing exactly the code a task needs before the model sees it, instead of past
 
 ### How do teams optimize token consumption at scale?
 
-Share one graph instead of having every developer's agent rebuild an understanding of the codebase from scratch. Hosted Graphify keeps graphs of your repositories current and serves them to Claude Code, Cursor, Codex and other clients over MCP, so every agent on the team starts from the same map.
+Build the map once and reuse it instead of having every session rediscover the codebase. A Graphify graph persists between sessions and updates incrementally as code changes, and hosted Graphify, which opened at app.graphify.com this week, indexes your GitHub repositories into graphs for you.
 
 ### How do I measure how many tokens I save?
 
@@ -140,4 +142,4 @@ Ask the same cross-file questions with and without the graph and compare your ag
 
 ## Try it
 
-Open [Graphify](https://app.graphify.com), connect a repo and point your agent at the hosted MCP server. Prefer to keep everything on your machine? Run `uv tool install graphifyy`, then `/graphify .` in your agent. New to the idea? Start with [what a code knowledge graph is](/blog/what-is-a-code-knowledge-graph), and come say hi on [Discord](https://discord.gg/graphify).
+Open [Graphify](https://app.graphify.com) and connect a repo to see its graph, or keep everything on your machine: run `uv tool install graphifyy`, then `/graphify .` in your agent. New to the idea? Start with [what a code knowledge graph is](/blog/what-is-a-code-knowledge-graph), and come say hi on [Discord](https://discord.gg/graphify).
