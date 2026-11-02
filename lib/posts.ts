@@ -23,8 +23,10 @@ export type Post = {
   tags: string[];
   imgSocial?: string;
   imgThumb?: string;
-  /** Pins the post as the blog lead, whatever its date. At most one post sets it. */
+  /** Pins the post near the top of the blog, whatever its date. */
   featured?: boolean;
+  /** Where a featured post sits among the featured ones: `featured: true` is 1, `featured: 2` comes next. */
+  featuredRank?: number;
   /** Question and answer pairs; the site emits them as FAQPage structured data. */
   faq?: Faq[];
   body: string;
@@ -181,9 +183,10 @@ export function parsePost(filename: string, raw: string, authors: Record<string,
     seenTags.add(tag);
   }
   assertSafeBody(filename, parsed.content);
-  if (data.featured !== undefined && typeof data.featured !== "boolean") {
-    throw new Error(`${filename}: featured must be true or false`);
-  }
+  const featuredOk = data.featured === undefined || typeof data.featured === "boolean"
+    || (typeof data.featured === "number" && Number.isInteger(data.featured) && data.featured >= 1);
+  if (!featuredOk) throw new Error(`${filename}: featured must be true, false or a whole number from 1`);
+  const featuredRank = data.featured === true ? 1 : typeof data.featured === "number" ? data.featured : undefined;
 
   return {
     slug,
@@ -197,7 +200,7 @@ export function parsePost(filename: string, raw: string, authors: Record<string,
     tags,
     imgSocial: optionalFile(data.imgSocial, `${filename}: imgSocial`),
     imgThumb: optionalFile(data.imgThumb, `${filename}: imgThumb`),
-    ...(data.featured === true ? { featured: true } : {}),
+    ...(featuredRank ? { featured: true, featuredRank } : {}),
     ...(data.faq !== undefined ? { faq: optionalFaq(data.faq, `${filename}: faq`) } : {}),
     body: parsed.content.trim(),
   };
@@ -223,7 +226,12 @@ export function getPosts(dir = path.join(process.cwd(), "posts")): Post[] {
     if (seen.has(post.slug)) throw new Error(`Duplicate slug: ${post.slug}`);
     seen.add(post.slug);
   }
-  const featured = posts.filter((post) => post.featured);
-  if (featured.length > 1) throw new Error(`Only one post can be featured: ${featured.map((p) => p.slug).join(", ")}`);
+  const ranks = new Map<number, string>();
+  for (const post of posts) {
+    if (!post.featuredRank) continue;
+    const other = ranks.get(post.featuredRank);
+    if (other) throw new Error(`${other} and ${post.slug} are both featured ${post.featuredRank}`);
+    ranks.set(post.featuredRank, post.slug);
+  }
   return posts.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : a.slug.localeCompare(b.slug)));
 }

@@ -132,10 +132,16 @@ describe("featured, faq and dates", () => {
   });
   it("rejects a bad featured or faq", () => {
     expect(() => parsePost("2026-10-02-x.mdx", head('featured: "yes"\n'), authors)).toThrow(/featured/);
+    expect(() => parsePost("2026-10-02-x.mdx", head("featured: 0\n"), authors)).toThrow(/featured/);
+  });
+  it("ranks featured posts, true being first", () => {
+    expect(parsePost("2026-10-02-x.mdx", head("featured: true\n"), authors).featuredRank).toBe(1);
+    expect(parsePost("2026-10-02-x.mdx", head("featured: 2\n"), authors)).toMatchObject({ featured: true, featuredRank: 2 });
     expect(() => parsePost("2026-10-02-x.mdx", head("faq:\n  - question: Q?\n"), authors)).toThrow(/faq/);
   });
-  it("keeps exactly one featured post in posts/", () => {
-    expect(getPosts().filter((p) => p.featured).map((p) => p.slug)).toEqual(["graphify-octoverse-2026"]);
+  it("keeps Octoverse as the lead featured post in posts/", () => {
+    const featured = getPosts().filter((p) => p.featured).sort((a, b) => a.featuredRank! - b.featuredRank!);
+    expect(featured[0].slug).toBe("graphify-octoverse-2026");
   });
   it("hides a post until its IST date", () => {
     expect(todayIST(new Date("2026-11-05T18:29:00Z"))).toBe("2026-11-05");
