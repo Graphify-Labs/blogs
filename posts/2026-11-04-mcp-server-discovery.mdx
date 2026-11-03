@@ -1,0 +1,208 @@
+---
+title: "MCP server discovery: Graphify now has a server card"
+description: "Graphify now supports MCP server discovery: a public server card and AI Catalog let clients find and set up its remote MCP server from the domain alone."
+date: "2026-11-04"
+keyword: mcp server discovery
+imgThumb: thumb.png
+authors:
+  - fahad
+categories:
+  - product
+tags:
+  - mcp
+faq:
+  - question: "What is an MCP server card?"
+    answer: "An MCP server card is a small public JSON file that describes a remote MCP server before anyone connects to it: its registry name, title, description, icons, website, source repository and the URL and transport to connect with. A server serves it at its MCP URL plus /server-card, and clients read it to show the server and configure the connection."
+  - question: "Where is Graphify's MCP server card?"
+    answer: "Graphify's server card is at https://api.graphify.com/mcp/server-card, next to the MCP endpoint at https://api.graphify.com/mcp. The domain's AI Catalog at https://api.graphify.com/.well-known/ai-catalog.json points to it."
+  - question: "What is an AI Catalog?"
+    answer: "An AI Catalog is a JSON index a domain serves at /.well-known/ai-catalog.json. It lists the AI artifacts that domain publishes, such as MCP servers, agents and skills, each with a stable identifier, a media type and a URL. Graphify's catalog has one entry, urn:air:graphify.com:mcp:graphify, which points to its server card."
+  - question: "Why doesn't Graphify's server card list its tools?"
+    answer: "Graphify's tools depend on who is signed in and which repositories they have connected, so a public, anonymous file can't describe them correctly. Clients get the real tool list from the server after they sign in, which is how the server card proposal expects it to work."
+  - question: "How does a client sign in to Graphify's remote MCP server?"
+    answer: "With OAuth and PKCE. An unauthenticated request to the MCP endpoint returns a 401 that points to /.well-known/oauth-protected-resource/mcp. That document names the authorization server and the graphify:query scope, and /.well-known/oauth-authorization-server lists the authorize, token and registration endpoints."
+  - question: "Is it safe to publish an MCP server card?"
+    answer: "Yes, if it holds only public metadata. Graphify's card has no keys, tokens or user data. It is readable from any site, cached for an hour, and returns 304 Not Modified when nothing has changed."
+---
+
+MCP server discovery is how an AI client finds a remote MCP server and learns how to connect to it without you pasting a config. As of today, Graphify supports it end to end. Hosted Graphify publishes a public MCP server card at `https://api.graphify.com/mcp/server-card` and an AI Catalog at `https://api.graphify.com/.well-known/ai-catalog.json`, so a client or registry that knows only the domain can find the server, show its name and icon, and start the sign-in.
+
+Here's what each file is, what's in ours, and how a client walks from the domain to a working connection.
+
+## What is an MCP server card?
+
+An MCP server card is a static JSON document that describes one remote MCP server before you connect to it. It's defined in the [MCP Server Card extension](https://github.com/modelcontextprotocol/ext-server-card), which grew out of the MCP proposal SEP-2127. The card carries the same identity the [MCP Registry](https://github.com/modelcontextprotocol/registry) uses (a reverse-DNS `name`), plus a title, description, icons, a website, a source repository and the `remotes` a client can connect to.
+
+The proposal reserves one default location: your Streamable HTTP endpoint plus `/server-card`. Graphify's MCP endpoint is `https://api.graphify.com/mcp`, so the card lives right next to it:
+
+```bash
+curl -s https://api.graphify.com/mcp/server-card | jq '{name, title, remotes, websiteUrl, repository}'
+```
+
+```json
+{
+  "name": "io.github.Graphify-Labs/graphify",
+  "title": "Graphify",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://api.graphify.com/mcp"
+    }
+  ],
+  "websiteUrl": "https://graphify.com/mcp",
+  "repository": {
+    "source": "github",
+    "url": "https://github.com/Graphify-Labs/graphify-mcp"
+  }
+}
+```
+
+The full card also has the `$schema` URL, a one-line description, a version and a 400×400 PNG icon. The `name` is the same one Graphify uses in the MCP Registry, so a client that sees both knows they describe the same server.
+
+## What is an AI Catalog, and how does it point to the card?
+
+A server card answers "what is this server?" An [AI Catalog](https://ai-catalog.io/spec/) answers "what does this domain publish?" It's a small index served at the well-known path `/.well-known/ai-catalog.json`, where each entry has a stable identifier, a media type and a URL.
+
+Graphify's catalog has exactly one entry:
+
+```bash
+curl -s https://api.graphify.com/.well-known/ai-catalog.json | jq
+```
+
+```json
+{
+  "entries": [
+    {
+      "identifier": "urn:air:graphify.com:mcp:graphify",
+      "type": "application/mcp-server-card+json",
+      "url": "https://api.graphify.com/mcp/server-card"
+    }
+  ],
+  "specVersion": "1.0"
+}
+```
+
+The identifier follows the catalog's `urn:air:{publisher}:{namespace}:{name}` format, anchored to graphify.com. The `type` tells a client it's an MCP server card before it fetches anything.
+
+Why two files instead of one? The [server card discovery notes](https://github.com/modelcontextprotocol/ext-server-card/blob/main/docs/discovery.md) explain it well: `.well-known` is for site-wide metadata, while a single server's card is application-level. The catalog is the site-wide index, and it already holds each card's URL, so the card can live next to the server it describes.
+
+## How does a client go from the domain to a connection?
+
+Put the pieces together and a client needs nothing but `api.graphify.com`:
+
+1. **Find what the domain offers.** Fetch `/.well-known/ai-catalog.json` and pick the entry with type `application/mcp-server-card+json`.
+2. **Read the card.** Fetch its `url` to get the name, title, icon and the `streamable-http` remote at `https://api.graphify.com/mcp`. This is enough to show Graphify in a server picker before anyone signs in.
+3. **Learn how to sign in.** Call the MCP endpoint. Without a token, it answers with a 401 that says where the auth metadata lives:
+
+```bash
+curl -si -X POST https://api.graphify.com/mcp -H 'Content-Type: application/json' -d '{}' | grep -i www-authenticate
+```
+
+```text
+www-authenticate: Bearer resource_metadata="https://api.graphify.com/.well-known/oauth-protected-resource/mcp"
+```
+
+4. **Read the protected resource metadata.** This follows [RFC 9728](https://www.rfc-editor.org/rfc/rfc9728), which the [MCP authorization spec](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization) builds on:
+
+```bash
+curl -s https://api.graphify.com/.well-known/oauth-protected-resource/mcp | jq
+```
+
+```json
+{
+  "resource": "https://api.graphify.com/mcp",
+  "authorization_servers": [
+    "https://api.graphify.com"
+  ],
+  "scopes_supported": [
+    "graphify:query"
+  ],
+  "bearer_methods_supported": [
+    "header"
+  ]
+}
+```
+
+5. **Run OAuth with PKCE.** `/.well-known/oauth-authorization-server` (with an `openid-configuration` alias) lists the authorize, token, registration and revocation endpoints. It advertises `S256` code challenges and public clients, so an editor or CLI can register itself and sign you in through the browser without a client secret.
+6. **List tools.** Once signed in, the client asks the server for its tools as usual.
+
+## Why doesn't the card list Graphify's tools?
+
+On purpose. What Graphify can answer depends on who you are and which repositories you've connected. A public, anonymous file would either list tools you can't use or leave out ones you can. The server card proposal takes the same view: the card is advisory, and clients trust what the server reports once connected.
+
+So the card says who Graphify is and where to connect, and the server tells your signed-in client what it can do for you.
+
+## Is a public server card safe?
+
+Yes. Everything in it is already public: a name, a description, an icon, two links and an endpoint URL. There are no keys, tokens or user data, and nothing in it grants access. Sign-in still goes through OAuth.
+
+The headers are set up for clients that check often:
+
+```bash
+curl -sI https://api.graphify.com/mcp/server-card | grep -i -E 'content-type|access-control-allow-origin|cache-control|etag'
+```
+
+```text
+content-type: application/mcp-server-card+json
+access-control-allow-origin: *
+cache-control: public, max-age=3600
+etag: "4a0f6dc7e4ae0ef4e4b61c007be626bc"
+```
+
+Any site can read it, including browser-based clients. It's cached for an hour, and a repeat check with the ETag costs almost nothing:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' \
+  -H 'If-None-Match: "4a0f6dc7e4ae0ef4e4b61c007be626bc"' \
+  https://api.graphify.com/mcp/server-card
+```
+
+```text
+304
+```
+
+The ETag changes whenever the card does, so run the first command to get the current one.
+
+## What does this change for you?
+
+If you already use Graphify over MCP, nothing breaks. Your existing setup keeps working.
+
+What gets easier is everything around the setup. Clients and registries that support discovery can list Graphify with its real name and icon, show what it is before you connect, and fill in the remote URL and sign-in for you. Wherever you'd type `api.graphify.com`, the domain is now enough.
+
+If your client doesn't support discovery yet, one command still does it. In Claude Code:
+
+```bash
+claude mcp add --transport http --scope user graphify https://api.graphify.com/mcp
+```
+
+For other clients, see [connecting any MCP client to a code graph](https://graphify.com/blog/connect-any-mcp-client-to-a-code-graph) and our explainer on [local vs remote MCP servers](https://graphify.com/blog/local-vs-remote-mcp-server). New to the idea behind Graphify? Start with [what a code knowledge graph is](https://graphify.com/blog/what-is-a-code-knowledge-graph).
+
+## How do I try it?
+
+Sign in at [app.graphify.com](https://app.graphify.com), connect a repository, and point your client at `https://api.graphify.com/mcp`. The [hosted MCP docs](https://docs.graphify.com/platform/hosted-mcp) cover each client step by step, and [graphify.com/mcp](https://graphify.com/mcp) has the overview. Prefer to run it locally? Install the open-source CLI with `uv tool install graphifyy`.
+
+## FAQ
+
+### What is an MCP server card?
+
+An MCP server card is a small public JSON file that describes a remote MCP server before anyone connects to it: its registry name, title, description, icons, website, source repository and the URL and transport to connect with. A server serves it at its MCP URL plus /server-card, and clients read it to show the server and configure the connection.
+
+### Where is Graphify's MCP server card?
+
+Graphify's server card is at https://api.graphify.com/mcp/server-card, next to the MCP endpoint at https://api.graphify.com/mcp. The domain's AI Catalog at https://api.graphify.com/.well-known/ai-catalog.json points to it.
+
+### What is an AI Catalog?
+
+An AI Catalog is a JSON index a domain serves at /.well-known/ai-catalog.json. It lists the AI artifacts that domain publishes, such as MCP servers, agents and skills, each with a stable identifier, a media type and a URL. Graphify's catalog has one entry, urn:air:graphify.com:mcp:graphify, which points to its server card.
+
+### Why doesn't Graphify's server card list its tools?
+
+Graphify's tools depend on who is signed in and which repositories they have connected, so a public, anonymous file can't describe them correctly. Clients get the real tool list from the server after they sign in, which is how the server card proposal expects it to work.
+
+### How does a client sign in to Graphify's remote MCP server?
+
+With OAuth and PKCE. An unauthenticated request to the MCP endpoint returns a 401 that points to /.well-known/oauth-protected-resource/mcp. That document names the authorization server and the graphify:query scope, and /.well-known/oauth-authorization-server lists the authorize, token and registration endpoints.
+
+### Is it safe to publish an MCP server card?
+
+Yes, if it holds only public metadata. Graphify's card has no keys, tokens or user data. It is readable from any site, cached for an hour, and returns 304 Not Modified when nothing has changed.
