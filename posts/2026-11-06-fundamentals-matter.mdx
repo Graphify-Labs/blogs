@@ -1,0 +1,73 @@
+---
+title: "Fundamentals Matter"
+description: "Cognitive surrender, comprehension debt, and how startups keep up with understanding while agents write more."
+date: "2026-11-06"
+keyword: cognitive surrender fundamentals agents
+authors:
+  - safi
+  - bruce
+categories:
+  - concepts
+tags:
+  - agents
+  - knowledge-graph
+  - code-knowledge-graph
+---
+
+"Critical thinking when agents do the work", a popular post by Addy Osmani (part of Anthropic's Claude Code team), highlights something many engineers have started to feel: cognitive surrender, taking an AI's answer as your own without noticing that you handed anything over. It is closely related to comprehension debt, the code a team owns but no longer understands.
+
+Modern software teams are people and agents building together. In this new world, fundamentals of software engineering still matter, probably even more now that AI is doing so much of the work. Let's dive deeper into what cognitive surrender is, how Addy and other engineers are fighting it, and how to scale those lessons to your team; whether you're a solo founder or leading a team of fifty.
+
+## What is cognitive surrender?
+
+The term comes from Steven Shaw and Gideon Nave at Wharton, in a paper published earlier this year. Handing a calculation to a calculator is offloading: you chose to delegate, and your own reasoning is still in charge. Surrender is adopting an AI's answer as your own without noticing that a hand-over took place. In their experiments, people took a deliberately wrong AI answer more than 80% of the time, and grew more confident as they did. MIT's committee on AI in teaching sees the same in its students, who reach for AI "at the first hint of struggle", most of all near a deadline. Every engineering team has a deadline.
+
+Repeated across a team, surrender becomes comprehension debt, and the research now measures it. At Maryland, students with a coding agent finished more and understood their own code less. The two feed each other: the less you understand, the less you can question what an agent tells you, while the delivery charts look healthy throughout. Anthropic's own engineers have a name for where this ends, the paradox of supervision: "supervising Claude requires the very coding skills that may atrophy from AI overuse."
+
+## Start with fundamentals
+
+This isn't about using AI less, but looking at the fundamentals of software engineering, and then adapting them to the age of agents. Here's a look at some core fundamentals to adhere to:
+
+**Software with a purpose.** Good software starts from knowing who it is for: the use cases, the customers and what they actually need. Product-minded engineers are in more demand than ever. Agents accept any prompt and hand back something that looks finished, so building now comes before deciding, and output starts to pass for outcome.
+
+**Keep it simple.** Simple doesn't mean basic. It means building from simple concepts, not over-architecting or over-building, and never making a system so convoluted that only one person really understands it. That was true before AI and is true now: you now have an extremely capable teammate, and it is happy to build complexity forever. As Kent Beck put it, the agent "seems to assume that its planetary-sized brain is capable of handling any amount of complexity, so it needn't ever reduce complexity. It's right until it isn't."
+
+**Software has always been more than the code.** Deployments, monitoring, migrations, backups and recovery: whether it runs on-premise or in the cloud, the system around the code has always been a bigger job than the code itself. Agents make the code nearly free but not the system around it, and with more code shipping, more of the work, and more of the risk, now sits outside the code.
+
+**Quality is an advantage.** Secure, well tested, easy to use, with the "it just works" feeling: you know it when you see it, and so do your customers. Agents stop when the work looks done, and as optimisers they learn to pass the check rather than do the task. A green check no longer means it works, and when anyone can generate the code, quality is what sets software apart.
+
+**Software lives over time.** Google's engineers put it simply: "software engineering is programming integrated over time." However many tools you have, software atrophies: dependencies age, debt builds up, and someone has to understand the system at 2 a.m. Agents write code faster than anyone can maintain it, comprehension debt grows silently, and the person on call cannot debug what nobody understood. Getting a POC running is easier than ever; keeping it running as the product evolves and usage shifts is as hard as it always was.
+
+## Lessons applied
+
+The fundamentals say what good software needs. Keeping them while agents do more of the work is the hard part, and it gets harder as the team grows. One engineer carries them as habits: the purpose, the design and the quality bar live in one head, and you notice when you start to slide. Every person and every agent you add is another place where a call gets skipped or an answer is accepted that nobody understands, and that is how surrender spreads: not all at once, but as the team grows faster than its understanding. So the lessons start where the fundamentals do, with each person's judgement, then turn to the intent the whole team has to share, and end with what it takes to hold both together at five, fifteen or fifty people.
+
+### Judgement starts with each person
+
+Every fundamental comes down to someone making a call: whether this is worth building, whether it is simple enough, whether it works, what it needs around it to run, and whether it will still make sense in a year. Agents make those calls easy to skip, so the habits matter. Think before you delegate: write down what you expect before you read the answer, because the gap between the two is where you learn. Make the agent take complexity away: ask for the smallest change that works and what it would remove; if only the agent can explain a part, it is already too complex. Define "verified" before the work, and keep the check apart from the agent that did it: an agent that writes both the feature and its test has graded its own exam.
+
+Nobody can read every line any more, so go deep where it matters: start from an overview, set review depth by what a change touches, and keep changes small enough to understand. Addy's warning is that surrender is the bottom of a slope, not a single mistake, and Simon Willison's rule is one of the clearest ways to stay off it: "I won't commit any code to my repository if I couldn't explain exactly what it does to somebody else." Personal rules like this work, but they rely on each person holding the line on every change, which gets harder as the volume grows.
+
+### Ship the intent, not just the code
+
+Agents are prolific. A team running a few of them gets more plans, pull requests and features in a week than anyone can read, and every one looks finished. The question that matters is why the work is being done: which use case it covers and, if it was for a customer, whether they adopted it. An agent builds whatever it was pointed at, as well as it was pointed, so the purpose has to go in with the work. The test is simple: if you can't explain what you are building and why, you are not ready to hand it to an agent.
+
+So write the intent down, in a few sentences a teammate could read: who it is for, what changes for them and how you will know it worked. Amazon's practice of writing the press release before building the product has lasted for exactly this reason. Then check it was understood: talk it through with a person before a significant piece of work, and have the agent ask questions and restate the goal in its own words; where its version differs from yours, the why was never clear. Written intent is also what lets the why outlive the conversation. The next engineer, and the next agent, start from it instead of reverse-engineering it from the code.
+
+### Scaling takes intention
+
+At five people, the why travels by conversation and everyone knows most of the system. Fred Brooks observed in *The Mythical Man-Month* that the lines of communication grow with the square of a team: five people have ten, fifteen have 105, and fifty have 1,225. Agents make it steeper, because every engineer now runs several of them, so code grows with the agents while understanding grows only as fast as you hire. Long before fifty, nobody was in every room, and personal habits stop being enough.
+
+The answer is not to make everyone work the same way. Individual judgement catches the mistakes no rule anticipated, and people should keep their choice of tools. What scales is a shared layer underneath: align the agents through the tooling. One founder's approach is a single place for the rules, skills and checks every agent follows, whichever tool an engineer prefers. Standardise what the agents read and the checks that gate a merge; leave how people work to them. Give that layer a way for anyone to add a skill or a check, with someone reviewing it, or it stays one person's project. And make sure people have the skills and standards to keep it current, because the shared layer only carries the judgement the team puts into it. That shared layer is where the fundamentals live at team scale: the checks hold the quality bar, the rules keep things simple, and the runbooks and production standards cover the work outside the code. Then watch understanding at team level: how long fixes take, and how long a new engineer takes to become useful, the clearest signs of whether software is ageing well.
+
+At the core is the human, who is ultimately responsible: regardless of how much agents write, a person (or team) answers for what ships. And when the processes built for people buckle under agent volume, change the tools, not the fundamentals.
+
+## What's next?
+
+None of these fundamentals is new, and neither is the job: someone has to understand the software. What has changed is how much of it there is.
+
+So far, most of the industry's energy has gone into context: context engines, [knowledge graphs](https://graphify.com/glossary/knowledge-graph) of the code, memory that carries over between sessions, generated wikis and instruction files. All of it helps agents work better, and it is the start of real collaboration between people and agents. The next set of work is to address the understanding problem itself: a loop that knows what the team does and does not understand, puts the right change in front of the right person, checks afterwards that it did what was intended, and feeds what was learnt back in, all provided with the right business context for your stage of company.
+
+## How we wrote this
+
+This post was written the way it recommends. We used AI to gather the concepts, find and read the papers, and draft the sections. It is anchored on an idea two people had first, and every claim is checked against its source by us before it is published.
