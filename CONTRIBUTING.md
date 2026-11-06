@@ -45,11 +45,23 @@ imgSocial: og.png
 | `imgThumb` | no | Listing image. File name only |
 | `imgSocial` | no | Share card. File name only |
 
-If you are a new writer, add your id to `authors.json` in the same pull request: `name`, an optional `role`, an optional `github` handle, an optional `x` handle, and an optional `linkedin` slug (the part after `linkedin.com/in/`). The GitHub handle is only used to show your own picture beside your posts. X and LinkedIn are the links on your author page. No image is stored here.
+Before you open the pull request, every id in the post's `authors` list has to be in `authors.json`. If you are not listed yet, add your own entry in that same pull request and use that id on the post. If you are already listed, reuse your id. Do not remove or rewrite someone else's entry. Changing your own role, links, or picture is fine.
+
+A new entry needs a `name` and, so the site can show a picture, a `github` handle. `role` is optional. `x` is an X handle, not a URL. `linkedin` is the slug after `linkedin.com/in/`.
 
 ```json
-"your-id": { "name": "Your Name", "role": "What you do", "github": "your-handle", "x": "your_handle", "linkedin": "your-slug" }
+"ada": { "name": "Ada Lovelace", "github": "ada" }
 ```
+
+With no `author_image_url`, graphify.com uses `https://avatars.githubusercontent.com/ada`.
+
+A different portrait is optional. Put a png, jpg, jpeg, webp, or gif in `public/images/authors/`, at most 1.5 MB. That folder is not a post. graphify.com publishes `public/images/authors/ada.png` at `/images/blog/authors/ada.png`. Set `author_image_url` to that path, or to the same path on `https://graphify.com` or `https://www.graphify.com`. Leave the field off to keep the GitHub picture. Other websites are not accepted.
+
+```json
+"ada": { "name": "Ada Lovelace", "github": "ada", "author_image_url": "/images/blog/authors/ada.png" }
+```
+
+The check fails if an author id that exists on the base branch is missing from the pull request. That catches an accidental deletion. It does not freeze anyone's role or links, and it does not stop you adding a person. A maintainer who means to remove someone adds that id on its own line in `authors.removals`. Blank lines and `#` comments in that file do not count.
 
 Someone who does not use git can open the file on GitHub, choose **Edit**, and submit the pull request from the web editor.
 
@@ -91,7 +103,7 @@ Do the same here, with one rule they do not enforce: one lowercase spelling. You
 
 Put files in `public/images/<slug>/`. In the post, name the file only (`thumb.png`), not a path.
 
-png, jpg, webp, or gif. Each file under 1.5 MB. No SVG in posts: the checker rejects it. A folder under `public/images/` must match a post slug.
+png, jpg, webp, or gif. Each file under 1.5 MB. No SVG in posts: the checker rejects it. A folder under `public/images/` must match a post slug, except `public/images/authors/`, which holds optional author portraits. `public/images/authors/ada.png` is published at `/images/blog/authors/ada.png`.
 
 Two of those files are the post's covers, and they are different pictures:
 

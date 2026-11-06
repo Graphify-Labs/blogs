@@ -10,6 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Fetch the base branch
+        if: github.event_name == 'pull_request'
+        run: git fetch --depth=1 origin "${{ github.base_ref }}"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -19,3 +24,4 @@ jobs:
       - run: node scripts/check-images.mjs
       - run: node scripts/check-seo.mjs
       - run: node scripts/check-content.mjs
+      - run: node scripts/check-authors.mjs
