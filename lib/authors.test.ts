@@ -76,7 +76,7 @@ describe("author_image_url", () => {
     expect(bytes.readUInt32BE(16)).toBe(500);
     expect(bytes.readUInt32BE(20)).toBe(500);
     const registry = loadAuthors();
-    expect(registry.safi?.role).toBe("Founder/CEO");
+    expect(registry.safi?.role).toBe("Founder & CEO");
     expect(registry.fahad?.role).toBe("Head of DevRel");
     const bruce = registry.bruce;
     expect(bruce?.name).toBe("Bruce Wang");
