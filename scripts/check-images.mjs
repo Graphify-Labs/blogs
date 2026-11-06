@@ -27,6 +27,10 @@ function walk(dir, slug) {
         process.exitCode = 1;
         continue;
       }
+      if (name === "authors") {
+        walk(full, "authors");
+        continue;
+      }
       if (!slugs.has(name)) {
         console.error(`${full}: no posts/*-${name}.mdx`);
         process.exitCode = 1;
