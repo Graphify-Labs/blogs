@@ -14,6 +14,13 @@ tags:
   - knowledge-graph
   - code-knowledge-graph
   - mcp
+faq:
+  - question: "What is comprehension debt?"
+    answer: "Comprehension debt is the gap between the code a team owns and the code it understands. It can build up when more changes arrive than anyone can read and the system changes before anyone learns it."
+  - question: "What breaks in an agentic SDLC?"
+    answer: "Our argument is that comprehension breaks first. Every stage of the software development lifecycle was built for people working at a person's pace, so when agents write most of the code, understanding can fall behind for both the people and the agents."
+  - question: "What is the difference between supervising agents and collaborating with them?"
+    answer: "In this post, supervision means agents write, agents check, and a person signs off, and we argue that this catches bugs without growing the team's understanding. Collaboration, as we describe it, means people think first and then delegate, attention is routed by consequence, and people and agents start from a shared understanding of the system."
 ---
 
 Teams scaled how fast software gets written. They did not scale how fast it gets understood. Attention, human and machine, is now the scarce resource in software, and most of it is wasted: people skim reviews they cannot keep up with, and agents re-read the codebase every time they start. The answer is not to slow agents down or review harder. It is to make humans and agents cognitive collaborators: working from one shared, living understanding of the system, so agents stop re-deriving context, people spend their attention on intent and judgment, and the struggle that builds understanding is kept on purpose.
@@ -85,11 +92,25 @@ At Graphify, we see these problems every week in the teams we work with. Small t
 
 That is why Graphify starts with the living map. Every repository becomes a [code knowledge graph](https://graphify.com/glossary/knowledge-graph), rebuilt on every push and linked across repositories. Agents reach it over [MCP](https://graphify.com/glossary/mcp-server) from 30 tools and start from what is already known instead of scanning, and agent memory keeps what one agent or review learns attached to the code it is about, for the whole team. For people, the same graph answers plain-language questions and shows which parts of the code each answer comes from, and the Wiki turns it into a write-up of every repository, so the people who did not write the code can still learn it.
 
-On top of the map, we route attention. Impact analysis shows what a change touches and what depends on it, both when someone plans a refactor and on every pull request. Reviews read each change against the graph and learn from the team which findings matter. Formal verification proves when a changed function still behaves the same, or finds the input where it does not, so people spend their review on changes in meaning. Insights finds dead and duplicate code across repositories: one sign of whether a codebase is getting healthier or just bigger.
+On top of the map, we route attention. [Impact analysis](https://graphify.com/glossary/blast-radius) shows what a change touches and what depends on it, both when someone plans a refactor and on every pull request. Reviews read each change against the graph and learn from the team which findings matter. Formal verification proves when a changed function still behaves the same, or finds the input where it does not, so people spend their review on changes in meaning. Insights finds dead and duplicate code across repositories: one sign of whether a codebase is getting healthier or just bigger.
 
 The research above also tells us what to build next. Helping people think first, before the agent writes, and tying changes to the outcomes that matter are both still open, for us and for everyone else.
 
 Machine attention produced more code than people can read. The teams that come out of this well will be the ones whose systems show them what to understand, and who still understand what they built.
+
+## FAQ
+
+### What is comprehension debt?
+
+Comprehension debt is the gap between the code a team owns and the code it understands. It can build up when more changes arrive than anyone can read and the system changes before anyone learns it.
+
+### What breaks in an agentic SDLC?
+
+Our argument is that comprehension breaks first. Every stage of the software development lifecycle was built for people working at a person's pace, so when agents write most of the code, understanding can fall behind for both the people and the agents.
+
+### What is the difference between supervising agents and collaborating with them?
+
+In this post, supervision means agents write, agents check, and a person signs off, and we argue that this catches bugs without growing the team's understanding. Collaboration, as we describe it, means people think first and then delegate, attention is routed by consequence, and people and agents start from a shared understanding of the system.
 
 ## Sources
 
