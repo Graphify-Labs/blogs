@@ -70,12 +70,15 @@ describe("author_image_url", () => {
     bad("https://graphify.com/images/blog/authors/missing.png");
   });
 
-  it("accepts the Bruce portrait file without adding him to the registry", () => {
+  it("uses the supplied Bruce portrait at the published blog path", () => {
     const bytes = fs.readFileSync(path.join(process.cwd(), "public", "images", "authors", "bruce.png"));
     expect(bytes.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
     expect(bytes.readUInt32BE(16)).toBe(500);
     expect(bytes.readUInt32BE(20)).toBe(500);
-    expect(loadAuthors().bruce).toBeUndefined();
+    const bruce = loadAuthors().bruce;
+    expect(bruce?.name).toBe("Bruce Wang");
+    expect(bruce?.author_image_url).toBe("/images/blog/authors/bruce.png");
+    expect(authorAvatarUrl(bruce!)).toBe("/images/blog/authors/bruce.png");
   });
 });
 
