@@ -1,7 +1,8 @@
 ---
 title: "Graphify passes 10 million downloads on PyPI"
-description: "Open-source Graphify, graphifyy on PyPI, just passed 10 million downloads in seven months. Here's what the numbers show and what's next."
+description: "Graphify has passed 10 million PyPI downloads. On 6 November 2026, pepy.tech reported 10,138,357 downloads of graphifyy, and that total is not a headcount."
 date: "2026-11-06"
+updated: "2026-11-06"
 imgThumb: thumb.png
 keyword: graphify
 authors:
@@ -14,95 +15,57 @@ tags:
   - milestones
 faq:
   - question: "How many times has graphifyy been downloaded?"
-    answer: "According to pepy.tech, graphifyy has been downloaded 10,056,896 times on PyPI as of November 6, 2026, including 1,949,236 downloads in the 30 days ending November 4."
-  - question: "Where do the download numbers come from?"
-    answer: "The totals come from pepy.tech, which reads PyPI's public download data. pypistats.org shows the same trend, with about 1.63 million downloads in the last month."
-  - question: "What is graphifyy?"
-    answer: "graphifyy is the PyPI package for open-source Graphify. It turns a folder of code, docs, papers, images or videos into a queryable knowledge graph that you and your AI coding agents can ask questions of."
-  - question: "Is Graphify open source?"
-    answer: "Yes. Open-source Graphify is Apache 2.0, and the code lives at github.com/Graphify-Labs/graphify."
+    answer: "On 6 November 2026, pepy.tech reported 10,138,357 downloads of graphifyy on PyPI, including 2,030,697 in the last 30 days."
+  - question: "Do 10 million downloads mean 10 million people?"
+    answer: "pepy.tech says its download chart includes CI traffic, and the same project can be installed many times, so 10 million downloads are not 10 million people."
   - question: "How do I try Graphify?"
-    answer: "Open the hosted Graphify app at app.graphify.com and connect a repo. If you prefer to run it locally, install open-source Graphify with uv tool install graphifyy."
+    answer: "Open the hosted Graphify app at app.graphify.com and connect a repo. To run it on your machine, install open-source Graphify with uv tool install graphifyy."
 ---
 
-![pepy.tech download badge for graphifyy](/images/graphify-cli-10-million-downloads/pepy-badge.png)
+Open-source Graphify, published on PyPI as graphifyy, has passed 10 million downloads. On 6 November 2026, [pepy.tech](https://pepy.tech/projects/graphifyy) reported 10,138,357 downloads of graphifyy on PyPI, including 2,030,697 in the last 30 days. The first release, 0.1.1, was uploaded on 4 April 2026 (UTC), and [PyPI](https://pypi.org/project/graphifyy/) lists 271 versions.
 
-Graphify is a code knowledge graph: it maps your repo into functions, classes, files and the links between them, so you and your coding agents can ask real questions and get answers with a file and a line. And open-source Graphify, published on PyPI as `graphifyy`, just passed **10 million downloads**. 🎉
+The latest version on that pepy.tech page is 0.9.103, released 5 November 2026.
 
-As of November 6, 2026, [pepy.tech](https://pepy.tech/projects/graphifyy) counts **10,056,896** downloads. Ten million installs of a tool that helps agents understand code. We're still a little stunned.
+## What Graphify does
 
-The first version went up on PyPI in April 2026. Seven months and 270 releases later, here we are.
+Graphify turns a folder of code into a knowledge graph your coding agents can query. The graph records functions, classes, files, and the links between them, so an answer can point at a file and a line. [What is a code knowledge graph?](/blog/what-is-a-code-knowledge-graph) is the longer explanation. In October we wrote about [Eight million downloads in six months](/blog/eight-million-downloads-in-six-months).
 
-## What do the numbers actually show?
+## What the download count does not mean
 
-Totals are fun, but the shape of the curve is the part that made our team stop and stare.
+pepy.tech says its download chart includes CI traffic, and the same project can be installed many times, so 10 million downloads are not 10 million people. The total is an install count. It is not a measure of how many teams use Graphify.
 
-![Daily PyPI downloads of graphifyy from August 5 to November 3, 2026, from pepy.tech data](/images/graphify-cli-10-million-downloads/downloads-daily-chart.png)
+[pypistats.org](https://pypistats.org/packages/graphifyy) is a second public counter. On 6 November 2026 its package page showed 79,294 downloads in the last day, 483,662 in the last week, and 1,630,115 in the last month. That page plots one line with mirrors and one without. Those figures are not pepy.tech's, and they are not a headcount either.
 
-* **10,056,896** total downloads on PyPI (pepy.tech, Nov 6, 2026)
-* **1,949,236** of them in the 30 days ending Nov 4, so roughly one in five installs ever happened this past month
-* **about 481,000** downloads in the last week and **about 80,000** in a single day ([pypistats.org](https://pypistats.org/packages/graphifyy))
+![Bar chart of graphifyy daily downloads on PyPI from 5 August 2026 to 3 November 2026, labeled as pepy.tech data.](downloads-daily-chart.png)
 
-Download counts include CI machines and mirrors, so we don't read them as "ten million people". We read them as a trend: more teams are wiring Graphify into the places where their agents work every day, from laptops to build pipelines.
+The chart covers 5 August to 3 November 2026. It stops on 3 November and has not been redrawn for the 6 November total.
 
-![The graphifyy project page on pepy.tech](/images/graphify-cli-10-million-downloads/pepy-page.png)
+## Thank you
 
-## Why are developers installing it?
+Thank you for installing Graphify, for issues and pull requests, and for questions in [Discord](https://discord.gg/graphify). The download count does not record that work. It only records installs. Open-source Graphify stays under the Apache 2.0 license. The code is at [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify).
 
-Coding agents got very good at writing code and stayed surprisingly bad at knowing a codebase. Ask one what breaks when a function changes and it goes back to grepping and guessing.
+## How to try Graphify
 
-Graphify gives the agent the structure instead. Run it on a folder and you get a graph of who calls what, who imports what, and what depends on what, served to your agent through [MCP](https://graphify.com/mcp). The CLI works with the assistants people already use, including Claude Code, Codex, Cursor, Gemini CLI and many more, and it reads about 40 languages.
-
-That's the whole pitch, and judging by the counter, it lands. If you're new to the idea, our explainer on [what a code knowledge graph is](https://graphify.com/blog/what-is-a-code-knowledge-graph) is the best place to start.
-
-![The graphifyy page on PyPI](/images/graphify-cli-10-million-downloads/pypi-page.png)
-
-## Who made this happen?
-
-You did. Every person who ran the install, filed an issue, sent a pull request, asked a sharp question on Discord or told a teammate "just try it on our repo" is inside that number.
-
-Open source works because people show up for it. Thank you for showing up for this one. Open-source Graphify stays Apache 2.0, and the code lives on [GitHub](https://github.com/Graphify-Labs/graphify).
-
-## What's next?
-
-Ten million is a checkpoint, not a finish line. Next on the roadmap:
-
-* Faster graph builds and fresher graphs as your code changes
-* More agents and editors that can read the graph out of the box
-* Even smoother paths between the CLI on your machine and the hosted Graphify app for your team
-
-We'll keep shipping in the open and writing it up here as we go.
-
-## Try Graphify
-
-The quickest way in is the hosted app. Open [app.graphify.com](https://app.graphify.com), connect a repo, and ask your codebase a question.
-
-Prefer to run it on your own machine? Install [open-source Graphify](https://github.com/Graphify-Labs/graphify):
+Open the hosted Graphify app at [app.graphify.com](https://app.graphify.com) and connect a repo. To run it on your machine, install open-source Graphify with uv tool install graphifyy.
 
 ```bash
 uv tool install graphifyy
 ```
 
-Come celebrate with us on [Discord](https://discord.gg/graphify). Here's to the next ten million.
+The steps for uv, pipx, and a virtual environment are in [Install Graphify CLI with uv or pipx](https://docs.graphify.com/open-source/installation).
+
+Syed Fahad and the Graphify team
 
 ## FAQ
 
 ### How many times has graphifyy been downloaded?
 
-According to pepy.tech, graphifyy has been downloaded 10,056,896 times on PyPI as of November 6, 2026, including 1,949,236 downloads in the 30 days ending November 4.
+On 6 November 2026, pepy.tech reported 10,138,357 downloads of graphifyy on PyPI, including 2,030,697 in the last 30 days.
 
-### Where do the download numbers come from?
+### Do 10 million downloads mean 10 million people?
 
-The totals come from pepy.tech, which reads PyPI's public download data. pypistats.org shows the same trend, with about 1.63 million downloads in the last month.
-
-### What is graphifyy?
-
-graphifyy is the PyPI package for open-source Graphify. It turns a folder of code, docs, papers, images or videos into a queryable knowledge graph that you and your AI coding agents can ask questions of.
-
-### Is Graphify open source?
-
-Yes. Open-source Graphify is Apache 2.0, and the code lives at github.com/Graphify-Labs/graphify.
+pepy.tech says its download chart includes CI traffic, and the same project can be installed many times, so 10 million downloads are not 10 million people.
 
 ### How do I try Graphify?
 
-Open the hosted Graphify app at app.graphify.com and connect a repo. If you prefer to run it locally, install open-source Graphify with uv tool install graphifyy.
+Open the hosted Graphify app at app.graphify.com and connect a repo. To run it on your machine, install open-source Graphify with uv tool install graphifyy.
