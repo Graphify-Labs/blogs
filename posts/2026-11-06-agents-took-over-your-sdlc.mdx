@@ -1,0 +1,141 @@
+---
+title: "Agents Took Over Your SDLC. Now What?"
+description: "Why attention is the new bottleneck, and how humans and agents become cognitive collaborators."
+date: "2026-11-06"
+keyword: agents sdlc attention bottleneck
+imgThumb: thumb.png
+authors:
+  - safi
+  - bruce
+categories:
+  - concepts
+  - product
+tags:
+  - agents
+  - knowledge-graph
+  - code-knowledge-graph
+  - mcp
+faq:
+  - question: "What is comprehension debt?"
+    answer: "Comprehension debt is the gap between the code a team owns and the code it understands. It can build up when more changes arrive than anyone can read and the system changes before anyone learns it."
+  - question: "What breaks in an agentic SDLC?"
+    answer: "Our argument is that comprehension breaks first. Every stage of the software development lifecycle was built for people working at a person's pace, so when agents write most of the code, understanding can fall behind for both the people and the agents."
+  - question: "What is the difference between supervising agents and collaborating with them?"
+    answer: "In this post, supervision means agents write, agents check, and a person signs off, and we argue that this catches bugs without growing the team's understanding. Collaboration, as we describe it, means people think first and then delegate, attention is routed by consequence, and people and agents start from a shared understanding of the system."
+---
+
+Teams scaled how fast software gets written. They did not scale how fast it gets understood. Attention, human and machine, is now the scarce resource in software, and most of it is wasted: people skim reviews they cannot keep up with, and agents re-read the codebase every time they start. The answer is not to slow agents down or review harder. It is to make humans and agents cognitive collaborators: working from one shared, living understanding of the system, so agents stop re-deriving context, people spend their attention on intent and judgment, and the struggle that builds understanding is kept on purpose.
+
+## Everyone is busy building
+
+Anthropic, OpenAI and Google each report that AI now writes 75% or more of their new code. A study of 2,135 open-source AI repositories found that regular contributors submitted a median 183% more code in mid-2026 than in early 2024. Teams everywhere are shipping faster than ever, and each one has a list of new problems that did not exist two years ago. They look like separate problems. They are not.
+
+## Three decades plus of process, built for people
+
+Technical debt (1992, Ward Cunningham), Scrum (1995, Ken Schwaber and Jeff Sutherland), the Agile Manifesto (2001, seventeen developers at a ski lodge in Utah): 30+ years of process, all built around people writing and maintaining code. The cloud sped it up, from yearly releases with quarterly patches to Etsy releasing "over 25 times a day" by 2010, and DevOps grew out of it. But the cloud changed how often teams shipped, not who did the work.
+
+AI is a whole other animal. Most code is no longer written by people, and it arrives orders of magnitude faster, yet every stage of the process still assumes a person working at a person's pace. As Sonya Siderova put it: "Agile isn't dead. It's optimizing a constraint that moved."
+
+Let's look at the SDLC loop in more detail and see where things have broken down:
+
+| Stage | Built for people | What's buckling | Whose attention runs out |
+| --- | --- | --- | --- |
+| Plan | Sprints and Agile size work to what a team can finish in a few weeks; intent lives in people's heads | Plans range from vague prompts to detailed specs, and agents accept them all | Every later reader's, who has to guess the intent |
+| Write | A person writes, and learns the system by writing it | AI writes most new code, on tasks that keep getting longer and more complex, and the struggle that built understanding goes with it | The author's: no struggle, no understanding |
+| Review | IBM's code inspections (1976) became the pull request: a second person reads every diff | More pull requests than reviewers: those from high-volume automated accounts get a human review less than 30% of the time | The reviewer's: more diffs than eyes |
+| Merge and release | Version control from CVS to Git (2005); CI/CD sized for the cloud era | Merges can jump 10x or more: Anthropic went from 2,500 a day to over 30,000 in four months | The team's: queues and CI sized for people |
+| Run | A person on call reads the logs and answers the alerts | AI workloads pushed log volume up 93% in a year, and organizations now drop 86% of their log data to manage cost (Dynatrace survey) | The on-call engineer's: more to read, less of it kept |
+| Maintain | Understanding builds up in the team as it works | Shared understanding erodes, unseen until the team is stuck | Everyone's, and the agent's: it re-reads the system every session |
+
+The tools are crumbling under the weight. Anthropic replaced Git because "the bottleneck, now, is all of the developer infrastructure built for human scale." Cursor rebuilt its Git hosting because agents create "vast numbers of small repositories, many of them throwaway." Most teams do not have the luxury of rewriting core SDLC tools from scratch.
+
+## What broke underneath: comprehension
+
+Every row of that table breaks the same way: understanding cannot keep up, for people or for agents. "AI systems can generate code faster than developers can read or understand it," writes Margaret-Anne Storey. Teams have always shipped code they only partly understood; "what is new is the rate at which this gap can accumulate, and the difficulty of detecting it." More changes arrive than anyone can read, and the system changes before anyone learns it. That gap is comprehension debt.
+
+Agents carry it too. As tasks grow, coding agents do not mainly edit more; they spend more effort reading and analyzing code. Microsoft Research found that "the number of tool calls an agent spends to understand code predicts task difficulty better than line edit count." The correlations are weak, the authors note, but the direction is clear. And an agent forgets: every session re-reads the codebase, rebuilds a partial picture and throws it away. The debt people carry once, agents pay on every run.
+
+People used to pay it down by struggling. "When a developer writes code from scratch, even messy code, the friction and effort mean they build at least a partial mental model along the way," Storey writes. When an agent writes the code, the code arrives and the mental model does not. In a randomized trial at Anthropic, developers learning a new library with AI scored 17% lower on understanding, worse on debugging, and were not significantly faster: "AI-enhanced productivity is not a shortcut to competence." It is an old lesson: Lisanne Bainbridge's 1983 "Ironies of Automation" warned that the more a system is automated, the harder it is for people to oversee, as their skills fade. Friction does survive in chat, but a Stanford study of 250,000 Claude.ai conversations cautions that its findings "may not generalize" to agentic work. In agentic coding, the struggle disappears unless someone designs it back in.
+
+## From supervisors to collaborators
+
+Not every team is at Anthropic's scale. But volume only has to grow by an order of magnitude for processes built for the old volume to break, and Anthropic expects these problems to "become more commonplace over the next six to 12 months." So the question for every team is: when volume, speed and lost struggle hit at once, how do you rethink everything?
+
+Version 1 is supervision, with AI doing the checking. Use AI to troubleshoot, to debug, to read pull requests, to judge changes, and it is good at all of them. AI reviewers such as Greptile, CodeRabbit and Graphite (which Cursor bought in December 2025) catch real bugs. At Anthropic, agents watching telemetry catch issues that make traditional alerts "seem one-dimensional by comparison." But version 1 keeps the old shape: agents write, agents check, a person signs off. The bugs get caught; the understanding does not grow.
+
+Version 2 is collaboration. Machine attention, the idea behind 2017's "Attention Is All You Need" and the models it made possible, created this problem; attention, spent deliberately by people and agents, is the way out of it. Collaboration changes five things, and the first matters most:
+
+| | Supervisor (v1) | Collaborator (v2) |
+| --- | --- | --- |
+| Learning | Delegate first, review later | Think first, then delegate |
+| People's role | Approve output | Connect customers, systems and teams |
+| Understanding | Lives in whoever last read the code; agents start from zero | A living map that points people and agents to what matters |
+| Attention | Every diff, as far as it lasts | Routed by consequence |
+| Success | Output: changes merged | Intent and outcomes: customers, bugs, the needle moving |
+
+**Learning: think first, then delegate.** Nothing should ship that nobody understands. In a Google DeepMind experiment, the AI would only write once a person had set out their own position and one supporting argument; people did more of the thinking, took no longer, and later judged other work faster. Anthropic's coding trial found the same split between developers who used AI to understand and those who delegated. At scale, this has to live in the tools: ask for the approach (where the change goes, why, what it must not break) before the code, teach before telling, show people what skipping costs them, and explain every change to those who did not write it.
+
+**People's role: be the connective tissue.** Agents work inside a task; people work across them. The human work that matters most now is the collaboration that decides what gets built: product thinking about what customers actually need, systems thinking about how the pieces fit, and coordination across teams and the agents working for them. The engineers who built Anthropic's Scion rate Claude a better coder than themselves, yet they were the ones "making informed choices around the problems we wanted to solve." Some things cannot be handed off at all; as product managers in one study put it, "accountability must not be delegated to non-human actors."
+
+**Understanding: keep one living map that points to what matters.** A shared picture of how the parts connect and what each change touched, kept current as the code changes, so agents start from it instead of from zero. More context is not the goal. The map earns its keep by pulling out the right pieces: the part of the system this change touches, the decision behind it, the thing a newcomer should learn first.
+
+**Attention: route it by consequence.** Anthropic's team reviews "the intent of the change as opposed to reading every line of code," and its review tool separates "comment-only changes from sensitive logical changes, so that human reviewers can focus on the most consequential changes." Decide which changes need human eyes, and stop asking for them everywhere else.
+
+**Success: hold on to intent and outcomes.** Write down what the system is for, what it must never do and why, where people and agents both read it. Then track what is actually happening: is the work moving the needle, are customers more engaged, are they seeing fewer bugs? Feeling faster is not a measure. In a METR trial, experienced developers expected AI to make them 24% faster, believed afterward that it had, and were in fact 19% slower. Google's DORA research finds AI now raises delivery throughput but still lowers stability: "AI doesn't fix a team; it amplifies what's already there." Watching outcomes is the part of the job that has not changed, and it may be what saves you.
+
+## What matters most
+
+Attention is not only a budget to protect; it has to be pointed. The tools that help most will not hand people and agents more context. They will show both of them the right things to learn and build on, and keep that understanding current as the system changes. That matters because people still direct the work, and directing a system assumes you understand it.
+
+## Graphify puts your SDLC back in your control
+
+At Graphify, we see these problems every week in the teams we work with. Small teams that build almost entirely with agents can no longer see across their own repositories. Engineers watch their agents spend most of a session scanning a codebase before they can plan. Reviewers face more pull requests than they can read. As one CEO running agents on a large monorepo told us: "Graphify has definitely reduced the amount of time that my agents have to scan through the code before planning and executing."
+
+That is why Graphify starts with the living map. Every repository becomes a [code knowledge graph](https://graphify.com/glossary/knowledge-graph), rebuilt on every push and linked across repositories. Agents reach it over [MCP](https://graphify.com/glossary/mcp-server) from 30 tools and start from what is already known instead of scanning, and agent memory keeps what one agent or review learns attached to the code it is about, for the whole team. For people, the same graph answers plain-language questions and shows which parts of the code each answer comes from, and the Wiki turns it into a write-up of every repository, so the people who did not write the code can still learn it.
+
+On top of the map, we route attention. [Impact analysis](https://graphify.com/glossary/blast-radius) shows what a change touches and what depends on it, both when someone plans a refactor and on every pull request. Reviews read each change against the graph and learn from the team which findings matter. Formal verification proves when a changed function still behaves the same, or finds the input where it does not, so people spend their review on changes in meaning. Insights finds dead and duplicate code across repositories: one sign of whether a codebase is getting healthier or just bigger.
+
+The research above also tells us what to build next. Helping people think first, before the agent writes, and tying changes to the outcomes that matter are both still open, for us and for everyone else.
+
+Machine attention produced more code than people can read. The teams that come out of this well will be the ones whose systems show them what to understand, and who still understand what they built.
+
+## FAQ
+
+### What is comprehension debt?
+
+Comprehension debt is the gap between the code a team owns and the code it understands. It can build up when more changes arrive than anyone can read and the system changes before anyone learns it.
+
+### What breaks in an agentic SDLC?
+
+Our argument is that comprehension breaks first. Every stage of the software development lifecycle was built for people working at a person's pace, so when agents write most of the code, understanding can fall behind for both the people and the agents.
+
+### What is the difference between supervising agents and collaborating with them?
+
+In this post, supervision means agents write, agents check, and a person signs off, and we argue that this catches bugs without growing the team's understanding. Collaboration, as we describe it, means people think first and then delegate, attention is routed by consequence, and people and agents start from a shared understanding of the system.
+
+## Sources
+
+- Agile Manifesto authors, *History: The Agile Manifesto*, February 2001.
+- Anthropic Engineering, *Redesigning source control at Anthropic*, October 13, 2026.
+- Bainbridge, *Ironies of Automation*, Automatica, 1983.
+- Balepur, Tomlinson and Schnabel, *Code Understanding is a Bottleneck for Coding Agents*, Microsoft Research, October 2026.
+- Becker, Rush, Barnes and Rein, *Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity*, METR, 2025.
+- Bodkin, Sokhansanj and Hadfield, *Comprehension Audits to Mitigate Risks from Automated AI Research*, October 2026.
+- Brittain, *Tracking Every Release*, Etsy Code as Craft, December 8, 2010.
+- Cunningham, *The WyCash Portfolio Management System*, OOPSLA '92 Experience Report, 1992.
+- Dynatrace, *The State of Log Management 2026*, survey of 450 leaders by Coleman Parkes, June 17, 2026.
+- Fagan, *Design and Code Inspections to Reduce Errors in Program Development*, IBM Systems Journal, 1976.
+- Google Cloud, *Announcing the 2025 DORA report*, September 23, 2025.
+- Kewenig, Tankelevitch, Rintel, Sarkar and Sellen, *Metacognitive Scaffolds Create Productive Friction for AI-Assisted Knowledge Work*, Microsoft Research, 2026.
+- Kwa, West, Becker, Deng et al., *Measuring AI Ability to Complete Long Software Tasks*, METR, March 2025.
+- Maier, Schwabe, Schneider and Feuerriegel, *Designing Against Deskilling: Metacognitive Feedback Reduces Cognitive Offloading to LLM Assistants*, 2026.
+- Martí, *Git at any scale*, Cursor, August 18, 2026.
+- Schwaber, *SCRUM Development Process*, OOPSLA, 1995.
+- Shao, Zhao, Padmakumar, Wang and Yang, *Human–AI Collaboration at Scale*, Stanford, 2026; and Anthropic, *Enabling independent research on how people use Claude*, August 26, 2026.
+- Shen and Tamkin, *How AI Impacts Skill Formation*, Anthropic, January 2026.
+- SiliconANGLE, *Cursor acquires AI code review startup Graphite*, December 19, 2025.
+- Storey, *From Technical Debt to Cognitive and Intent Debt: Rethinking Software Health in the Age of AI*, 2026.
+- Su, Rimell, Li, Rannen-Triki, Paquet, Hendricks, Qadri, Ippolito and Mirowski, *Who Thinks First? Designing Productive Friction with Engage-to-Unlock GenAI*, Google DeepMind, October 2026.
+- Ulloa, Butler, Haniyur, Miller, Amos, Sarkar and Storey, *Product Manager Practices for Delegating Work to Generative AI: "Accountability must not be delegated to non-human actors"*, ICSE 2026.
+- Vaswani et al., *Attention Is All You Need*, 2017.
+- Wiggers, *Does AI Make the Agile Manifesto Obsolete?*, InfoQ, February 17, 2026.

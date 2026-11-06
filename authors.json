@@ -12,5 +12,13 @@
     "github": "SyedFahad7",
     "x": "fahad_developer",
     "linkedin": "syedfahads"
+  },
+  "bruce": {
+    "name": "Bruce Wang",
+    "role": "Seed investor & ex-Netflix Engineering Director",
+    "github": "batmany13",
+    "x": "batmany13",
+    "linkedin": "batmany13",
+    "author_image_url": "/images/blog/authors/bruce.png"
   }
 }
