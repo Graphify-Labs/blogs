@@ -55,13 +55,11 @@ A new entry needs a `name` and, so the site can show a picture, a `github` handl
 
 With no `author_image_url`, graphify.com uses `https://avatars.githubusercontent.com/ada`.
 
-A different portrait is optional. Put a png, jpg, webp, or gif under `public/authors/`, at most 1.5 MB, and set `author_image_url` to the site path. graphify.com uses that URL instead of the GitHub picture. Leave the field off to keep the GitHub picture.
+A different portrait is optional. Put a png, jpg, jpeg, webp, or gif in `public/images/authors/`, at most 1.5 MB. That folder is not a post. graphify.com publishes `public/images/authors/ada.png` at `/images/blog/authors/ada.png`. Set `author_image_url` to that path, or to the same path on `https://graphify.com` or `https://www.graphify.com`. Leave the field off to keep the GitHub picture. Other websites are not accepted.
 
 ```json
-"ada": { "name": "Ada Lovelace", "github": "ada", "author_image_url": "/authors/ada.png" }
+"ada": { "name": "Ada Lovelace", "github": "ada", "author_image_url": "/images/blog/authors/ada.png" }
 ```
-
-`/authors/ada.png` is the file `public/authors/ada.png`. An `https://` URL is also allowed. `graphify.net` is not.
 
 The check fails if an author id that exists on the base branch is missing from the pull request. That catches an accidental deletion. It does not freeze anyone's role or links, and it does not stop you adding a person. A maintainer who means to remove someone adds that id on its own line in `authors.removals`. Blank lines and `#` comments in that file do not count.
 
@@ -105,7 +103,7 @@ Do the same here, with one rule they do not enforce: one lowercase spelling. You
 
 Put files in `public/images/<slug>/`. In the post, name the file only (`thumb.png`), not a path.
 
-png, jpg, webp, or gif. Each file under 1.5 MB. No SVG in posts: the checker rejects it. A folder under `public/images/` must match a post slug.
+png, jpg, webp, or gif. Each file under 1.5 MB. No SVG in posts: the checker rejects it. A folder under `public/images/` must match a post slug, except `public/images/authors/`, which holds optional author portraits. `public/images/authors/ada.png` is published at `/images/blog/authors/ada.png`.
 
 Two of those files are the post's covers, and they are different pictures:
 

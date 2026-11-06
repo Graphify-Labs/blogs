@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { parseRemovals, removedAuthorIds } from "./author-removals.mjs";
-import { authorAvatarUrl, loadAuthors, parsePost } from "./posts";
+import { authorAvatarUrl, authorImageRepoFile, loadAuthors, parsePost } from "./posts";
 
 const head = (authors: string) => `---
 title: A note
@@ -39,41 +39,43 @@ describe("author_image_url", () => {
     expect(authorAvatarUrl({ name: "No picture" })).toBeUndefined();
   });
 
-  it("keeps a custom portrait and rejects a bad one", () => {
+  it("keeps a graphify.com portrait and rejects anything else", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "authors-"));
     const file = path.join(dir, "authors.json");
+    const portrait = "/images/blog/authors/bruce.png";
+    const repoFile = path.join(process.cwd(), "public", "images", "authors", "bruce.png");
     fs.writeFileSync(file, JSON.stringify({
-      ada: { name: "Ada", github: "ada", author_image_url: "https://example.com/ada.png" },
+      ada: { name: "Ada", github: "ada", author_image_url: portrait },
     }));
     const ada = loadAuthors(file).ada!;
-    expect(ada.author_image_url).toBe("https://example.com/ada.png");
-    expect(authorAvatarUrl(ada)).toBe("https://example.com/ada.png");
+    expect(ada.author_image_url).toBe(portrait);
+    expect(authorAvatarUrl(ada)).toBe(portrait);
+    expect(authorImageRepoFile(portrait)).toBe(repoFile);
+    expect(authorImageRepoFile("https://graphify.com/images/blog/authors/bruce.png")).toBe(repoFile);
+    expect(authorImageRepoFile("https://www.graphify.com/images/blog/authors/bruce.png")).toBe(repoFile);
+
+    const httpsPortrait = "https://www.graphify.com/images/blog/authors/bruce.png";
+    fs.writeFileSync(file, JSON.stringify({ ada: { name: "Ada", github: "ada", author_image_url: httpsPortrait } }));
+    expect(authorAvatarUrl(loadAuthors(file).ada!)).toBe(httpsPortrait);
 
     const bad = (url: string) => {
       fs.writeFileSync(file, JSON.stringify({ ada: { name: "Ada", author_image_url: url } }));
       expect(() => loadAuthors(file)).toThrow(/author_image_url/);
     };
-    bad("http://example.com/ada.png");
-    bad("https://graphify.net/ada.png");
-    bad("/images/ada.png");
-    bad("/authors/../secret.png");
+    bad("https://example.com/ada.png");
+    bad("http://graphify.com/images/blog/authors/bruce.png");
+    bad("https://graphify.net/images/blog/authors/bruce.png");
+    bad("/authors/bruce.png");
+    bad("/images/blog/../secret.png");
+    bad("https://graphify.com/images/blog/authors/missing.png");
   });
 
   it("accepts the Bruce portrait file without adding him to the registry", () => {
-    const bytes = fs.readFileSync(path.join(process.cwd(), "public", "authors", "bruce.png"));
+    const bytes = fs.readFileSync(path.join(process.cwd(), "public", "images", "authors", "bruce.png"));
     expect(bytes.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
     expect(bytes.readUInt32BE(16)).toBe(500);
     expect(bytes.readUInt32BE(20)).toBe(500);
     expect(loadAuthors().bruce).toBeUndefined();
-
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "authors-"));
-    const file = path.join(dir, "authors.json");
-    fs.writeFileSync(file, JSON.stringify({
-      bruce: { name: "Bruce Wang", github: "batmany13", author_image_url: "/authors/bruce.png" },
-    }));
-    const bruce = loadAuthors(file).bruce!;
-    expect(bruce.author_image_url).toBe("/authors/bruce.png");
-    expect(authorAvatarUrl(bruce)).toBe("/authors/bruce.png");
   });
 });
 

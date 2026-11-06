@@ -18,7 +18,7 @@ authors.json
 
 `posts/2026-10-02-a-note.mdx` is published at `/blog/a-note`. The date prefix is the publish date, not part of the URL.
 
-Categories are `guides`, `concepts`, `product`, and `engineering`. A new writer adds their id to `authors.json` in the same pull request. A writer who is already listed reuses that id. Leave `author_image_url` off to use the GitHub picture, or set it to a file in `public/authors/`.
+Categories are `guides`, `concepts`, `product`, and `engineering`. A new writer adds their id to `authors.json` in the same pull request. A writer who is already listed reuses that id. Leave `author_image_url` off to use the GitHub picture, or point it at a file in `public/images/authors/`, published at `/images/blog/authors/`.
 
 ```bash
 npm install

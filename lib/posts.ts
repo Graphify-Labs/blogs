@@ -10,9 +10,10 @@ export type Author = {
   x?: string;
   linkedin?: string;
   /**
-   * Optional portrait. graphify.com uses this URL when it is set, and
-   * `https://avatars.githubusercontent.com/<github>` when it is omitted.
-   * A root-relative value is a file in this repo: `/authors/ada.png` is `public/authors/ada.png`.
+   * Optional portrait. graphify.com uses this when set, otherwise
+   * `https://avatars.githubusercontent.com/<github>`.
+   * The value is a blogs image: `/images/blog/authors/ada.png` is `public/images/authors/ada.png`.
+   * `https://graphify.com` and `https://www.graphify.com` with that same path are equivalent.
    */
   author_image_url?: string;
 };
@@ -40,7 +41,38 @@ export type Post = {
 
 export type Faq = { question: string; answer: string };
 
-const AUTHOR_IMAGE_FILE = /^\/authors\/[a-z0-9][a-z0-9.-]*\.(?:png|jpe?g|webp|gif)$/;
+const BLOG_IMAGE = /^\/images\/blog\/(?:[a-z0-9][a-z0-9.-]*\/)+[a-z0-9][a-z0-9.-]*\.(?:png|jpe?g|webp|gif)$/;
+
+/**
+ * Repo file for a portrait URL the website accepts.
+ * `public/images/<rest>` is published at `/images/blog/<rest>`.
+ */
+export function authorImageRepoFile(url: string): string {
+  let pathname = url;
+  if (url.startsWith("https://")) {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      throw new Error("author_image_url must be /images/blog/<file> on graphify.com");
+    }
+    const host = parsed.hostname.toLowerCase();
+    if (parsed.protocol !== "https:" || (host !== "graphify.com" && host !== "www.graphify.com") || parsed.search || parsed.hash) {
+      throw new Error("author_image_url must be /images/blog/<file> on graphify.com");
+    }
+    pathname = parsed.pathname;
+  }
+  if (!BLOG_IMAGE.test(pathname) || pathname.includes("..")) {
+    throw new Error("author_image_url must be /images/blog/<file> on graphify.com");
+  }
+  const rest = pathname.slice("/images/blog/".length);
+  const imagesDir = path.resolve(process.cwd(), "public", "images");
+  const file = path.resolve(imagesDir, ...rest.split("/"));
+  if (!file.startsWith(`${imagesDir}${path.sep}`)) {
+    throw new Error("author_image_url must stay inside public/images");
+  }
+  return file;
+}
 
 /** Portrait URL the site should render. A custom image wins; otherwise the GitHub avatar. */
 export function authorAvatarUrl(author: Pick<Author, "author_image_url" | "github">): string | undefined {
@@ -52,32 +84,17 @@ export function authorAvatarUrl(author: Pick<Author, "author_image_url" | "githu
 function optionalAuthorImage(value: unknown, id: string): string | undefined {
   if (value === undefined) return undefined;
   if (typeof value !== "string" || value.trim() === "") {
-    throw new Error(`authors.json: ${id} author_image_url must be /authors/<file> or an https URL`);
+    throw new Error(`authors.json: ${id} author_image_url must be /images/blog/<file> on graphify.com`);
   }
   const url = value.trim();
-  if (url.startsWith("/")) {
-    if (!AUTHOR_IMAGE_FILE.test(url) || url.includes("..")) {
-      throw new Error(`authors.json: ${id} author_image_url must look like /authors/name.png`);
-    }
-    const authorsDir = path.resolve(process.cwd(), "public", "authors");
-    const file = path.resolve(authorsDir, path.basename(url));
-    if (!file.startsWith(`${authorsDir}${path.sep}`)) {
-      throw new Error(`authors.json: ${id} author_image_url must stay inside public/authors`);
-    }
-    if (!fs.existsSync(file)) throw new Error(`authors.json: ${id} missing public${url}`);
-    if (fs.statSync(file).size > 1_500_000) throw new Error(`authors.json: ${id} author image is over 1.5 MB`);
-    return url;
-  }
-  let parsed: URL;
+  let file: string;
   try {
-    parsed = new URL(url);
-  } catch {
-    throw new Error(`authors.json: ${id} author_image_url must be /authors/<file> or an https URL`);
+    file = authorImageRepoFile(url);
+  } catch (error) {
+    throw new Error(`authors.json: ${id} ${(error as Error).message}`);
   }
-  const host = parsed.hostname.toLowerCase();
-  if (parsed.protocol !== "https:" || host === "graphify.net" || host.endsWith(".graphify.net")) {
-    throw new Error(`authors.json: ${id} author_image_url must be an https URL`);
-  }
+  if (!fs.existsSync(file)) throw new Error(`authors.json: ${id} author_image_url file is missing: ${path.relative(process.cwd(), file)}`);
+  if (fs.statSync(file).size > 1_500_000) throw new Error(`authors.json: ${id} author image is over 1.5 MB`);
   return url;
 }
 
@@ -130,7 +147,7 @@ export function loadAuthors(file = path.join(process.cwd(), "authors.json")): Re
     if (role !== undefined && typeof role !== "string") {
       throw new Error(`authors.json: ${id} role must be a string`);
     }
-    // graphify.com shows that handle's own GitHub picture, so no image lives here.
+    // When author_image_url is omitted, graphify.com uses this handle's GitHub picture.
     if (github !== undefined && !/^[a-zA-Z\d](?:[a-zA-Z\d]|-(?=[a-zA-Z\d])){0,38}$/.test(String(github))) {
       throw new Error(`authors.json: ${id} github must be a GitHub username`);
     }
