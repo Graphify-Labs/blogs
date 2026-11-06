@@ -13,6 +13,15 @@ tags:
   - graph
   - knowledge-graph
   - code-graph
+faq:
+  - question: "What is a code knowledge graph?"
+    answer: "A code knowledge graph is a knowledge graph built from a codebase. Functions, classes, config, and docs are nodes. Calls, imports, and references are typed edges between them. An assistant follows those edges to see how the pieces connect, instead of searching the repo as flat text."
+  - question: "How is a code knowledge graph different from grep?"
+    answer: "Grep returns the lines that contain a string. A code graph stores the relationship itself, a call or an import with a direction and a type. A call can exist when the names do not match. Grep for the original name finds the import and misses the call. The import edge still connects them."
+  - question: "When should an agent still use grep?"
+    answer: "Grep is the right tool when the question is really a search for a string. A misspelled word in a comment, or a URL in a config file, is a string to find. A string that never became a node or an edge is still a search, and grep is how you run it."
+  - question: "How do you build one with Graphify?"
+    answer: "In the project, /graphify . writes three files under graphify-out/: graph.html, GRAPH_REPORT.md, and graph.json. The package on PyPI is graphifyy. Sign in at Graphify Cloud and connect a repository to open the hosted map. The install steps above are the on-device path."
 ---
 
 A code knowledge graph is a knowledge graph built from a codebase. Functions, classes, config, and docs are nodes. Calls, imports, and references are typed edges between them. An assistant follows those edges to see how the pieces connect, instead of searching the repo as flat text.
@@ -61,7 +70,7 @@ When the code changes, `graphify update .` re-extracts the changed files. Inside
 
 There is no telemetry.
 
-Graphify is open source, Apache 2.0. Graphify Cloud at https://app.graphify.com is the hosted map, and it is a different product from this on-device setup.
+Graphify is open source, Apache 2.0. [Graphify Cloud](https://app.graphify.com) is the hosted map, and it is a different product from this on-device setup.
 
 ## Install
 
@@ -80,3 +89,23 @@ Then, in the project:
 ```
 
 First graph: [docs.graphify.com/guides/first-graph](https://docs.graphify.com/guides/first-graph).
+
+Sign in at [Graphify Cloud](https://app.graphify.com) and connect a repository to open the hosted map. The install steps above are the on-device path.
+
+## FAQ
+
+### What is a code knowledge graph?
+
+A code knowledge graph is a knowledge graph built from a codebase. Functions, classes, config, and docs are nodes. Calls, imports, and references are typed edges between them. An assistant follows those edges to see how the pieces connect, instead of searching the repo as flat text.
+
+### How is a code knowledge graph different from grep?
+
+Grep returns the lines that contain a string. A code graph stores the relationship itself, a call or an import with a direction and a type. A call can exist when the names do not match. Grep for the original name finds the import and misses the call. The import edge still connects them.
+
+### When should an agent still use grep?
+
+Grep is the right tool when the question is really a search for a string. A misspelled word in a comment, or a URL in a config file, is a string to find. A string that never became a node or an edge is still a search, and grep is how you run it.
+
+### How do you build one with Graphify?
+
+In the project, `/graphify .` writes three files under `graphify-out/`: `graph.html`, `GRAPH_REPORT.md`, and `graph.json`. The package on PyPI is `graphifyy`. Sign in at Graphify Cloud and connect a repository to open the hosted map. The install steps above are the on-device path.
