@@ -28,7 +28,7 @@ Teams scaled how fast software gets written. They did not scale how fast it gets
 
 ## Everyone is busy building
 
-Anthropic, OpenAI and Google each report that AI now writes 75% or more of their new code. A study of 2,135 open-source AI repositories found that regular contributors submitted a median 183% more code in mid-2026 than in early 2024. Teams everywhere are shipping faster than ever, and each one has a list of new problems that did not exist two years ago. They look like separate problems. They are not.
+Anthropic, OpenAI and Google each report that AI now writes 75% or more of their new code. A [study of 2,135 open-source AI repositories](https://www.alphaxiv.org/abs/2610.10064) found that regular contributors submitted a median 183% more code in mid-2026 than in early 2024. Teams everywhere are shipping faster than ever, and each one has a list of new problems that did not exist two years ago. They look like separate problems. They are not.
 
 ## Three decades plus of process, built for people
 
@@ -47,15 +47,15 @@ Let's look at the SDLC loop in more detail and see where things have broken down
 | Run | A person on call reads the logs and answers the alerts | AI workloads pushed log volume up 93% in a year, and organizations now drop 86% of their log data to manage cost (Dynatrace survey) | The on-call engineer's: more to read, less of it kept |
 | Maintain | Understanding builds up in the team as it works | Shared understanding erodes, unseen until the team is stuck | Everyone's, and the agent's: it re-reads the system every session |
 
-The tools are crumbling under the weight. Anthropic replaced Git because "the bottleneck, now, is all of the developer infrastructure built for human scale." Cursor rebuilt its Git hosting because agents create "vast numbers of small repositories, many of them throwaway." Most teams do not have the luxury of rewriting core SDLC tools from scratch.
+The tools are crumbling under the weight. Anthropic [replaced Git](https://www.anthropic.com/engineering/redesigning-source-control) because "the bottleneck, now, is all of the developer infrastructure built for human scale." Cursor rebuilt its Git hosting because agents create "vast numbers of small repositories, many of them throwaway." Most teams do not have the luxury of rewriting core SDLC tools from scratch.
 
 ## What broke underneath: comprehension
 
-Every row of that table breaks the same way: understanding cannot keep up, for people or for agents. "AI systems can generate code faster than developers can read or understand it," writes Margaret-Anne Storey. Teams have always shipped code they only partly understood; "what is new is the rate at which this gap can accumulate, and the difficulty of detecting it." More changes arrive than anyone can read, and the system changes before anyone learns it. That gap is comprehension debt.
+Every row of that table breaks the same way: understanding cannot keep up, for people or for agents. "AI systems can generate code faster than developers can read or understand it," writes [Margaret-Anne Storey](https://www.alphaxiv.org/abs/2603.22106). Teams have always shipped code they only partly understood; "what is new is the rate at which this gap can accumulate, and the difficulty of detecting it." More changes arrive than anyone can read, and the system changes before anyone learns it. That gap is comprehension debt.
 
-Agents carry it too. As tasks grow, coding agents do not mainly edit more; they spend more effort reading and analyzing code. Microsoft Research found that "the number of tool calls an agent spends to understand code predicts task difficulty better than line edit count." The correlations are weak, the authors note, but the direction is clear. And an agent forgets: every session re-reads the codebase, rebuilds a partial picture and throws it away. The debt people carry once, agents pay on every run.
+Agents carry it too. As tasks grow, coding agents do not mainly edit more; they spend more effort reading and analyzing code. [Microsoft Research](https://www.alphaxiv.org/abs/2610.10610) found that "the number of tool calls an agent spends to understand code predicts task difficulty better than line edit count." The correlations are weak, the authors note, but the direction is clear. And an agent forgets: every session re-reads the codebase, rebuilds a partial picture and throws it away. The debt people carry once, agents pay on every run.
 
-People used to pay it down by struggling. "When a developer writes code from scratch, even messy code, the friction and effort mean they build at least a partial mental model along the way," Storey writes. When an agent writes the code, the code arrives and the mental model does not. In a randomized trial at Anthropic, developers learning a new library with AI scored 17% lower on understanding, worse on debugging, and were not significantly faster: "AI-enhanced productivity is not a shortcut to competence." It is an old lesson: Lisanne Bainbridge's 1983 "Ironies of Automation" warned that the more a system is automated, the harder it is for people to oversee, as their skills fade. Friction does survive in chat, but a Stanford study of 250,000 Claude.ai conversations cautions that its findings "may not generalize" to agentic work. In agentic coding, the struggle disappears unless someone designs it back in.
+People used to pay it down by struggling. "When a developer writes code from scratch, even messy code, the friction and effort mean they build at least a partial mental model along the way," Storey writes. When an agent writes the code, the code arrives and the mental model does not. In a [randomized trial at Anthropic](https://www.alphaxiv.org/abs/2601.20245), developers learning a new library with AI scored 17% lower on understanding, worse on debugging, and were not significantly faster: "AI-enhanced productivity is not a shortcut to competence." It is an old lesson: Lisanne Bainbridge's 1983 "Ironies of Automation" warned that the more a system is automated, the harder it is for people to oversee, as their skills fade. Friction does survive in chat, but a Stanford study of 250,000 Claude.ai conversations cautions that its findings "may not generalize" to agentic work. In agentic coding, the struggle disappears unless someone designs it back in.
 
 ## From supervisors to collaborators
 
@@ -73,7 +73,7 @@ Version 2 is collaboration. Machine attention, the idea behind 2017's "Attention
 | Attention | Every diff, as far as it lasts | Routed by consequence |
 | Success | Output: changes merged | Intent and outcomes: customers, bugs, the needle moving |
 
-**Learning: think first, then delegate.** Nothing should ship that nobody understands. In a Google DeepMind experiment, the AI would only write once a person had set out their own position and one supporting argument; people did more of the thinking, took no longer, and later judged other work faster. Anthropic's coding trial found the same split between developers who used AI to understand and those who delegated. At scale, this has to live in the tools: ask for the approach (where the change goes, why, what it must not break) before the code, teach before telling, show people what skipping costs them, and explain every change to those who did not write it.
+**Learning: think first, then delegate.** Nothing should ship that nobody understands. In a [Google DeepMind experiment](https://www.alphaxiv.org/abs/2610.01518), the AI would only write once a person had set out their own position and one supporting argument; people did more of the thinking, took no longer, and later judged other work faster. Anthropic's coding trial found the same split between developers who used AI to understand and those who delegated. At scale, this has to live in the tools: ask for the approach (where the change goes, why, what it must not break) before the code, teach before telling, show people what skipping costs them, and explain every change to those who did not write it.
 
 **People's role: be the connective tissue.** Agents work inside a task; people work across them. The human work that matters most now is the collaboration that decides what gets built: product thinking about what customers actually need, systems thinking about how the pieces fit, and coordination across teams and the agents working for them. The engineers who built Anthropic's Scion rate Claude a better coder than themselves, yet they were the ones "making informed choices around the problems we wanted to solve." Some things cannot be handed off at all; as product managers in one study put it, "accountability must not be delegated to non-human actors."
 
@@ -115,27 +115,27 @@ In this post, supervision means agents write, agents check, and a person signs o
 
 ## Sources
 
-- Agile Manifesto authors, *History: The Agile Manifesto*, February 2001.
-- Anthropic Engineering, *Redesigning source control at Anthropic*, October 13, 2026.
-- Bainbridge, *Ironies of Automation*, Automatica, 1983.
-- Balepur, Tomlinson and Schnabel, *Code Understanding is a Bottleneck for Coding Agents*, Microsoft Research, October 2026.
-- Becker, Rush, Barnes and Rein, *Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity*, METR, 2025.
-- Bodkin, Sokhansanj and Hadfield, *Comprehension Audits to Mitigate Risks from Automated AI Research*, October 2026.
-- Brittain, *Tracking Every Release*, Etsy Code as Craft, December 8, 2010.
-- Cunningham, *The WyCash Portfolio Management System*, OOPSLA '92 Experience Report, 1992.
-- Dynatrace, *The State of Log Management 2026*, survey of 450 leaders by Coleman Parkes, June 17, 2026.
-- Fagan, *Design and Code Inspections to Reduce Errors in Program Development*, IBM Systems Journal, 1976.
-- Google Cloud, *Announcing the 2025 DORA report*, September 23, 2025.
-- Kewenig, Tankelevitch, Rintel, Sarkar and Sellen, *Metacognitive Scaffolds Create Productive Friction for AI-Assisted Knowledge Work*, Microsoft Research, 2026.
-- Kwa, West, Becker, Deng et al., *Measuring AI Ability to Complete Long Software Tasks*, METR, March 2025.
-- Maier, Schwabe, Schneider and Feuerriegel, *Designing Against Deskilling: Metacognitive Feedback Reduces Cognitive Offloading to LLM Assistants*, 2026.
-- Martí, *Git at any scale*, Cursor, August 18, 2026.
-- Schwaber, *SCRUM Development Process*, OOPSLA, 1995.
-- Shao, Zhao, Padmakumar, Wang and Yang, *Human–AI Collaboration at Scale*, Stanford, 2026; and Anthropic, *Enabling independent research on how people use Claude*, August 26, 2026.
-- Shen and Tamkin, *How AI Impacts Skill Formation*, Anthropic, January 2026.
-- SiliconANGLE, *Cursor acquires AI code review startup Graphite*, December 19, 2025.
-- Storey, *From Technical Debt to Cognitive and Intent Debt: Rethinking Software Health in the Age of AI*, 2026.
-- Su, Rimell, Li, Rannen-Triki, Paquet, Hendricks, Qadri, Ippolito and Mirowski, *Who Thinks First? Designing Productive Friction with Engage-to-Unlock GenAI*, Google DeepMind, October 2026.
-- Ulloa, Butler, Haniyur, Miller, Amos, Sarkar and Storey, *Product Manager Practices for Delegating Work to Generative AI: "Accountability must not be delegated to non-human actors"*, ICSE 2026.
-- Vaswani et al., *Attention Is All You Need*, 2017.
-- Wiggers, *Does AI Make the Agile Manifesto Obsolete?*, InfoQ, February 17, 2026.
+- Agile Manifesto authors, [History: The Agile Manifesto](https://agilemanifesto.org/history.html), February 2001.
+- Anthropic Engineering, [Redesigning source control at Anthropic](https://www.anthropic.com/engineering/redesigning-source-control), October 13, 2026.
+- Bainbridge, [Ironies of Automation](https://doi.org/10.1016/0005-1098\(83\)90046-8), Automatica, 1983.
+- Balepur, Tomlinson and Schnabel, [Code Understanding is a Bottleneck for Coding Agents](https://www.alphaxiv.org/abs/2610.10610), Microsoft Research, October 2026.
+- Becker, Rush, Barnes and Rein, [Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity](https://arxiv.org/abs/2507.09089), METR, 2025.
+- Bodkin, Sokhansanj and Hadfield, [Comprehension Audits to Mitigate Risks from Automated AI Research](https://www.alphaxiv.org/abs/2610.10064), October 2026.
+- Brittain, [Tracking Every Release](https://www.etsy.com/codeascraft/track-every-release), Etsy Code as Craft, December 8, 2010.
+- Cunningham, [The WyCash Portfolio Management System](https://doi.org/10.1145/157709.157715), OOPSLA '92 Experience Report, 1992.
+- Dynatrace, [The State of Log Management 2026](https://www.dynatrace.com/news/press-release/the-state-of-log-management-2026/), survey of 450 leaders by Coleman Parkes, June 17, 2026.
+- Fagan, [Design and Code Inspections to Reduce Errors in Program Development](https://doi.org/10.1147/sj.153.0182), IBM Systems Journal, 1976.
+- Google Cloud, [Announcing the 2025 DORA report](https://cloud.google.com/blog/products/ai-machine-learning/announcing-the-2025-dora-report), September 23, 2025.
+- Kewenig, Tankelevitch, Rintel, Sarkar and Sellen, [Metacognitive Scaffolds Create Productive Friction for AI-Assisted Knowledge Work](https://arxiv.org/abs/2610.30945), Microsoft Research, 2026.
+- Kwa, West, Becker, Deng et al., [Measuring AI Ability to Complete Long Software Tasks](https://arxiv.org/abs/2503.14499), METR, March 2025.
+- Maier, Schwabe, Schneider and Feuerriegel, [Designing Against Deskilling: Metacognitive Feedback Reduces Cognitive Offloading to LLM Assistants](https://arxiv.org/abs/2609.20143), 2026.
+- Martí, [Git at any scale](https://cursor.com/blog/git-at-any-scale), Cursor, August 18, 2026.
+- Schwaber, [SCRUM Development Process](https://www.cse.chalmers.se/~feldt/courses/agile/schwaber_1995_scrum_dev_process.pdf), OOPSLA, 1995.
+- Shao, Zhao, Padmakumar, Wang and Yang, [Human–AI Collaboration at Scale](https://www.alphaxiv.org/abs/2608.human-ai-collaboration-at-scale), Stanford, 2026; and Anthropic, [Enabling independent research on how people use Claude](https://www.anthropic.com/research/enabling-independent-research), August 26, 2026.
+- Shen and Tamkin, [How AI Impacts Skill Formation](https://www.alphaxiv.org/abs/2601.20245), Anthropic, January 2026.
+- SiliconANGLE, [Cursor acquires AI code review startup Graphite](https://siliconangle.com/2025/12/19/cursor-acquires-ai-code-review-startup-graphite/), December 19, 2025.
+- Storey, [From Technical Debt to Cognitive and Intent Debt: Rethinking Software Health in the Age of AI](https://www.alphaxiv.org/abs/2603.22106), 2026.
+- Su, Rimell, Li, Rannen-Triki, Paquet, Hendricks, Qadri, Ippolito and Mirowski, [Who Thinks First? Designing Productive Friction with Engage-to-Unlock GenAI](https://www.alphaxiv.org/abs/2610.01518), Google DeepMind, October 2026.
+- Ulloa, Butler, Haniyur, Miller, Amos, Sarkar and Storey, [Product Manager Practices for Delegating Work to Generative AI: "Accountability must not be delegated to non-human actors"](https://arxiv.org/abs/2510.02504), ICSE 2026.
+- Vaswani et al., [Attention Is All You Need](https://arxiv.org/abs/1706.03762), 2017.
+- Wiggers, [Does AI Make the Agile Manifesto Obsolete?](https://www.infoq.com/news/2026/02/ai-agile-manifesto-debate), InfoQ, February 17, 2026.
