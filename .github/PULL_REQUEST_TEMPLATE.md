@@ -9,7 +9,7 @@
 
 - [ ] File is `posts/YYYY-MM-DD-slug.mdx`
 - [ ] `date` matches the filename prefix
-- [ ] Every author id is in `authors.json` (add a new writer in this pull request)
+- [ ] Every author id is in `authors.json` (add your own entry if you are new; reuse it if you are already listed). Do not remove someone else's entry.
 - [ ] Images, if any, are in `public/images/<slug>/` and under 1.5 MB
 - [ ] Body is markdown: no `import`, `export`, `<script>`, or React components
 - [ ] Commands, flags, and numbers are real
