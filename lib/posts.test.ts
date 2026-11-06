@@ -143,6 +143,23 @@ describe("featured, faq and dates", () => {
     const featured = getPosts().filter((p) => p.featured).sort((a, b) => a.featuredRank! - b.featuredRank!);
     expect(featured[0].slug).toBe("graphify-octoverse-2026");
   });
+  it("keeps the pillar FAQ answers visible in the post body", () => {
+    const posts = getPosts();
+    for (const slug of ["what-is-a-code-knowledge-graph", "reduce-claude-code-token-usage"]) {
+      const post = posts.find((item) => item.slug === slug);
+      expect(post?.faq?.length).toBeGreaterThan(0);
+      const body = post!.body.replace(/`/g, "");
+      for (const item of post!.faq!) {
+        expect(body).toContain(item.question);
+        expect(body).toContain(item.answer.replace(/`/g, ""));
+      }
+    }
+    const eight = posts.find((item) => item.slug === "eight-million-downloads-in-six-months");
+    expect(eight?.updated).toBe("2026-11-06");
+    expect(eight?.body).toContain("/blog/graphify-cli-10-million-downloads");
+    expect(eight?.body).not.toMatch(/10,056,896|10,138,357/);
+  });
+
   it("hides a post until its IST date", () => {
     expect(todayIST(new Date("2026-11-05T18:29:00Z"))).toBe("2026-11-05");
     expect(todayIST(new Date("2026-11-05T18:31:00Z"))).toBe("2026-11-06");
