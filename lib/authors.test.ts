@@ -77,6 +77,8 @@ describe("author_image_url", () => {
     expect(bytes.readUInt32BE(20)).toBe(500);
     const registry = loadAuthors();
     expect(registry.safi?.role).toBe("Founder & CEO");
+    expect(registry.safi?.author_image_url).toBe("/images/blog/authors/safi.png");
+    expect(authorAvatarUrl(registry.safi!)).toBe("/images/blog/authors/safi.png");
     expect(registry.fahad?.role).toBe("Head of DevRel");
     const bruce = registry.bruce;
     expect(bruce?.name).toBe("Bruce Wang");
