@@ -5,7 +5,8 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) first. Open a pull request. Do not push 
 - One post per pull request: `posts/YYYY-MM-DD-slug.mdx`, images under `public/images/<slug>/`.
 - Copy [template/post.mdx](template/post.mdx).
 - Categories are only `guides`, `concepts`, `product`, `engineering`.
-- If the writer is not in `authors.json`, add them in the same pull request.
+- If the writer is not already in `authors.json`, add their own entry in the same pull request and use that id on the post. If they are already listed, reuse the id. Do not remove someone else's entry.
+- A portrait is optional. Leave `author_image_url` off and the site uses the GitHub avatar for the `github` handle. To use another picture, set `author_image_url` to `/authors/<file>.png` and put the file in `public/authors/`.
 - The body is markdown. No imports, exports, scripts, or React components.
 - Do not invent commands, flags, or numbers. The PyPI package is `graphifyy`. The site is graphify.com. If a figure comes from one person, name that person.
 - Order: the point, how it works, the honest limit, proof, then how to install.

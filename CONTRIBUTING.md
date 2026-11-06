@@ -45,11 +45,25 @@ imgSocial: og.png
 | `imgThumb` | no | Listing image. File name only |
 | `imgSocial` | no | Share card. File name only |
 
-If you are a new writer, add your id to `authors.json` in the same pull request: `name`, an optional `role`, an optional `github` handle, an optional `x` handle, and an optional `linkedin` slug (the part after `linkedin.com/in/`). The GitHub handle is only used to show your own picture beside your posts. X and LinkedIn are the links on your author page. No image is stored here.
+Before you open the pull request, every id in the post's `authors` list has to be in `authors.json`. If you are not listed yet, add your own entry in that same pull request and use that id on the post. If you are already listed, reuse your id. Do not remove or rewrite someone else's entry. Changing your own role, links, or picture is fine.
+
+A new entry needs a `name` and, so the site can show a picture, a `github` handle. `role` is optional. `x` is an X handle, not a URL. `linkedin` is the slug after `linkedin.com/in/`.
 
 ```json
-"your-id": { "name": "Your Name", "role": "What you do", "github": "your-handle", "x": "your_handle", "linkedin": "your-slug" }
+"ada": { "name": "Ada Lovelace", "github": "ada" }
 ```
+
+With no `author_image_url`, graphify.com uses `https://avatars.githubusercontent.com/ada`.
+
+A different portrait is optional. Put a png, jpg, webp, or gif under `public/authors/`, at most 1.5 MB, and set `author_image_url` to the site path. graphify.com uses that URL instead of the GitHub picture. Leave the field off to keep the GitHub picture.
+
+```json
+"ada": { "name": "Ada Lovelace", "github": "ada", "author_image_url": "/authors/ada.png" }
+```
+
+`/authors/ada.png` is the file `public/authors/ada.png`. An `https://` URL is also allowed. `graphify.net` is not.
+
+The check fails if an author id that exists on the base branch is missing from the pull request. That catches an accidental deletion. It does not freeze anyone's role or links, and it does not stop you adding a person. A maintainer who means to remove someone adds that id on its own line in `authors.removals`. Blank lines and `#` comments in that file do not count.
 
 Someone who does not use git can open the file on GitHub, choose **Edit**, and submit the pull request from the web editor.
 
