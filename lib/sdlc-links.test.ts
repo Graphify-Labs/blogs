@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-const file = path.join(process.cwd(), "posts", "2026-11-06-agents-took-over-your-sdlc.mdx");
+const file = path.join(process.cwd(), "posts", "2026-11-03-agents-took-over-your-sdlc.mdx");
 
 /** Inline links, including destinations that escape parentheses. */
 export function markdownLinks(text: string): { anchor: string; url: string }[] {
