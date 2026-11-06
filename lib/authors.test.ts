@@ -75,8 +75,15 @@ describe("author_image_url", () => {
     expect(bytes.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
     expect(bytes.readUInt32BE(16)).toBe(500);
     expect(bytes.readUInt32BE(20)).toBe(500);
-    const bruce = loadAuthors().bruce;
+    const registry = loadAuthors();
+    expect(registry.safi?.role).toBe("Founder/CEO");
+    expect(registry.fahad?.role).toBe("Head of DevRel");
+    const bruce = registry.bruce;
     expect(bruce?.name).toBe("Bruce Wang");
+    expect(bruce?.role).toBe("Startup Advisor/Investor");
+    expect(bruce?.github).toBe("batmany13");
+    expect(bruce?.x).toBe("batmany13");
+    expect(bruce?.linkedin).toBe("batmany13");
     expect(bruce?.author_image_url).toBe("/images/blog/authors/bruce.png");
     expect(authorAvatarUrl(bruce!)).toBe("/images/blog/authors/bruce.png");
   });
