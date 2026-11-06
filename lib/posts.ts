@@ -9,6 +9,13 @@ export type Author = {
   github?: string;
   x?: string;
   linkedin?: string;
+  /**
+   * Optional portrait. graphify.com uses this when set, otherwise
+   * `https://avatars.githubusercontent.com/<github>`.
+   * The value is a blogs image: `/images/blog/authors/ada.png` is `public/images/authors/ada.png`.
+   * `https://graphify.com` and `https://www.graphify.com` with that same path are equivalent.
+   */
+  author_image_url?: string;
 };
 
 export type Post = {
@@ -33,6 +40,63 @@ export type Post = {
 };
 
 export type Faq = { question: string; answer: string };
+
+const BLOG_IMAGE = /^\/images\/blog\/(?:[a-z0-9][a-z0-9.-]*\/)+[a-z0-9][a-z0-9.-]*\.(?:png|jpe?g|webp|gif)$/;
+
+/**
+ * Repo file for a portrait URL the website accepts.
+ * `public/images/<rest>` is published at `/images/blog/<rest>`.
+ */
+export function authorImageRepoFile(url: string): string {
+  let pathname = url;
+  if (url.startsWith("https://")) {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      throw new Error("author_image_url must be /images/blog/<file> on graphify.com");
+    }
+    const host = parsed.hostname.toLowerCase();
+    if (parsed.protocol !== "https:" || (host !== "graphify.com" && host !== "www.graphify.com") || parsed.search || parsed.hash) {
+      throw new Error("author_image_url must be /images/blog/<file> on graphify.com");
+    }
+    pathname = parsed.pathname;
+  }
+  if (!BLOG_IMAGE.test(pathname) || pathname.includes("..")) {
+    throw new Error("author_image_url must be /images/blog/<file> on graphify.com");
+  }
+  const rest = pathname.slice("/images/blog/".length);
+  const imagesDir = path.resolve(process.cwd(), "public", "images");
+  const file = path.resolve(imagesDir, ...rest.split("/"));
+  if (!file.startsWith(`${imagesDir}${path.sep}`)) {
+    throw new Error("author_image_url must stay inside public/images");
+  }
+  return file;
+}
+
+/** Portrait URL the site should render. A custom image wins; otherwise the GitHub avatar. */
+export function authorAvatarUrl(author: Pick<Author, "author_image_url" | "github">): string | undefined {
+  if (author.author_image_url) return author.author_image_url;
+  if (author.github) return `https://avatars.githubusercontent.com/${author.github}`;
+  return undefined;
+}
+
+function optionalAuthorImage(value: unknown, id: string): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new Error(`authors.json: ${id} author_image_url must be /images/blog/<file> on graphify.com`);
+  }
+  const url = value.trim();
+  let file: string;
+  try {
+    file = authorImageRepoFile(url);
+  } catch (error) {
+    throw new Error(`authors.json: ${id} ${(error as Error).message}`);
+  }
+  if (!fs.existsSync(file)) throw new Error(`authors.json: ${id} author_image_url file is missing: ${path.relative(process.cwd(), file)}`);
+  if (fs.statSync(file).size > 1_500_000) throw new Error(`authors.json: ${id} author image is over 1.5 MB`);
+  return url;
+}
 
 /** Today's date in India (UTC+5:30), the day graphify.com publishes on. */
 export function todayIST(now = new Date()): string {
@@ -76,13 +140,14 @@ export function loadAuthors(file = path.join(process.cwd(), "authors.json")): Re
     const github = (value as { github?: unknown }).github;
     const x = (value as { x?: unknown }).x;
     const linkedin = (value as { linkedin?: unknown }).linkedin;
+    const authorImage = (value as { author_image_url?: unknown }).author_image_url;
     if (typeof name !== "string" || name.trim() === "") {
       throw new Error(`authors.json: ${id} needs a name`);
     }
     if (role !== undefined && typeof role !== "string") {
       throw new Error(`authors.json: ${id} role must be a string`);
     }
-    // graphify.com shows that handle's own GitHub picture, so no image lives here.
+    // When author_image_url is omitted, graphify.com uses this handle's GitHub picture.
     if (github !== undefined && !/^[a-zA-Z\d](?:[a-zA-Z\d]|-(?=[a-zA-Z\d])){0,38}$/.test(String(github))) {
       throw new Error(`authors.json: ${id} github must be a GitHub username`);
     }
@@ -97,6 +162,8 @@ export function loadAuthors(file = path.join(process.cwd(), "authors.json")): Re
     if (typeof github === "string") authors[id].github = github;
     if (typeof x === "string") authors[id].x = x;
     if (typeof linkedin === "string") authors[id].linkedin = linkedin;
+    const image = optionalAuthorImage(authorImage, id);
+    if (image) authors[id].author_image_url = image;
   }
   return authors;
 }
