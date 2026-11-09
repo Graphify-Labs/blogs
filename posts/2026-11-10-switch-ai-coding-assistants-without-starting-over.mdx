@@ -1,6 +1,6 @@
 ---
 title: "How to switch AI coding assistants without starting over"
-description: "How to switch AI coding assistants without starting over: what moves with you, what does not, and how to reconnect your code knowledge graph."
+description: "How to switch AI coding assistants without starting over: what moves with you, what does not, and how to sign a new client in to your code knowledge graph."
 date: "2026-11-10"
 keyword: switch ai coding assistants
 authors:
@@ -18,16 +18,16 @@ tags:
   - code-knowledge-graph
 faq:
   - question: "Do I lose my code graph when I switch AI coding assistants?"
-    answer: "No. The graph is files in your project, in a folder called graphify-out/. It does not belong to any one assistant. Each assistant needs its own setup step, which adds that assistant's instruction file, but the graph stays where it is."
+    answer: "No. The graph lives in your Graphify account, built from the repositories you connect, not inside any one assistant. A new assistant signs in to the same account and reads the same graph."
   - question: "Does Graphify move my chat history, settings or subscriptions?"
     answer: "No. Graphify does not move chat history, settings or subscriptions between tools. Export what you need from the tool you are leaving."
-  - question: "Do I need MCP to use Graphify with a new assistant?"
-    answer: "Not for Claude Code, Cursor or Codex. Their default setup is a skill, rules file or instruction file plus the command line, and the MCP server is an optional extra. For VS Code and GitHub Copilot, the install commands add a skill and instruction files, and you can add the MCP server to their MCP config."
-  - question: "Should I use hosted Graphify or the open-source command line?"
-    answer: "Use hosted Graphify when the code is on GitHub or GitLab and you want the graph shared and rebuilt for you. Use the command line when the code must stay on your machine or you want no account."
+  - question: "Do I need an API key to connect a new assistant?"
+    answer: "No. Every client connects to one MCP server URL, https://api.graphify.com/mcp, and signs in through OAuth in the browser. There is no API key to paste."
+  - question: "Does Graphify see my uncommitted changes?"
+    answer: "No. The hosted server serves the indexed graph, which Graphify rebuilds on every push to the default branch. For work that is not pushed yet, the agent reads your files directly."
 ---
 
-To switch AI coding assistants without starting over, keep what lives in your repository and reconnect it to the new tool. A code knowledge graph is a set of files in your project, so it does not move or disappear when you change clients. Run the new assistant's Graphify setup, then export anything the old tool held.
+To switch AI coding assistants without starting over, keep your code knowledge graph in Graphify and sign the new assistant in to it. The graph lives in your Graphify account, not inside any one tool, so every client reads the same graph. Export what the old tool held, then connect the new one.
 
 ## What is changing in AI coding tools right now?
 
@@ -47,38 +47,32 @@ What you can keep is the map of your codebase. A code knowledge graph is a knowl
 
 ## Does the code graph carry over to a new assistant?
 
-Yes, because it is not stored inside any assistant. The open-source engine writes a `graphify-out/` folder in your project with `graph.json` (the queryable graph), `graph.html` (an interactive view) and `GRAPH_REPORT.md` (highlights and suggested questions). The integration pages describe it as shared context of the codebase for the assistant and your team.
+Yes, because it is not stored inside any assistant. In Graphify you connect a repository, switch on indexing, and Graphify builds the graph and serves it to your coding agent over a hosted MCP server. The graph lives in your Graphify account, built from the repositories you connect. A new client signs in to the same account, picks the workspace that holds your repositories, and gets the same graph.
 
-What changes per tool is how the assistant is told to use the graph. Each client gets its own small setup step, and the table below lists what each one writes. If you prefer not to run anything locally, hosted Graphify builds the graph from the GitHub or GitLab repositories you connect, and any MCP client that supports remote HTTP servers can read it. [Connect any MCP client to a code graph](/blog/connect-any-mcp-client-to-a-code-graph) has the steps.
+It also stays current without you doing anything. Graphify rebuilds the graph on every push to the default branch and re-processes only the files that changed, as described in [how Graphify keeps your graph fresh](https://docs.graphify.com/platform/keep-the-graph-fresh).
 
 ## How do I connect each assistant?
 
-First install the package once. The package on PyPI is `graphifyy`, with two y's.
+Every client uses the same server, `https://api.graphify.com/mcp`, which is Streamable HTTP with OAuth. You sign in once in the browser and there is no API key to paste. Each row below comes from that client's Graphify setup page, so open the page for the full steps and fixes.
 
-```bash
-uv tool install graphifyy
-```
+| Assistant | How you connect | Setup page |
+| --- | --- | --- |
+| Claude Code | `claude mcp add --transport http --scope user graphify https://api.graphify.com/mcp`, then run `/mcp`, select graphify and choose Authenticate | [Graphify for Claude Code](https://docs.graphify.com/integrations/claude-code) |
+| Cursor | One-click install link on the page, or add the server URL to `~/.cursor/mcp.json`, then finish the sign-in from Cursor's MCP settings | [Graphify for Cursor](https://docs.graphify.com/integrations/cursor) |
+| Codex | Install the Graphify plugin from the OpenAI plugin directory and select Connect, or run `codex mcp add graphify --url https://api.graphify.com/mcp` and then `codex mcp login graphify` | [Graphify for Codex](https://docs.graphify.com/integrations/codex) |
+| VS Code | Install the Graphify MCP extension from the Visual Studio Marketplace (VS Code 1.102 or later), or add the server to `mcp.json`. VS Code handles the sign-in | [Graphify for VS Code and GitHub Copilot](https://docs.graphify.com/integrations/vscode) |
+| GitHub Copilot CLI | `copilot mcp add --transport http graphify https://api.graphify.com/mcp`. It signs in on first connect | [Graphify MCP: connect your coding agent](https://docs.graphify.com/platform/graphify-mcp) |
 
-Then run the setup command for the assistant you moved to. Each row below comes from that tool's integration page, so check the page for the full steps and troubleshooting.
-
-| Assistant | Setup command | What it adds | MCP |
-| --- | --- | --- | --- |
-| [Claude Code](/integrations/claude-code) | `graphify install`, then `graphify claude install` in the repo | The `/graphify` skill, a section in `CLAUDE.md`, and hooks that steer Claude Code to the graph before it greps | Optional, in `.mcp.json`, with the `graphifyy[mcp]` extra |
-| [Cursor](/integrations/cursor) | `graphify cursor install` | One always-on rule, `.cursor/rules/graphify.mdc`. No hooks and no background process | Optional, in `.cursor/mcp.json` |
-| [Codex](/integrations/codex) | `graphify codex install --project` | A section in `AGENTS.md`, the skill under `.codex/skills/`, and `.codex/hooks.json`. Build with `$graphify`, not `/graphify` | Optional, in `~/.codex/config.toml` |
-| [VS Code](/integrations/vs-code) | `graphify vscode install` | The skill, and `.github/copilot-instructions.md` for Copilot Chat | Optional manual add to VS Code's MCP config, or hosted Graphify over MCP |
-| [GitHub Copilot](/integrations/github-copilot) | `graphify copilot install` | The `/graphify` skill for Copilot CLI in `~/.copilot/skills/`. For Copilot Chat in VS Code, run `graphify vscode install` | Optional manual add for Copilot CLI, or hosted Graphify over MCP |
-
-Bare `graphify install` only sets up Claude Code, so use the command for your assistant. If the graph is not built yet, type `/graphify .` in the assistant (`$graphify .` in Codex) and wait for `graphify-out/` to appear. All of the integrations are listed on the [integrations page](/integrations), and the command reference is in the [Graphify docs](https://docs.graphify.com).
+For Copilot in VS Code, use the VS Code row. Copilot on github.com cannot connect yet: the docs say its coding agent and code review only support static header credentials, so they cannot use this endpoint. Not on the list? [Graphify for other MCP clients](https://docs.graphify.com/integrations/other-agents) covers any client that supports remote HTTP servers, and [connect any MCP client to a code graph](/blog/connect-any-mcp-client-to-a-code-graph) walks through it.
 
 ## What is a quick checklist for switching?
 
 1. Export what you want to keep from the old tool: chats, rules, settings. Graphify does not do this for you.
-2. Sign up at [app.graphify.com/signup](https://app.graphify.com/signup) if you want the hosted graph. Or run `uv tool install graphifyy` for the open-source command line, with no account.
-3. Run the setup command for the new assistant from the table.
-4. Build the graph if `graphify-out/` is not there yet.
-5. Ask the new assistant a structural question you already know the answer to, such as what calls a function you wrote. If the answer matches, you are set.
-6. Keep the graph current. A local graph does not update itself. Run `graphify update .` after edits, or `graphify hook install` to refresh it on commit and checkout.
+2. Sign up at [app.graphify.com/signup](https://app.graphify.com/signup). The Free plan covers up to 3 repositories and needs no card.
+3. Connect your repository, switch on indexing, and wait for the status to show Indexed. The [quickstart](https://docs.graphify.com/platform/quickstart) walks through it.
+4. Add the Graphify server to the new assistant using the table above, and finish the browser sign-in. Choose the workspace that holds your repositories.
+5. Check the connection. Paste this into the assistant: `Use Graphify's list_repositories tool and show the repositories I can access. If the tool fails, report the error instead of guessing.` The list should match your workspace. [Check your agent is using Graphify](https://docs.graphify.com/platform/verify-connection) has fixes if it does not.
+6. Ask a structural question you already know the answer to, such as what calls a function you wrote. If the answer matches, you are set.
 
 ## What if I use Conductor Cloud?
 
@@ -93,24 +87,26 @@ Graphify does not have a Conductor integration, so this guide does not cover wir
 
 ## What does Graphify not do?
 
-It does not move chat history, settings or subscriptions. It does not replace anything your assistant does on its own, such as autocomplete or which models you can use. It also will not make a small repository easier to work in: a graph helps most when a question spans many files in a large or unfamiliar codebase. And assistants tend to reach for grep unless told otherwise, which is why each setup step above writes an instruction file or hook. [Tell your agent to use the graph](/blog/tell-your-agent-to-use-the-graph) has a rule you can copy. To choose between hosted and local, read [Graphify open source vs hosted](/blog/graphify-open-source-vs-hosted).
+It does not move chat history, settings or subscriptions. It does not replace anything your assistant does on its own, such as autocomplete or which models you can use. It serves the indexed graph, so it does not see changes you have not pushed. And an assistant may reach for grep unless it is told to use the graph, which is why the quickstart gives you a rules block to copy into your agent's instructions file. [Tell your agent to use the graph](/blog/tell-your-agent-to-use-the-graph) has a rule you can copy.
+
+If your code has to stay on your machine, the open-source Graphify CLI builds a graph locally instead. [Graphify vs Graphify CLI](https://docs.graphify.com/platform/graphify-vs-local) compares the two.
 
 ## What do people ask most about switching?
 
 ### Do I lose my code graph when I switch AI coding assistants?
 
-No. The graph is files in your project, in a folder called `graphify-out/`. It does not belong to any one assistant. Each assistant needs its own setup step, which adds that assistant's instruction file, but the graph stays where it is.
+No. The graph lives in your Graphify account, built from the repositories you connect, not inside any one assistant. A new assistant signs in to the same account and reads the same graph.
 
 ### Does Graphify move my chat history, settings or subscriptions?
 
 No. Graphify does not move chat history, settings or subscriptions between tools. Export what you need from the tool you are leaving.
 
-### Do I need MCP to use Graphify with a new assistant?
+### Do I need an API key to connect a new assistant?
 
-Not for Claude Code, Cursor or Codex. Their default setup is a skill, rules file or instruction file plus the command line, and the MCP server is an optional extra. For VS Code and GitHub Copilot, the install commands add a skill and instruction files, and you can add the MCP server to their MCP config. The [MCP server glossary entry](/glossary/mcp-server) explains the term.
+No. Every client connects to one MCP server URL, `https://api.graphify.com/mcp`, and signs in through OAuth in the browser. There is no API key to paste. The [MCP server glossary entry](/glossary/mcp-server) explains the term.
 
-### Should I use hosted Graphify or the open-source command line?
+### Does Graphify see my uncommitted changes?
 
-Use hosted Graphify when the code is on GitHub or GitLab and you want the graph shared and rebuilt for you. Use the command line when the code must stay on your machine or you want no account.
+No. The hosted server serves the indexed graph, which Graphify rebuilds on every push to the default branch. For work that is not pushed yet, the agent reads your files directly.
 
-Start with [Graphify at app.graphify.com/signup](https://app.graphify.com/signup), or install the package with `uv tool install graphifyy`.
+Start with [Graphify at app.graphify.com/signup](https://app.graphify.com/signup).
