@@ -1,0 +1,139 @@
+---
+title: "Stale CLAUDE.md and AGENTS.md: why agents follow them, and the fix"
+seoTitle: "AGENTS.md best practices: when the file goes stale"
+description: "AGENTS.md best practices for a file that has gone stale: why agents follow it over the code, the one sentence that fixes most of it, and habits that stop drift."
+date: "2026-10-28"
+keyword: agents.md best practices
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - agents
+  - claude-code
+  - codex
+  - claude-md
+  - code-review
+faq:
+  - question: "Should the precedence sentence go in the project AGENTS.md or the user-level file?"
+    answer: "The study tested the user-level file only, which is ~/.claude/CLAUDE.md for Claude Code and ~/.codex/AGENTS.md for Codex. A copy in the project file is a reasonable extra. If you put it in the project file, a stale file can still outrank it, so the user-level file is the safer home."
+  - question: "Does Claude Code read AGENTS.md?"
+    answer: "Yes. Since Claude Code v2.1.277 it reads AGENTS.md when there is no CLAUDE.md in the working directory or above it. If you have both files, it reads CLAUDE.md only, unless you import AGENTS.md from CLAUDE.md with @AGENTS.md."
+  - question: "What if a migration is in progress and the file is meant to override the code?"
+    answer: "Say so inside the file. For example: new code uses logging, leave the old print calls alone for now. The sentence tells the agent to follow the code when the two disagree, so a deliberate rule needs to explain itself."
+  - question: "How often should I review AGENTS.md or CLAUDE.md?"
+    answer: "Whenever the structure, commands or conventions it describes change, ideally in the same commit. Anthropic also suggests reviewing the files periodically, and you can run /doctor prompt-audit in Claude Code to look for outdated or conflicting lines."
+  - question: "Does a code graph replace AGENTS.md?"
+    answer: "No. A graph answers structure questions such as where something lives and what calls it. Conventions, commands and the reasons behind decisions still belong in the file."
+---
+
+Coding agents follow a stale AGENTS.md or CLAUDE.md because the file arrives as an instruction and the code arrives as tool output, which models rank lower. In a 2026 study, agents followed the stale file in 90.1% of choices. One sentence in your user-level file fixes most of it. Below are the evidence, the sentence and the AGENTS.md best practices that stop the drift.
+
+## Why do coding agents follow a stale AGENTS.md or CLAUDE.md?
+
+Because of how the two sources reach the model. Xiaonan Xu and Wenjing Wu tested this in ["Stale Instruction Files Override the Code in Coding Agents: A One-Sentence Fix"](https://arxiv.org/abs/2610.30571), posted to arXiv on October 22, 2026. They built 40 small Python projects where the instruction file asks for one convention and the existing code uses another, such as `print` in the file and `logging` in the code. Then they had Claude Code and Codex CLI add a feature to each one, 320 runs in total.
+
+- Without any fix, 90.1% of the agents' choices followed the stale file. Only 4.2% followed the code.
+- Claude Code named the conflict in 79 of 80 runs and still followed the file.
+- Codex CLI rewrote existing code to match the file in 20 of 80 runs, and the project's own tests then failed in 17 of those.
+
+The authors' explanation is that the instruction file is delivered to the model as an instruction, while the code only shows up as the output of a file reading tool. Models are trained to put instructions ahead of tool output, which protects agents from prompt injection. The same training gives a stale line the priority of an instruction over the code it used to describe.
+
+Claude Code's own docs say something similar in plainer words: CLAUDE.md content is [delivered as a user message after the system prompt](https://code.claude.com/docs/en/memory), and there is no guarantee of strict compliance. Whatever is in the file, the agent treats as the brief.
+
+## How common are stale instruction files?
+
+Common enough to plan for. The same paper cites a study of 441 company repositories in which 73.8% of AI configuration files were committed once and never modified. It also points to Supabase, where a skill file kept telling agents for 13 days that the dashboard used React 18 after it moved to React 19, and to the Codex repository, where an AGENTS.md asked agents for 24 days to update a document that had already been deleted.
+
+A separate paper, [Context Rot in AI-Assisted Software Development](https://arxiv.org/abs/2606.09090) by Christoph Treude and Sebastian Baltes, ran an existing documentation checker over a sample of 356 public repositories and found stale references to code in 23.0% of them. The authors call that a feasibility signal, not a precise rate, since some of what the checker flagged was a false positive. Their examples are ordinary: a renamed function, a deleted script, a file path that moved.
+
+## What is the one sentence that fixes it?
+
+The study added one sentence to the user-level instruction file, `~/.claude/CLAUDE.md` for Claude Code and `~/.codex/AGENTS.md` for Codex CLI:
+
+```md
+When a repository's documentation and its existing code disagree, follow the conventions used in the existing code, and in your final reply point out each inconsistency you found between the documentation and the code.
+```
+
+With it, the share of choices that followed the code went from 4.2% to 91.4%. No Codex run rewrote existing code, and the test pass rate went from 89.4% to 100%. Both agents reported the conflicts they found in all 160 runs with the sentence, which gives you a free list of lines to fix.
+
+Two practical notes:
+
+- **Codex override files.** [The Codex docs](https://developers.openai.com/codex/guides/agents-md) say Codex reads `AGENTS.override.md` in your Codex home directory if it exists, and otherwise `AGENTS.md`, and uses only the first non-empty file at that level. If you keep an override file there, put the sentence in it, or it will never load.
+- **Where it was tested.** The study ran Claude Code and Codex CLI on Python projects, with the sentence in the user-level file.
+
+## Does Claude Code read CLAUDE.md or AGENTS.md?
+
+Both, with a rule. Claude Code started reading AGENTS.md in [v2.1.277, released on September 18, 2026](https://github.com/anthropics/claude-code/releases/tag/v2.1.277). According to the [Claude Code memory docs](https://code.claude.com/docs/en/memory), this is what it reads by default:
+
+| Your repository has | Claude Code reads |
+| --- | --- |
+| An `AGENTS.md`, and no `CLAUDE.md` or `CLAUDE.local.md` in the working directory or above | `AGENTS.md` |
+| An `AGENTS.md` and a `CLAUDE.md` or `CLAUDE.local.md` in the working directory or above | `CLAUDE.md` files only |
+| A `CLAUDE.md` that imports `AGENTS.md` | `CLAUDE.md`, with `AGENTS.md` included through the import |
+
+If you want one source of truth, keep the shared rules in AGENTS.md and make a `CLAUDE.md` that starts with `@AGENTS.md`, then add anything Claude specific below it. The docs also describe a symlink, though they recommend the import on Windows. Either way you maintain one file, so there is only one place for a line to go stale. The [agents.md site](https://agents.md) lists Cursor, Gemini CLI, GitHub Copilot's coding agent, Aider, Zed and many others as tools that work with AGENTS.md, so the shared file travels.
+
+## What are the AGENTS.md best practices that prevent drift?
+
+Keep the file small and only put in things that stay true or that you will notice changing. The [Agentic AI Foundation's guide to writing an effective AGENTS.md](https://aaif.io/blog/writing-an-effective-agents-md) offers a test for every line: would knowing this change what the agent does? If not, it probably belongs somewhere else.
+
+- **Change the file in the same commit as the code.** The AAIF guide gives the example: if the build moves from npm to pnpm, the commands need to change, and an old warning about a generated directory's previous path is worse than no warning.
+- **Remove lines that no longer change behavior.** The AAIF guide says instructions that no longer affect decisions should go. Every extra line is one more thing that can go out of date.
+- **Skip what the code already shows.** The AAIF guide says a directory listing copied into AGENTS.md adds much less than the meaning behind the structure, such as which package owns a feature and what must not import what.
+- **Move enforceable rules into tools.** If a formatter or a linter can enforce a rule, put it there. The file can mention the tool, but it should not be the only thing standing in the way.
+- **Treat it as living documentation.** That is how the agents.md site describes it, and it means it gets reviewed like code.
+- **Run the audit.** Claude Code v2.1.283, released on September 25, 2026, added `/doctor prompt-audit`. It looks for instructions written for older models, references to files or commands that do not exist, and files that contradict each other. It proposes edits and changes nothing until you ask. By default it covers CLAUDE.md, CLAUDE.local.md and AGENTS.md.
+
+For the longer split of what belongs in the file and what does not, read [CLAUDE.md best practices: what belongs vs a code graph](/blog/claude-md-vs-a-code-graph-what-belongs-where). For the rules that tell an agent to use a graph before it greps, see [tell your agent to use the graph](/blog/tell-your-agent-to-use-the-graph).
+
+## Can you catch stale lines in CI?
+
+Partly, yes. Treude and Baltes point out that the check they used is a plain `git grep` comparison that runs in CI: take the code elements the file mentions and flag any that existed when the file was written and are gone now. You can start smaller. This snippet checks that every path written in backticks in AGENTS.md still exists:
+
+```bash
+grep -oE '`[A-Za-z0-9_./-]+/[A-Za-z0-9_.-]+`' AGENTS.md | tr -d '`' | sort -u |
+while read -r path; do
+  [ -e "$path" ] || echo "AGENTS.md mentions $path, which does not exist"
+done
+```
+
+Run it on pull requests that touch the repository layout. It catches moved and deleted paths, and nothing about conventions, which still need a human reading the file.
+
+## Does Graphify check for stale docs?
+
+Yes. [Graphify](https://app.graphify.com/signup) reviews pull requests, and the review has a Stale docs check. It is on by default, you can switch it off per repository, and it is advisory only. When a pull request adds or removes a function or class definition, the review lists the sections of git tracked `.md`, `.markdown`, `.mdx` and `.rst` files that mention that name. Because CLAUDE.md and AGENTS.md are `.md` files, they are included.
+
+It points you straight at the sections to update. The [reviews docs](https://docs.graphify.com/platform/reviews) explain the repository settings.
+
+## How do you keep structure out of the file in the first place?
+
+Do not write down what the code can tell the agent. Lines like "the billing code lives in `services/billing`" are the ones that go stale first, because they describe the code. Questions about where something lives, who calls it and what a change touches are better answered from a [code knowledge graph](/glossary/knowledge-graph) that Graphify rebuilds when you push, as described in [how to keep a code graph fresh on every push](/blog/keep-a-code-graph-fresh-on-every-push). The file keeps conventions, commands and the reasons behind decisions, and a single line pointing the agent at the graph.
+
+## Try it
+
+Add the sentence to your user-level file today, then open your project's AGENTS.md and delete every line that describes code instead of instructing the agent. If you want reviews that surface docs mentioning changed code, and a graph your agents can query for structure, [connect a repository in Graphify](https://app.graphify.com/signup).
+
+## FAQ
+
+### Should the precedence sentence go in the project AGENTS.md or the user-level file?
+
+The study tested the user-level file only, which is `~/.claude/CLAUDE.md` for Claude Code and `~/.codex/AGENTS.md` for Codex. A copy in the project file is a reasonable extra. If you put it in the project file, a stale file can still outrank it, so the user-level file is the safer home.
+
+### Does Claude Code read AGENTS.md?
+
+Yes. Since Claude Code v2.1.277 it reads AGENTS.md when there is no CLAUDE.md in the working directory or above it. If you have both files, it reads CLAUDE.md only, unless you import AGENTS.md from CLAUDE.md with `@AGENTS.md`.
+
+### What if a migration is in progress and the file is meant to override the code?
+
+Say so inside the file. For example: new code uses logging, leave the old print calls alone for now. The sentence tells the agent to follow the code when the two disagree, so a deliberate rule needs to explain itself.
+
+### How often should I review AGENTS.md or CLAUDE.md?
+
+Whenever the structure, commands or conventions it describes change, ideally in the same commit. Anthropic also suggests reviewing the files periodically, and you can run `/doctor prompt-audit` in Claude Code to look for outdated or conflicting lines.
+
+### Does a code graph replace AGENTS.md?
+
+No. A graph answers structure questions such as where something lives and what calls it. Conventions, commands and the reasons behind decisions still belong in the file.
