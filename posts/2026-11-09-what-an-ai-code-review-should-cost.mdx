@@ -1,0 +1,119 @@
+---
+title: "What an AI code review should cost"
+description: "What should an AI code review cost? Public pricing, bills and noisy comments, and why a review should follow what a change reaches, not the whole repo."
+date: "2026-11-09"
+keyword: ai code review cost
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - code-review
+  - ai-review
+  - knowledge-graph
+faq:
+  - question: "What should an AI code review cost?"
+    answer: "Vendors publish figures from about 25 cents to $1.50 for an average review in 2026, and some bill by tokens with no flat price at all. A better question is whether the cost follows the change. A small change should cost little, and a change that many other functions depend on is worth more."
+  - question: "Why do AI code reviews get expensive?"
+    answer: "Mostly because of how often they run and how much they read. Several vendors document that reviewing on every push multiplies the cost by the number of pushes, and that bigger repositories mean more surrounding code to read."
+  - question: "Why do AI code review comments get noisy?"
+    answer: "Some noise is style nitpicks, and some is wrong findings from a reviewer that never saw the code that handles the case, such as a guard in a caller. The second kind is a context problem, so it helps to show the reviewer the code a change reaches."
+  - question: "Does Graphify run an AI review on every push?"
+    answer: "No. A review runs when a pull request opens or when someone asks with @graphify review. Quick bursts of pushes collapse into one run."
+  - question: "What context does a Graphify review get?"
+    answer: "The pull request diff plus compact graph context for the changed code: the functions that call it and the ones it calls, one step each way, with short excerpts for the most widely used changes. It does not get whole files or the whole repository."
+---
+
+An AI code review should cost about what the change deserves: little for a one-line typo fix, more for a change many functions depend on. Most billing follows tokens, diff size or how often a bot runs instead. The fairer design is to review what a change reaches, not reread the whole repo on every push.
+
+## What does an AI code review cost today?
+
+Prices moved a lot in 2026. Here is what vendors have published, with dates. These are the vendors' own figures, and they measure different things (a run, a kilobyte, a credit), so treat the table as a map and not a ranking.
+
+Figures below are as published on the linked pages as of 2026-11-09. Vendors change pricing, so check the linked page before you buy.
+
+| Reviewer | How it bills | What it published | When |
+| --- | --- | --- | --- |
+| [Cursor Bugbot](https://cursor.com/blog/may-2026-bugbot-changes) | Usage, no seat fee | Average run $1.00 to $1.50 | Announced May 2026, applied at renewals after June 8 |
+| [Macroscope](https://macroscope.com/content/usage-based-pricing-seat-based-pricing-dead-ai-code-review) | $0.05 per KB reviewed, 10 KB minimum | Average 55 cents on Budget, 76 cents on Balanced | Existing customers moved April 27, 2026 |
+| [Baz](https://baz.ai/resources/blog/simpler-pricing) | $30 per developer with 50 reviews a month, then $1 each | Flat per review after the allowance | From November 3, 2026 |
+| [Claude Code Review](https://code.claude.com/docs/en/code-review-costs) | Token usage, no flat per-review price | Cost scales with the review level, change size, surrounding code and how often reviews run | Current docs |
+| [Devin Review](https://devin.ai/blog/devin-review-2) | Per PR | Typical review $0.25 to $0.75 | November 5, 2026 |
+| [Atlassian Code Reviewer](https://support.atlassian.com/rovo/docs/how-code-reviewer-uses-rovo-credits/) | Rovo credits | Credits vary with PR size, repo size and how often reviews run | Billing starts December 3, 2026 |
+| [Doist, in house](https://www.doist.dev/state-of-the-art-code-reviews-for-less-than-2/) | Model and cloud spend | Average under $2 a review across about 4,500 a month | November 3, 2026 |
+
+The range is wide, and a single average hides the shape underneath it, because volume decides what a team feels. Swizec Teller, whose team opened about 2,900 pull requests last quarter, [wrote in August](https://swizec.com/blog/stop-burning-tokens-on-code-review) that their AI reviewer cost about $1,000 a week. In fairness, [one Hacker News comment](https://news.ycombinator.com/item?id=50124678) from October makes the opposite point: a few thousand dollars a month is small next to the hours engineers spend reviewing by hand. Both can be true. The question is whether the money buys attention in the right place.
+
+## Why do AI code review bills surprise teams?
+
+Because the unit that is billed is rarely the unit teams think about. Two things come up again and again in vendor docs and forum threads.
+
+- **How often it runs.** Anthropic's docs say a repository set to review on every push [multiplies cost by the number of pushes](https://code.claude.com/docs/en/code-review-costs). Atlassian's docs say the same about [every commit trigger](https://support.atlassian.com/rovo/docs/how-code-reviewer-uses-rovo-credits/), and ship with manual triggering as the default. Cursor staff have said in [public forum replies](https://forum.cursor.com/t/bugbot-price-hike-135/174859) that volume can rise mostly from re-reviews after new pushes.
+- **How much it reads.** The Atlassian docs also note that in a large repository the reviewer may read more of the surrounding code, and that long custom instructions are read on every review.
+
+Teams have found sensible fixes. Doist found that every pull request, including dependency bumps from bots, got a full review with its most expensive models. It [added routing](https://www.doist.dev/state-of-the-art-code-reviews-for-less-than-2/) so mechanical changes get a smaller review, or none, and cut the per-review cost by about 30%. Devin Review says re-runs [only look at the parts of a PR that changed](https://devin.ai/blog/devin-review-2), and it offers a per-PR spend limit. Macroscope offers spend caps per review and per PR. These all work on the same two levers: run less often, or use a cheaper model for easy changes.
+
+## Why do AI code review comments get noisy?
+
+Noise is the other half of the bill, because every comment costs a human a few minutes to read, judge and dismiss. Teller wrote that reviewing an AI reviewer's comments [sometimes took longer](https://swizec.com/blog/stop-burning-tokens-on-code-review) than reading the code. Greptile's 2024 post on [making a review bot stop leaving nitpicky comments](https://www.greptile.com/blog/make-llms-shut-up) drew a long Hacker News thread of people describing the same thing, and [one commenter](https://news.ycombinator.com/item?id=42451968) pointed out that a model paid by the token has no built-in reason to be brief. A vendor-run benchmark of 118 bugs, [published in November](https://macroscope.com/content/ai-code-review-false-positives-signal-to-noise), counted anywhere from under one to about eleven comments per pull request across five tools. It is a vendor benchmark, so read it as a sign of the spread and not as a verdict.
+
+It helps to split noise into kinds. A [guide from MergeHarbor](https://mergeharbor.com/guides/reduce-false-positives) separates wrong findings, correct but unwanted ones, and low-value or repeated ones. Its point about the first kind is the one that matters here: wrong findings are a context problem. The reviewer reported a bug because it never saw the validation in the caller, the guard in the middleware or the constraint in the database. Style nitpicks you can filter. A confident comment about code the reviewer never read is harder to filter, because it looks like a real finding.
+
+## What if a review only looked at what the change reaches?
+
+That is the idea behind graph-scoped review, and others have written about it. Ken Imoto [wrote in June](https://kenimoto.dev/blog/claude-code-blast-radius-review-tokens-8-49x/) about limiting a coding agent to the code near a diff using a call graph. His most useful lesson is about the traps: a widely used utility function can pull hundreds of files into the picture, and tests that call your code add volume without adding information. Any approach that scopes by connections has to deal with both.
+
+The reasoning is simple. A pull request touches a few functions. The code that can behave differently because of those functions is the code that calls them and the code they call. Everything else in the repository is, for this change, background. A reviewer that sees the diff and that neighborhood has what it needs to say "this caller still passes `None`", and no reason to comment on a file that has nothing to do with the change.
+
+A [code knowledge graph](https://graphify.com/glossary/knowledge-graph) is a convenient way to get that neighborhood, because the parser has already worked out who calls whom. We covered how it compares with reading only the diff in [graph-based code review vs diff-only review](https://graphify.com/blog/graph-based-code-review-vs-diff-only-review).
+
+## How does Graphify scope a review?
+
+This is what [Graphify reviews](https://docs.graphify.com/platform/reviews) do, as of this post:
+
+- **What the reviewer gets.** The pull request diff plus compact graph context for the changed code: the functions that call it and the ones it calls, one step each way, with short excerpts for the most widely used changes. It does not get whole files or the whole repository.
+- **Where the graph comes from.** Graphify indexes the default branch on every push. Each review builds a temporary graph of the pull request head and compares it against that index. Nothing from the pull request branch is stored.
+- **When a review runs.** No AI review runs on every push. A review runs when a pull request opens or when someone asks with `@graphify review`. Quick bursts of pushes collapse into one run.
+- **Where the risk signal comes from.** Blast radius and risk come from the graph, without an LLM. Findings you dismiss do not come back on the same code.
+- **What a review covers.** The full pull request, from where it branched to its latest commit, not only the newest commits.
+
+## What should you ask any AI code review tool?
+
+Whichever tool you use, these questions are worth asking before the first invoice:
+
+1. What triggers a run: open, every push, or only when asked?
+2. Besides the diff, what does the reviewer read, and does that change with the size of the repository?
+3. Does a re-run cover the whole pull request or only what changed, and how is each billed?
+4. Can you cap spend per pull request and per month?
+5. What happens to a finding your team dismisses? Does it come back on the same code?
+6. Can you see which pull requests the usage belongs to?
+
+Then measure it yourself for a month: how many comments led to a change, and how many were dismissed. That ratio tells you more about your tool than any published average.
+
+## How do you try it?
+
+Connect a repository at [app.graphify.com](https://app.graphify.com/signup), open a pull request, and read the review. The [reviews docs](https://docs.graphify.com/platform/reviews) explain what each part means, and [what is a code knowledge graph](https://graphify.com/blog/what-is-a-code-knowledge-graph) covers the background.
+
+## FAQ
+
+### What should an AI code review cost?
+
+Vendors publish figures from about 25 cents to $1.50 for an average review in 2026, and some bill by tokens with no flat price at all. A better question is whether the cost follows the change. A small change should cost little, and a change that many other functions depend on is worth more.
+
+### Why do AI code reviews get expensive?
+
+Mostly because of how often they run and how much they read. Several vendors document that reviewing on every push multiplies the cost by the number of pushes, and that bigger repositories mean more surrounding code to read.
+
+### Why do AI code review comments get noisy?
+
+Some noise is style nitpicks, and some is wrong findings from a reviewer that never saw the code that handles the case, such as a guard in a caller. The second kind is a context problem, so it helps to show the reviewer the code a change reaches.
+
+### Does Graphify run an AI review on every push?
+
+No. A review runs when a pull request opens or when someone asks with @graphify review. Quick bursts of pushes collapse into one run.
+
+### What context does a Graphify review get?
+
+The pull request diff plus compact graph context for the changed code: the functions that call it and the ones it calls, one step each way, with short excerpts for the most widely used changes. It does not get whole files or the whole repository.
