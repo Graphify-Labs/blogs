@@ -63,11 +63,11 @@ Then run the setup command for the assistant you moved to. Each row below comes 
 
 | Assistant | Setup command | What it adds | MCP |
 | --- | --- | --- | --- |
-| [Claude Code](/integrations/claude-code) | `graphify install`, then `graphify claude install` in the repo | The `/graphify` skill, a section in `CLAUDE.md`, and PreToolUse hooks that steer Claude Code to the graph before it greps | Optional, in `.mcp.json` |
+| [Claude Code](/integrations/claude-code) | `graphify install`, then `graphify claude install` in the repo | The `/graphify` skill, a section in `CLAUDE.md`, and hooks that steer Claude Code to the graph before it greps | Optional, in `.mcp.json`, with the `graphifyy[mcp]` extra |
 | [Cursor](/integrations/cursor) | `graphify cursor install` | One always-on rule, `.cursor/rules/graphify.mdc`. No hooks and no background process | Optional, in `.cursor/mcp.json` |
 | [Codex](/integrations/codex) | `graphify codex install --project` | A section in `AGENTS.md`, the skill under `.codex/skills/`, and `.codex/hooks.json`. Build with `$graphify`, not `/graphify` | Optional, in `~/.codex/config.toml` |
-| [VS Code](/integrations/vs-code) | `graphify vscode install` | The skill, and `.github/copilot-instructions.md` for Copilot Chat | Add the server to VS Code's MCP config if it takes MCP servers |
-| [GitHub Copilot](/integrations/github-copilot) | `graphify copilot install` | The `/graphify` skill for Copilot CLI in `~/.copilot/skills/`. For Copilot Chat in VS Code, run `graphify vscode install` | Add the server to Copilot's MCP config if it takes MCP servers |
+| [VS Code](/integrations/vs-code) | `graphify vscode install` | The skill, and `.github/copilot-instructions.md` for Copilot Chat | Optional manual add to VS Code's MCP config, or hosted Graphify over MCP |
+| [GitHub Copilot](/integrations/github-copilot) | `graphify copilot install` | The `/graphify` skill for Copilot CLI in `~/.copilot/skills/`. For Copilot Chat in VS Code, run `graphify vscode install` | Optional manual add for Copilot CLI, or hosted Graphify over MCP |
 
 Bare `graphify install` only sets up Claude Code, so use the command for your assistant. If the graph is not built yet, type `/graphify .` in the assistant (`$graphify .` in Codex) and wait for `graphify-out/` to appear. All of the integrations are listed on the [integrations page](/integrations), and the command reference is in the [Graphify docs](https://docs.graphify.com).
 
