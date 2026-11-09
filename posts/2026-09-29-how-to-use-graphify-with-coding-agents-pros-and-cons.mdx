@@ -1,0 +1,130 @@
+---
+title: "How to use Graphify with coding agents: pros and cons"
+description: "How to use Graphify with coding agents like Claude Code, Cursor and Codex over MCP: setup for each, what a code graph does well, where it falls short."
+date: "2026-09-29"
+keyword: how to use graphify with coding agents
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - guides
+tags:
+  - agents
+  - mcp
+  - claude-code
+  - cursor
+  - codex
+faq:
+  - question: "Does Graphify use my agent's model?"
+    answer: "Only for docs, PDFs and images. Code is parsed on your machine with tree-sitter and no model. With /graphify in a chat, the semantic pass runs on your assistant's model. With the CLI it runs on a provider you configure, or none if you pass --code-only."
+  - question: "Is Graphify worth it for a small repository?"
+    answer: "Usually not. A graph helps when a question spans many files in a large or unfamiliar codebase. On a small repo, or a single-file edit, the agent can read what it needs directly."
+  - question: "Does a code graph reduce my agent's token use?"
+    answer: "Sometimes, but it is not why to use one. Public tests of Graphify show a wide spread, from fewer tokens to more. Treat any saving as a side benefit and measure it on your own repo with /usage before and after."
+  - question: "What does Graphify send off my machine?"
+    answer: "With the open-source CLI, nothing from a code-only build. Your agent still sends what it reads to its own provider. Hosted Graphify builds the graph from the repositories you connect, and your agent reaches it over MCP with OAuth."
+---
+
+Graphify gives coding agents such as Claude Code, Cursor and Codex a code knowledge graph they can query over MCP, so they can ask what calls a function instead of searching files. You connect it once, then tell the agent to use it. It helps most on cross-file questions in large repos, and little on small ones.
+
+## How do I use Graphify with a coding agent?
+
+Connect the server, then give the agent a rule. That is the whole job. The fastest route is [Graphify](https://app.graphify.com): connect a GitHub or GitLab repository, wait for its status to show Indexed, then add the hosted MCP server at `https://api.graphify.com/mcp` to your agent. Sign-in is OAuth in the browser, so there is no API key to paste.
+
+Each agent takes one step:
+
+| Agent | Connect the hosted server | Guide |
+| --- | --- | --- |
+| Claude Code | `claude mcp add --transport http --scope user graphify https://api.graphify.com/mcp`, then `/mcp` and Authenticate | [Claude Code integration](/integrations/claude-code) |
+| Cursor | Add `{"mcpServers":{"graphify":{"url":"https://api.graphify.com/mcp"}}}` to `~/.cursor/mcp.json`, then sign in from MCP settings | [Cursor integration](/integrations/cursor) |
+| Codex | `codex mcp add graphify --url https://api.graphify.com/mcp`, then `codex mcp login graphify` | [Codex integration](/integrations/codex) |
+
+Other MCP clients work the same way, as long as they support remote HTTP servers. See [connect any MCP client to a code graph](/blog/connect-any-mcp-client-to-a-code-graph).
+
+## Should I use hosted Graphify or the Graphify CLI?
+
+Use hosted Graphify when your code is on GitHub or GitLab and you want the graph rebuilt on every push and shared with your team. Use the Graphify CLI when the code must stay on your machine, you work offline, or you want no account. The CLI is open source under Apache 2.0.
+
+The local route is three commands, then `/graphify .` typed in the agent chat:
+
+```bash
+uv tool install graphifyy
+graphify install
+graphify claude install   # Claude Code only: adds the CLAUDE.md section and hooks
+```
+
+The graph lands in `graphify-out/`. For the longer comparison, read [Graphify open source vs hosted](/blog/graphify-open-source-vs-hosted).
+
+## Which model runs where?
+
+Three different models can be involved, and they are easy to mix up.
+
+- **Your agent's model.** Claude, GPT, whatever Cursor routes to. It answers you and decides when to call Graphify. Graphify does not change it.
+- **The code parse.** Tree-sitter reads your source on your machine, with no model and no key. This is where the call and import edges come from.
+- **The semantic pass.** Docs, PDFs and images need a model. In the CLI you pick it: Claude, Gemini, OpenAI, Ollama and others are built in, and Ollama keeps everything local. `graphify extract . --code-only` skips the pass.
+
+So "which provider does Graphify use?" has a short answer for code: none.
+
+## What are the pros?
+
+- **Structural questions get direct answers.** What calls this, what depends on that package, how does A reach B. The agent follows edges instead of rebuilding the answer from search results. See [what a code knowledge graph is](/blog/what-is-a-code-knowledge-graph).
+- **Answers cite real files.** Every edge is tagged `EXTRACTED`, `INFERRED` or `AMBIGUOUS`, so you can see how sure Graphify is and open the file yourself.
+- **It works across agents.** One graph, and Claude Code, Cursor and Codex all read it. Your team does not have to agree on one tool.
+- **The code build is free and local.** No model tokens, no key, about 40 languages.
+- **Hosted adds upkeep you would otherwise do.** Rebuilds on every push, shared workspaces and combined repositories.
+
+## What are the cons?
+
+- **Agents skip it unless told.** Grep is the tool they know. Without a rule in `CLAUDE.md`, `AGENTS.md` or `.cursor/rules/`, the graph sits unused. [Tell your agent to use the graph](/blog/tell-your-agent-to-use-the-graph) has a rule you can copy.
+- **It does little on small repos.** A single-file edit or a file you already know gains nothing. The agent still reads the file it is about to change.
+- **A local graph does not update itself.** Re-run `graphify update .` or install the git hooks. The hosted graph follows the default branch, so your uncommitted edits are read from disk.
+- **Inferred edges need a second look.** They are useful and sometimes wrong. [How to audit inferred edges](/blog/how-to-audit-inferred-edges) shows how.
+- **Token results vary.** Some public tests saw fewer tokens, others more. Measure your own repo.
+- **Docs and images cost model tokens.** A README and a folder of screenshots are enough to trigger the semantic pass.
+- **Hosted needs an account and a connected repo.** The Free plan needs no card. Pro and Teams raise the limits.
+
+## When should I skip Graphify?
+
+Skip it for a small project, a throwaway script, or work where your questions are about one file at a time. Skip hosted if policy says the repository cannot leave your machine; use the CLI with `--code-only`, or do not use a graph at all. If grep and your agent already answer your questions fast, you do not have the problem a graph solves.
+
+## How do I check that my agent is using it?
+
+Ask a code question without naming Graphify, then read the tool calls. If the first call is a Graphify tool, the rule works. If it is a file search, tighten the rule. You can also end a task with:
+
+```text
+List every Graphify tool call you made in this session. If you made none, say so.
+```
+
+Good first questions: "What calls the function that parses config?", "What would change if I renamed this class?", "Which modules depend on the payments package?" Open the cited lines before you trust an answer. For a first look at the Claude Code and Cursor details, see [how to give Claude Code a code knowledge graph](/blog/how-to-give-claude-code-a-code-knowledge-graph) and [how to give Cursor a code knowledge graph](/blog/how-to-give-cursor-a-code-knowledge-graph). The [what is Graphify](/what-is-graphify) page has the short version.
+
+## Try it
+
+Connect a repository at [Graphify](https://app.graphify.com), then add the MCP server to your agent. Or stay local:
+
+```bash
+uv tool install graphifyy
+graphify install
+```
+
+Open-source Graphify is licensed under Apache 2.0. Sources: [Graphify docs](https://docs.graphify.com), [Anthropic's Claude Code MCP documentation](https://code.claude.com/docs/en/mcp), [OpenAI's Codex MCP documentation](https://developers.openai.com/codex/mcp), [Cursor's MCP documentation](https://cursor.com/docs/mcp).
+
+## FAQ
+
+### Does Graphify use my agent's model?
+
+Only for docs, PDFs and images. Code is parsed on your machine with tree-sitter and no model. With `/graphify` in a chat, the semantic pass runs on your assistant's model. With the CLI it runs on a provider you configure, or none if you pass `--code-only`.
+
+### Is Graphify worth it for a small repository?
+
+Usually not. A graph helps when a question spans many files in a large or unfamiliar codebase. On a small repo, or a single-file edit, the agent can read what it needs directly.
+
+### Does a code graph reduce my agent's token use?
+
+Sometimes, but it is not why to use one. Public tests of Graphify show a wide spread, from fewer tokens to more. Treat any saving as a side benefit and measure it on your own repo with `/usage` before and after.
+
+### What does Graphify send off my machine?
+
+With the open-source CLI, nothing from a code-only build. Your agent still sends what it reads to its own provider. Hosted Graphify builds the graph from the repositories you connect, and your agent reaches it over MCP with OAuth.
+
+Syed Fahad and the Graphify team
