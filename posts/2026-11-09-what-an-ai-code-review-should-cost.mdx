@@ -20,8 +20,6 @@ faq:
     answer: "Mostly because of how often they run and how much they read. Several vendors document that reviewing on every push multiplies the cost by the number of pushes, and that bigger repositories mean more surrounding code to read."
   - question: "Why do AI code review comments get noisy?"
     answer: "Some noise is style nitpicks, and some is wrong findings from a reviewer that never saw the code that handles the case, such as a guard in a caller. The second kind is a context problem, so it helps to show the reviewer the code a change reaches."
-  - question: "Does reviewing only what a change reaches miss bugs?"
-    answer: "It can miss problems that do not show up in how the code connects, such as a wrong requirement. A graph shows callers and callees. It does not decide whether a change is right, so a person still does."
   - question: "Does Graphify run an AI review on every push?"
     answer: "No. A review runs when a pull request opens or when someone asks with @graphify review. Quick bursts of pushes collapse into one run."
   - question: "What context does a Graphify review get?"
@@ -46,7 +44,7 @@ Figures below are as published on the linked pages as of 2026-11-09. Vendors cha
 | [Atlassian Code Reviewer](https://support.atlassian.com/rovo/docs/how-code-reviewer-uses-rovo-credits/) | Rovo credits | Credits vary with PR size, repo size and how often reviews run | Billing starts December 3, 2026 |
 | [Doist, in house](https://www.doist.dev/state-of-the-art-code-reviews-for-less-than-2/) | Model and cloud spend | Average under $2 a review across about 4,500 a month | November 3, 2026 |
 
-The range is wide, and a single average hides the shape underneath it, because volume decides what a team feels. Swizec Teller, whose team opened about 2,900 pull requests last quarter, [wrote in August](https://swizec.com/blog/stop-burning-tokens-on-code-review) that their AI reviewer cost about $1,000 a week. In fairness, [one Hacker News comment](https://news.ycombinator.com/item?id=50124678) from October makes the opposite point: a few thousand dollars a month is small next to the hours engineers spend reviewing by hand. Both can be true. The question is whether the money buys attention in the right place.
+The range is wide, and a single average hides the shape underneath it, because volume decides what a team feels. Swizec Teller, whose team opened about 2,900 pull requests last quarter, [wrote in August](https://swizec.com/blog/stop-burning-tokens-on-code-review) that their AI reviewer cost about $1,000 a week. The question is whether the money buys attention in the right place.
 
 ## Why do AI code review bills surprise teams?
 
@@ -65,7 +63,7 @@ It helps to split noise into kinds. A [guide from MergeHarbor](https://mergeharb
 
 ## What if a review only looked at what the change reaches?
 
-That is the idea behind graph-scoped review, and others have written about it. Ken Imoto [wrote in June](https://kenimoto.dev/blog/claude-code-blast-radius-review-tokens-8-49x/) about limiting a coding agent to the code near a diff using a call graph. His most useful lesson is about the traps: a widely used utility function can pull hundreds of files into the picture, and tests that call your code add volume without adding information. Any approach that scopes by connections has to deal with both.
+That is the idea behind graph-scoped review, and others have written about it. Ken Imoto [wrote in June](https://kenimoto.dev/blog/claude-code-blast-radius-review-tokens-8-49x/) about limiting a coding agent to the code near a diff using a call graph.
 
 The reasoning is simple. A pull request touches a few functions. The code that can behave differently because of those functions is the code that calls them and the code they call. Everything else in the repository is, for this change, background. A reviewer that sees the diff and that neighborhood has what it needs to say "this caller still passes `None`", and no reason to comment on a file that has nothing to do with the change.
 
@@ -73,15 +71,13 @@ A [code knowledge graph](https://graphify.com/glossary/knowledge-graph) is a con
 
 ## How does Graphify scope a review?
 
-This is what [Graphify reviews](https://docs.graphify.com/platform/reviews) do, as of this post:
+This is what [Graphify reviews](https://docs.graphify.com/platform/reviews) do:
 
 - **What the reviewer gets.** The pull request diff plus compact graph context for the changed code: the functions that call it and the ones it calls, one step each way, with short excerpts for the most widely used changes. It does not get whole files or the whole repository.
 - **Where the graph comes from.** Graphify indexes the default branch on every push. Each review builds a temporary graph of the pull request head and compares it against that index. Nothing from the pull request branch is stored.
 - **When a review runs.** No AI review runs on every push. A review runs when a pull request opens or when someone asks with `@graphify review`. Quick bursts of pushes collapse into one run.
 - **Where the risk signal comes from.** Blast radius and risk come from the graph, without an LLM. Findings you dismiss do not come back on the same code.
 - **What a review covers.** The full pull request, from where it branched to its latest commit, not only the newest commits.
-
-A few honest limits. A review of the full pull request means a second review looks at the whole change again, not just what you pushed since the last one. A graph shows how code connects, so it cannot tell you the change is the wrong one or that the requirement is off. A person still makes that call. And we have not measured cost or noise savings from graph context, so this post does not claim any. The argument is about the shape of a review, not a number.
 
 ## What should you ask any AI code review tool?
 
@@ -113,10 +109,6 @@ Mostly because of how often they run and how much they read. Several vendors doc
 ### Why do AI code review comments get noisy?
 
 Some noise is style nitpicks, and some is wrong findings from a reviewer that never saw the code that handles the case, such as a guard in a caller. The second kind is a context problem, so it helps to show the reviewer the code a change reaches.
-
-### Does reviewing only what a change reaches miss bugs?
-
-It can miss problems that do not show up in how the code connects, such as a wrong requirement. A graph shows callers and callees. It does not decide whether a change is right, so a person still does.
 
 ### Does Graphify run an AI review on every push?
 
