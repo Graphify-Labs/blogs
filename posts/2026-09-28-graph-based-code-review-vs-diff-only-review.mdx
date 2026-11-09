@@ -14,7 +14,7 @@ tags:
   - ai-review
 faq:
   - question: "Is graph based review slower than diff-only review?"
-    answer: "Not noticeably once the graph exists. Lookups in a graph are fast. Building the graph happens on push, not during review."
+    answer: "Not noticeably once the graph exists. Lookups in a graph are fast. Graphify keeps an up-to-date graph of your default branch and uses it in every review."
   - question: "Does graph based review replace human reviewers?"
     answer: "No. It gives reviewers better leads. A person still decides whether a change is right."
   - question: "What languages does graph based review support?"
@@ -74,7 +74,7 @@ Prefer to stay local? Run `uv tool install graphifyy` for the open-source CLI. O
 
 ### Is graph based review slower than diff-only review?
 
-Not noticeably once the graph exists. Lookups in a graph are fast. Building the graph happens on push, not during review.
+Not noticeably once the graph exists. Lookups in a graph are fast. Graphify keeps an up-to-date graph of your default branch and uses it in every review.
 
 ### Does graph based review replace human reviewers?
 
