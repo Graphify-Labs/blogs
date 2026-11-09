@@ -1,7 +1,7 @@
 ---
 title: "Local code context for AI agents, with no proxy"
 description: "Local code context for AI agents with no proxy in the path: what a code graph is, what it costs on your machine, and what it will not save."
-date: "2026-11-09"
+date: "2026-09-22"
 keyword: local code context for ai agents
 imgThumb: thumb.png
 imgSocial: social.png
@@ -40,34 +40,18 @@ That matters if you work under a policy about where code and prompts can travel.
 
 It answers structural questions with the exact functions involved, instead of the agent assembling the picture from search results. Tree-sitter reads each file and writes nodes (files, classes, functions) and edges (contains, calls, imports, inherits). The agent traverses those edges. Each one is tagged `EXTRACTED`, `INFERRED` or `AMBIGUOUS`, so you can see how sure Graphify is.
 
-Here is a real run. On 9 November 2026 I built a code-only graph of [pallets/click](https://github.com/pallets/click) with graphify 0.9.97, which gave 3,130 nodes and 6,116 edges, then asked what calls `command()`:
-
-```bash
-graphify query "what calls command()"
-```
-
-```text
-Graph: graphify-out/graph.json (3130 nodes) | Traversal: BFS depth=2 | Start: ['command', 'command()'] | Context: call (heuristic) | 4 nodes found
-
-NODE command() [src=src/click/decorators.py loc=L138 community=105]
-NODE group() [src=src/click/decorators.py loc=L263 community=105]
-EDGE group() --calls [EXTRACTED context=call]--> command() at=src/click/decorators.py:L309
-```
-
-Line 309 of `decorators.py` is `return command(cls=cls, **attrs)(name)` inside `group()`, so the edge checks out. The query ran in about 0.4 seconds with no network and no model.
-
 It is not magic. Ask about a name that exists in several files and Graphify says the match is ambiguous and lists the candidates, and you retry with a path. The graph is as good as the question.
 
 ## What does it cost to build?
 
-For code, nothing in model tokens. For everything else, something. The [Graphify docs on reducing token usage](https://docs.graphify.com/open-source/features/honest-token-savings) put it plainly: code costs nothing to extract, and docs, PDFs and images do.
+For code, nothing in model tokens. For everything else, something. The [extract reference](https://docs.graphify.com/reference/extract) puts it plainly: code costs nothing to extract, and docs, PDFs and images do.
 
 | Files | Read by | Needs a model |
 | --- | --- | --- |
 | Code | tree-sitter, on your machine | No |
 | Docs, PDFs, images | Semantic pass | Yes |
 
-To keep the build free, run `graphify extract . --code-only`, or set `GRAPHIFY_BACKEND=none`. To keep the semantic pass local too, point the CLI at Ollama with `--backend ollama`. Refreshes after the first build, whether `graphify update .`, git hooks or `graphify watch`, only re-read code.
+To keep the build free, run `graphify extract . --code-only`. To keep the semantic pass local too, point the CLI at Ollama with `--backend ollama`. Refreshes after the first build, whether `graphify update .`, git hooks or `graphify watch`, only re-read code.
 
 ## How do I run it fully locally?
 
@@ -79,7 +63,7 @@ graphify extract . --code-only
 graphify install
 ```
 
-For MCP, the open-source CLI ships `graphify-mcp`, which reads `graphify-out/graph.json` and exposes ten tools, including `query_graph`, `get_node` and `shortest_path`. The [MCP server quickstart](https://docs.graphify.com/open-source/mcp-server) has the config for each agent. The [Graphify CLI quickstart](https://docs.graphify.com/open-source/cli-quickstart) covers the rest. For a team, [Graphify](https://app.graphify.com) builds and serves the same graph for you, so there is nothing to keep fresh by hand.
+For MCP, the open-source CLI ships `graphify-mcp`, which reads `graphify-out/graph.json` and exposes ten tools, including `query_graph`, `get_node` and `shortest_path`. The [MCP overview](https://docs.graphify.com/mcp/overview) has the config for each agent. The [quickstart](https://docs.graphify.com/quickstart) covers the rest. For a team, [Graphify](https://app.graphify.com) builds and serves the same graph for you, so there is nothing to keep fresh by hand.
 
 ## Will it cut my AI coding token costs?
 
@@ -87,8 +71,8 @@ Maybe, and we will not promise it. Any saving is a side benefit of sending the a
 
 What the evidence shows today:
 
-- `graphify benchmark` on the same click graph prints "127.5x fewer tokens per query". Read that carefully. It compares the whole corpus (about 208,666 tokens) with the size of a graph answer (about 1,636). No agent reads a whole repo, so it is not what you will save. The docs say as much: headline numbers are not your numbers.
-- Independent tests are mixed. Constantin Ponfick ran 11 questions on FastAPI and saw files inspected fall 14.6% while input tokens rose 49.5%. Our [Claude Code token post](/blog/reduce-claude-code-token-usage) lists the others, including the open [issue #985](https://github.com/Graphify-Labs/graphify/issues/985).
+- `graphify benchmark` compares an estimate of the whole corpus with the size of a graph answer. No agent reads a whole repo, so the ratio is not what you will save. [What the graphify benchmark measures](/blog/what-the-graphify-benchmark-measures) says as much.
+- Independent tests are mixed. Constantin Ponfick ran 11 questions on FastAPI and saw files inspected fall 14.6% while input tokens rose 49.5% ([Constantin's Blog](https://constantinsblog.eu/posts/graphify-llm-query-tool/)). [Issue #985](https://github.com/Graphify-Labs/graphify/issues/985) is still open.
 - The one accuracy number we publish is coverage, not tokens: on ERPNext, key-fact coverage rose from 70.8% to 82.0% across six questions, in [BENCHMARKS.md](https://github.com/Graphify-Labs/graphify/blob/v8/BENCHMARKS.md).
 
 Graphify also does not remember your conversations. It maps the code you have.
@@ -103,7 +87,7 @@ The free levers first. Anthropic's [cost guide](https://code.claude.com/docs/en/
 4. Write specific prompts.
 5. Match the model and effort to the job.
 
-[Reduce Claude Code token usage](/blog/reduce-claude-code-token-usage) walks through each, and [why agents grep](/blog/why-agents-grep-the-hidden-token-cost-of-file-search) explains where exploration cost comes from. Add a graph when the remaining cost is your agent working out how files connect in a repo too big to hold in its head.
+[Why agents grep](/blog/why-agents-grep-the-hidden-token-cost-of-file-search) explains where exploration cost comes from. Add a graph when the remaining cost is your agent working out how files connect in a repo too big to hold in its head.
 
 ## When is a code graph not worth it?
 
@@ -119,7 +103,7 @@ graphify extract . --code-only
 graphify install
 ```
 
-Then ask your agent a question that spans files, and compare its usage with and without the graph. Open-source Graphify is licensed under Apache 2.0. Related: [what a code knowledge graph is](/blog/what-is-a-code-knowledge-graph), [what is Graphify](/what-is-graphify) and [Graphify vs RAG](/vs/rag). Sources: [Graphify docs](https://docs.graphify.com), [Anthropic's Claude Code costs guide](https://code.claude.com/docs/en/costs), [pallets/click](https://github.com/pallets/click).
+Then ask your agent a question that spans files, and compare its usage with and without the graph. Open-source Graphify is licensed under Apache 2.0. Related: [what a code knowledge graph is](/blog/what-is-a-code-knowledge-graph) and [Graphify vs RAG](/vs/rag). Sources: [Graphify docs](https://docs.graphify.com), [Anthropic's Claude Code costs guide](https://code.claude.com/docs/en/costs).
 
 ## FAQ
 
