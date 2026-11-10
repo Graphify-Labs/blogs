@@ -139,9 +139,13 @@ describe("featured, faq and dates", () => {
     expect(parsePost("2026-10-02-x.mdx", head("featured: 2\n"), authors)).toMatchObject({ featured: true, featuredRank: 2 });
     expect(() => parsePost("2026-10-02-x.mdx", head("faq:\n  - question: Q?\n"), authors)).toThrow(/faq/);
   });
-  it("keeps Octoverse as the lead featured post in posts/", () => {
+  it("keeps the featured posts in order in posts/", () => {
     const featured = getPosts().filter((p) => p.featured).sort((a, b) => a.featuredRank! - b.featuredRank!);
-    expect(featured[0].slug).toBe("graphify-octoverse-2026");
+    expect(featured.map((p) => p.slug)).toEqual([
+      "graphify-is-now-an-official-claude-connector",
+      "graphify-with-claude",
+      "graphify-octoverse-2026",
+    ]);
   });
   it("keeps the pillar FAQ answers visible in the post body", () => {
     const posts = getPosts();
