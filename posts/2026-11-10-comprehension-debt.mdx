@@ -1,0 +1,80 @@
+---
+title: "Comprehension debt: what it is and how to keep it small"
+description: "Comprehension debt is the gap between the code a team ships and the code it understands. Habits that keep it small, and a way to see what a change touches."
+date: "2026-11-10"
+keyword: comprehension debt
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - code-review
+  - knowledge-graph
+  - code-knowledge-graph
+  - pull-requests
+faq:
+  - question: "What is comprehension debt?"
+    answer: "Comprehension debt is the growing gap between how much code your team ships and how much of it the team genuinely understands."
+  - question: "Who coined the term comprehension debt?"
+    answer: "Jason Gorman, who runs Codemanship, named it in September 2025. Addy Osmani brought it to a much wider audience in March 2026."
+  - question: "How is comprehension debt different from technical debt?"
+    answer: "Technical debt is usually a shortcut someone chose, so you know roughly where it lives. Comprehension debt builds up without a decision, one approved change at a time."
+  - question: "How do you keep comprehension debt small?"
+    answer: "Keep changes small, ask the agent to explain what changed and why, review for intent, and use the agent to learn the code, not only to write it."
+  - question: "How can you see what an AI change will break before you merge it?"
+    answer: "Look at what the change connects to, not only the lines that changed. Graphify's code knowledge graph shows what calls what, and its hosted pull request review reads the diff along with the callers and callees of the changed code."
+---
+
+Comprehension debt is the growing gap between how much code your team ships and how much of it the team genuinely understands. An agent can write a change in a minute, and nobody has to understand it for it to merge. The bill arrives later, when someone has to change that code and finds out what it was holding up.
+
+This post covers what the term means, why it hurts late instead of early, a few habits that keep it small, and a way to see what a change touches before you merge it.
+
+## What is comprehension debt?
+
+It is the thing a team owes when code arrives faster than anyone can learn it. Jason Gorman, who runs Codemanship, named it in September 2025, writing that [“When teams produce code faster than they can understand it,”](https://codemanship.wordpress.com/2025/09/30/comprehension-debt-the-ticking-time-bomb-of-llm-generated-code/) it creates what he calls comprehension debt. Addy Osmani brought it to a much wider audience in March 2026, in [an essay](https://addyosmani.com/blog/comprehension-debt/) that describes it as the growing gap between how much code exists in your system and how much of it any human being genuinely understands.
+
+It is not the same as technical debt. Technical debt is usually a shortcut someone chose, so you know roughly where it lives. Comprehension debt builds up without a decision, one approved change at a time. Osmani's word for it is that it accumulates invisibly. We wrote about how this reshapes the whole delivery loop in [Agents took over your SDLC. Now what?](https://graphify.com/blog/agents-took-over-your-sdlc)
+
+## Why does comprehension debt show up late?
+
+Because nothing looks wrong while it grows. In Osmani's words, "The codebase looks clean. The tests are green. The reckoning arrives quietly, usually at the worst possible moment."
+
+Review is where understanding is supposed to form, and it is the first thing to feel the volume. One engineer in a [Hacker News thread on cognitive debt](https://news.ycombinator.com/item?id=47198221) described it this way: "Reviewing PR feels even more implicit, I have to exert deliberate effort because tacit knowledge of context didn't form yet." Another reader [wrote](https://news.ycombinator.com/item?id=45424384) that an engineer using an agent "writes code faster than a careful person can review," and that code then starts passing review when it shouldn't. Kevin Cushnie, writing in Forbes, names the same pattern [review compression](https://www.forbes.com/councils/forbestechcouncil/2026/07/08/comprehension-debt-how-ai-is-re-creating-the-legacy-code-problem-in-months/): review time per change drops faster than the complexity of the change does.
+
+The cost lands on the next person to touch the code. Gorman points out that agents sometimes get stuck on a fix, and then a person has to edit the code by hand, which means understanding it first.
+
+## How do you keep comprehension debt small?
+
+Keep changes small, ask the agent to explain what changed and why, review for intent, and use the agent to learn the code, not only to write it. None of this is new, which is the good news. These are old habits that matter more when code arrives faster.
+
+### Keep changes small
+
+A small diff is one a person can hold in their head. One commenter in the [Hacker News discussion of Gorman's post](https://news.ycombinator.com/item?id=45430478) put a careful line by line review at around 400 to 500 lines an hour. Ask the agent for one change per pull request, and split the rest into the next one.
+
+### Ask the agent to explain the change
+
+Have it write a plain summary of what changed and why, in the pull request description, before you read the code. A reader in that same cognitive debt thread said their team now [commits the agent's plans alongside the code](https://news.ycombinator.com/item?id=47198221) so the reasoning is not lost. Another [made the case](https://news.ycombinator.com/item?id=45424824) for feeding the agent "the why, the motivation, the discussion and prior art" in the first place.
+
+### Review for intent, not only for lines
+
+Ask what the change is supposed to do before you check how it does it. Osmani's version is to be "ruthlessly explicit about what a change is supposed to do before it's written." Cushnie suggests one question for the pull request template: "Can the reviewer explain how this change works without referring to the prompt?" Tests help too, but as Osmani notes, you can't write a test for behavior you haven't thought to specify.
+
+### Use the agent to learn, not only to write
+
+In an [Anthropic study](https://arxiv.org/abs/2601.20245) of 52 engineers learning a new library, those who used AI assistance finished in about the same time and scored 17% lower on a follow up quiz, 50% against 67%. Osmani's summary of the researchers' point is that handing over the whole job hurt learning far more than asking questions along the way. A commenter in the cognitive debt thread had a practical version: before you start, [ask for an architectural overview](https://news.ycombinator.com/item?id=47197692) of the parts you are rusty on, and have it look at the bigger picture of what you are about to do.
+
+## How can you see what an AI change will break before you merge it?
+
+Look at what the change connects to, not only the lines that changed. A diff shows the function that moved. It does not show the callers that depend on it, which usually live in files nobody touched.
+
+A reader put the difficulty plainly: ["lines of code interact with each other,"](https://news.ycombinator.com/item?id=47197212) and the challenge is seeing the forest instead of individual trees. Gorman lists the same idea among the factors that decide how long it takes to understand code before changing it: [how much code has to be understood to make the change](https://www.linkedin.com/posts/jasongorman_comprehension-debt-the-time-it-takes-a-developer-activity-7370292822693949441-uniH), the “blast radius.”
+
+That is the problem Graphify is built for. Graphify is a code knowledge graph. It maps the functions, classes and files in your repository and how they connect, including what calls what. Start from a changed function and you can see its callers and callees, including the ones in files nobody touched. The [blast radius](https://graphify.com/glossary/blast-radius) of a change stops being a guess.
+
+Graphify's hosted pull request review puts that graph in front of you at the moment you need it. It reads the diff along with the callers and callees of the changed code, and shows how the change reaches the code around it. You start the review knowing where to look, and each review leaves you with a clearer picture of how the system fits together. The [reviews docs](https://docs.graphify.com/platform/reviews) cover how it works, and [AI PR review grounded in a code graph](https://graphify.com/blog/ai-pr-review-grounded-in-a-code-graph) goes deeper on why the graph matters.
+
+## Where do you start?
+
+With the next pull request an agent writes. Ask for the summary, keep the change small, and look at what it touches before you merge. To see it on your own code, [sign up for Graphify](https://app.graphify.com/signup), connect a repository and open a pull request. For the same idea outside of review, read [change impact analysis with a code graph](https://graphify.com/blog/change-impact-analysis-with-a-code-graph).
