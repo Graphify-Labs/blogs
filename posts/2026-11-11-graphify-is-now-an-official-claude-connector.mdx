@@ -1,0 +1,48 @@
+---
+title: "Graphify is now an official Claude connector"
+description: "Graphify is now an official Claude connector. Connect your repositories and ask Claude who calls a function and what a change reaches."
+date: "2026-11-11"
+keyword: claude connector
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - product
+tags:
+  - claude
+  - claude-code
+  - mcp
+---
+
+Graphify is now an official Claude connector. Connect your repositories to Claude and ask how your code fits together: who calls a function, what a change reaches, how one symbol gets to another.
+
+Graphify is a [code knowledge graph](/blog/what-is-a-code-knowledge-graph) of your repositories, a map of functions, files, calls and imports. With the connector, Claude reads that map directly instead of searching file after file, and every answer comes back with the file and line behind it.
+
+<Video youtube="https://www.youtube.com/watch?v=6h-ZH_W5YKM" title="Give Claude a Map of Your Codebase with Graphify" />
+
+## What you can do
+
+Claude picks the right Graphify tool for your question. With the connector on, you can:
+
+- Find a symbol and the files around it.
+- See what calls a function, and what it calls.
+- Trace how one symbol reaches another.
+- Find the tests linked to a piece of code.
+- Check what a change is likely to reach before you make it.
+
+Ask something like "Who calls the function that validates a session token?" and open the cited source to see the answer for yourself.
+
+## Getting started
+
+In Claude.ai or the Claude desktop app, open the connectors directory and select Graphify. Sign in, pick the workspace that holds your repositories, then turn Graphify on from the plus menu in any chat.
+
+Claude Code picks up the same connector under `/mcp` when you are signed in with your Claude account. You can also add it with one command and sign in from `/mcp`:
+
+```bash
+claude mcp add --transport http --scope user graphify https://api.graphify.com/mcp
+```
+
+New to Graphify? [Create a free account](https://app.graphify.com/signup) while you connect. The Free plan covers up to 3 repositories and needs no card.
+
+Read the [Graphify with Claude guide](/blog/graphify-with-claude) for the full setup, or the docs for [Claude](https://docs.graphify.com/integrations/claude-ai) and [Claude Code](https://docs.graphify.com/integrations/claude-code) to learn more. The [Graphify MCP server](/mcp) page lists the other clients that connect to the same endpoint.
