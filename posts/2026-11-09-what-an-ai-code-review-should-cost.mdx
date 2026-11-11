@@ -23,7 +23,7 @@ faq:
   - question: "Does Graphify run an AI review on every push?"
     answer: "No. A review runs when a pull request opens or when someone asks with @graphify review. Quick bursts of pushes collapse into one run."
   - question: "What context does a Graphify review get?"
-    answer: "The pull request diff plus compact graph context for the changed code: the functions that call it and the ones it calls, one step each way, with short excerpts for the most widely used changes. It does not get whole files or the whole repository."
+    answer: "The pull request diff plus compact graph context for the changed code: the functions that call it and the functions it calls, with short excerpts for the most widely used changes. It does not get whole files or the whole repository."
 ---
 
 An AI code review should cost about what the change deserves: little for a one-line typo fix, more for a change many functions depend on. Most billing follows tokens, diff size or how often a bot runs instead. The fairer design is to review what a change reaches, not reread the whole repo on every push.
@@ -73,7 +73,7 @@ A [code knowledge graph](https://graphify.com/glossary/knowledge-graph) is a con
 
 This is what [Graphify reviews](https://docs.graphify.com/platform/reviews) do:
 
-- **What the reviewer gets.** The pull request diff plus compact graph context for the changed code: the functions that call it and the ones it calls, one step each way, with short excerpts for the most widely used changes. It does not get whole files or the whole repository.
+- **What the reviewer gets.** The pull request diff plus compact graph context for the changed code: the functions that call it and the functions it calls, with short excerpts for the most widely used changes. It does not get whole files or the whole repository.
 - **Where the graph comes from.** Graphify indexes the default branch on every push. Each review builds a temporary graph of the pull request head and compares it against that index. Nothing from the pull request branch is stored.
 - **When a review runs.** No AI review runs on every push. A review runs when a pull request opens or when someone asks with `@graphify review`. Quick bursts of pushes collapse into one run.
 - **Where the risk signal comes from.** Blast radius and risk come from the graph, without an LLM. Findings you dismiss do not come back on the same code.
@@ -116,4 +116,4 @@ No. A review runs when a pull request opens or when someone asks with @graphify 
 
 ### What context does a Graphify review get?
 
-The pull request diff plus compact graph context for the changed code: the functions that call it and the ones it calls, one step each way, with short excerpts for the most widely used changes. It does not get whole files or the whole repository.
+The pull request diff plus compact graph context for the changed code: the functions that call it and the functions it calls, with short excerpts for the most widely used changes. It does not get whole files or the whole repository.
