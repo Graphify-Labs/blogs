@@ -1,0 +1,115 @@
+---
+title: "What a clean AI code review does not tell you"
+description: "A clean AI code review means the reviewer found nothing in what it examined. What one test found, why bugs hide a call away, and how to test your own reviewer."
+date: "2026-11-12"
+keyword: copilot code review
+authors:
+  - fahad
+categories:
+  - concepts
+tags:
+  - code-review
+  - ai-review
+  - pull-requests
+  - code-knowledge-graph
+faq:
+  - question: "What does a clean AI code review mean?"
+    answer: "It means the reviewer found nothing to flag in the code it examined. That is not proof the change is safe for code it did not examine, such as the callers of the changed code and the functions the change relies on."
+  - question: "What did the Towards Data Science test of Copilot code review find?"
+    answer: "In a synthetic test with 28 pull requests, Copilot caught all 8 seeded bugs in changed lines once written rules were added, and it missed both bugs in unchanged code the change relied on, with or without rules. The author calls it two cases, not ten."
+  - question: "Why do AI code reviews miss bugs outside the diff?"
+    answer: "The evidence for those bugs sits in code the reviewer never questioned, such as a caller that depends on the old behavior or a function the new code relies on. A review can only judge what it examines."
+  - question: "What should an AI code review read besides the diff?"
+    answer: "The functions that call the changed code, the functions it calls, the tests for the case the change introduces, and any written rules the team keeps."
+  - question: "How does Graphify review a pull request?"
+    answer: "Each review analyzes the full pull request, from where it branched to its latest commit. It sends the diff plus the functions that call or are called by the changed code, and it uses the code knowledge graph to see how the change affects the surrounding code."
+  - question: "How do I test my AI code reviewer?"
+    answer: "Recreate a change to a risky module on a test branch with one bug in the changed lines, one in code the change calls, and a clean control. Open each as a fresh pull request and score what the reviewer says."
+---
+
+A clean AI code review tells you the reviewer found nothing in what it examined. It does not tell you the change is safe. In a test published on Towards Data Science, GitHub Copilot code review caught all eight bugs seeded in changed lines once written rules were added, and neither of the two seeded in code the change relied on.
+
+This post covers what that test found, why a bug one call away is easy to miss, what a review needs to read besides the diff, and a short exercise for testing the reviewer you already use.
+
+## What does a clean AI code review tell you?
+
+A clean review is a statement about inputs. The reviewer looked at some set of code, asked some set of questions, and found nothing to say. Whether the rest of the system is fine is a separate fact, and nobody has checked it unless the review read that part too.
+
+That matters because of what happens next. Naga Chand Putta, who ran the test, wrote that once an agent gives a pull request a clean review, the human reviewer who comes next tends to skim, "even though a clean AI review says very little about whether the change is safe for the wider system." That is his observation from his own review queue, not a measured result. Anyone who has approved a green pull request late on a busy day will recognize it.
+
+## What did the Towards Data Science test of Copilot code review find?
+
+Putta [seeded ten bugs](https://towardsdatascience.com/copilot-caught-8-of-8-diff-bugs-with-rules-0-of-2-outside-the-diff/) into pull requests against two small synthetic projects, a billing service and a pandas feature pipeline. He had GitHub Copilot review each change twice, once with only the code and once with written rules describing the business logic. The repository is public and holds all 28 pull requests.
+
+Eight bugs sat in the changed lines. Copilot caught five of them without rules and all eight with rules. Two bugs sat in unchanged code the change relied on, and Copilot missed both, with or without rules. He is plain about the size of it: "That is two cases, not ten, but the miss happened every time." He also notes that he wrote both the bugs and the rules.
+
+The example the article turns on is small. A pull request adds a guard that rejects a negative enrollment day count, and the guard is correct. The function it calls, which the pull request does not touch, takes the span from a participant's first start date to their last end date and ignores a gap in between. A participant enrolled for 20 days is billed for 31. Copilot's summary of the change read: "The guard correctly rejects the negative sentinel while leaving valid fee calculations unchanged." That was true of the guard. The bug lived one call away. Across four pull requests per condition, no review asked what the called function returns.
+
+This is not a story about a tool that only reads changed lines. GitHub's [documentation](https://docs.github.com/en/copilot/concepts/agents/code-review) says Copilot code review gathers full project context, and Putta writes that the agent sees more than the diff. His summary of the result is that the reviewer "judged the lines in front of it and took the code underneath on trust."
+
+## Why does a bug one call away slip through?
+
+Because a diff can be correct while the change is not safe. The changed lines are the part of the evidence that is easy to show. The rest, the callers that depend on old behavior and the functions the new code leans on, sits in files nobody opened.
+
+Engineers keep describing the same shape. Thiago Avelino, who runs a Claude reviewer in CI, [wrote](https://avelino.run/more-review-is-not-better-review/) that a reviewer that only reads the diff misses regressions: "The changed line is fine. The bug is in the caller that didn't change, the test that doesn't exist, the other copy of the same rule two folders away." It is one team's account, not a study. His fix was to have the reviewer comment on the diff but read past it, and to search for the test before it says one is missing.
+
+An [Ask HN thread](https://news.ycombinator.com/item?id=47524361) about code review tools opens with the same complaint, that looking at diffs alone makes it hard to spot "issues like modifying a function signature breaking the function on another file."
+
+The pattern shows up in security research too. An [ICSE 2024 study](https://arxiv.org/abs/2401.09767) of 769 vulnerabilities in open source C and C++ projects found that 24.3% were inter-procedural, meaning the code that had to be patched and the code that triggered the bug were in different functions.
+
+## What should an AI code review read besides the diff?
+
+Start with who depends on the code that changed. The functions that call a changed function are where a new return value, a new null or a tightened rule lands. The functions it calls are where the new code gets its assumptions, like the span calculation behind the guard. A human reviewer would open both first, and a diff leaves both out.
+
+Tests come next: is there one for the case this change introduces? Then written rules, where a team keeps them. In Putta's test the rules helped with business logic that cannot be read from the code, and they still did not move the reviewer into the called function. His conclusion was that hard rules belong in a test, and that risky paths need a named human owner.
+
+## How does Graphify review a pull request?
+
+Graphify is a code knowledge graph for AI coding agents, and it reviews pull requests with that graph. Each review analyzes the full pull request, from where it branched to its latest commit. It sends the diff plus the functions that call or are called by the changed code, and it uses the graph to see how the change affects the surrounding code.
+
+A review runs when a pull request is opened, reopened or marked ready for review. After new commits, a repository owner, member or collaborator comments `@graphify review` to ask for a fresh one. The [reviews docs](https://docs.graphify.com/platform/reviews) explain how to read the findings. For why the graph matters, see [graph-based code review vs diff-only review](https://graphify.com/blog/graph-based-code-review-vs-diff-only-review) and [AI PR review grounded in a code graph](https://graphify.com/blog/ai-pr-review-grounded-in-a-code-graph). To try it, connect a repository at [app.graphify.com](https://app.graphify.com/signup) and open a pull request.
+
+{/* PLACEHOLDER: result of running Graphify review on the TDS outside-the-diff bugs goes here once Engineer reports. Do not publish without it or remove. */}
+
+{/* ## What happened when we ran Graphify on the same bugs */}
+
+## How do you test your own reviewer?
+
+You do not need a research project. This is Putta's method scaled down to an afternoon and a throwaway branch.
+
+1. Pick the module behind your last costly incident, the one where a small change did real damage.
+2. Recreate a change to it on a test branch, and keep the tests passing.
+3. Put one bug in the changed lines, one in code the change calls, and add a clean control that changes no behavior.
+4. Open each as its own fresh pull request. A re-requested review reuses the earlier comment threads, so it does not count as a new run.
+5. If you keep written rules for the reviewer, run the set with and without them.
+6. Score what comes back: did it find the bug, did it clear the control, and did any comment ask about the called code?
+7. Run it again whenever the model, the rules or the review tool changes.
+8. For whatever the reviewer misses in called code, write a test, and give that path a named human owner.
+
+After the first run you know what your reviewer examines on your own code, which a feature list cannot tell you.
+
+## FAQ
+
+### What does a clean AI code review mean?
+
+It means the reviewer found nothing to flag in the code it examined. That is not proof the change is safe for code it did not examine, such as the callers of the changed code and the functions the change relies on.
+
+### What did the Towards Data Science test of Copilot code review find?
+
+In a synthetic test with 28 pull requests, Copilot caught all 8 seeded bugs in changed lines once written rules were added, and it missed both bugs in unchanged code the change relied on, with or without rules. The author calls it two cases, not ten.
+
+### Why do AI code reviews miss bugs outside the diff?
+
+The evidence for those bugs sits in code the reviewer never questioned, such as a caller that depends on the old behavior or a function the new code relies on. A review can only judge what it examines.
+
+### What should an AI code review read besides the diff?
+
+The functions that call the changed code, the functions it calls, the tests for the case the change introduces, and any written rules the team keeps.
+
+### How does Graphify review a pull request?
+
+Each review analyzes the full pull request, from where it branched to its latest commit. It sends the diff plus the functions that call or are called by the changed code, and it uses the code knowledge graph to see how the change affects the surrounding code.
+
+### How do I test my AI code reviewer?
+
+Recreate a change to a risky module on a test branch with one bug in the changed lines, one in code the change calls, and a clean control. Open each as a fresh pull request and score what the reviewer says.
