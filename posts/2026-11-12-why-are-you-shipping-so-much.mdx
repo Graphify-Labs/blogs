@@ -1,0 +1,88 @@
+---
+title: "Why Are You Shipping So Much?"
+description: "Agents made shipping cheap. That's why asking what it's for matters more."
+date: "2026-11-12"
+keyword: agents shipping purpose
+authors:
+  - safi
+  - bruce
+categories:
+  - concepts
+tags:
+  - agents
+  - sdlc
+  - open-source
+imgThumb: thumb.png
+imgSocial: social.png
+---
+
+Agents made shipping cheap. The harder question now is whether it was worth shipping. We think the answer starts where it always has, with a stated purpose, and that agents make it matter more, not less: when you can build almost anything you point them at, what you point them at is the whole game.
+
+## More metrics ≠ more purpose
+
+Look at any dashboard this year and everything is up and to the right. Anthropic now merges more than 30,000 changes a day; one engineer on the Grok team, Lauren Tan, [ships 2,000 pull requests a month](https://x.com/poteto/status/2094457600259842065). Token usage goes on leaderboards. It feels like progress, and often it is. None of those numbers can tell you which.
+
+We've had better ways to tell for years. Google's DORA research measures software delivery with a handful of numbers, and has found again and again that speed and stability are [not trade-offs](https://dora.dev/guides/dora-metrics/): for most teams they move together. Its [2025 report](https://cloud.google.com/blog/products/ai-machine-learning/announcing-the-2025-dora-report) found AI pulling them apart, raising throughput while stability falls: "AI doesn't fix a team; it amplifies what's already there." In 2021, [SPACE](https://queue.acm.org/doi/10.1145/3454122.3454124) widened the view beyond delivery, to satisfaction, collaboration and flow, and argued that performance is "often best evaluated as outcomes instead of output."
+
+Since then the measures have multiplied. One review counted [more than 120 developer-experience metrics](https://queue.acm.org/doi/10.1145/3831360) across research and over 50 engineering organizations, and built a compass just to help teams choose among them. Its finding: "Most teams are measuring what is easy, not what matters most." Commits, pull requests, token spend and lines of code are cheap to collect and easy to game, and token leaderboards [already have been](https://www.ibm.com/think/topics/tokenmaxxing). This points to the common misconception that "having more metrics means better insight": adding metrics without a clear goal "creates noise, not clarity." Its fix is to start with the problem you want to solve, then choose the measures that would show whether you solved it.
+
+More metrics haven't made it easier to know whether the work mattered. The SPACE authors offered a simpler test:
+
+> Did the code written by the developer reliably do what it was supposed to do?
+
+Swap "developer" for "agent" and it still works. The word that matters is *supposed*.
+
+## Purpose makes the flow
+
+"Supposed to do" assumes someone said what the work is for. In [Fundamentals Matter](https://graphify.com/blog/fundamentals-matter) we argued for writing that down as intent: who it's for, what changes for them and how you'll know it worked. Purpose comes one step earlier. Intent describes a piece of work; purpose is why the work exists at all, and it's what the intent gets written from. A stated purpose does three jobs at once. It says what to build. It constrains how people and agents build it. And it says how you'll know it worked. Without it, there's nothing to check the work against, so the only thing left to count is how much of it there is.
+
+In research by Sara Chizari at Microsoft, reported in [*The SPACE of AI*](https://queue.acm.org/doi/10.1145/3807964), experienced developers ran coding agents under time pressure. It was a small study, eight people, but the strongest predictor of success in multi-agent sessions "was not tool capability but specification quality." Sessions with clear decomposition and roles worked. Sessions without that structure produced what the developers called "merge nightmares." Agents don't create purpose. They expose whether you had one. And purpose doesn't come from just one place:
+
+| Where the purpose comes from | An example | How you'd see the outcome |
+| --- | --- | --- |
+| A customer's ask | An issue, a support ticket, a thread of people who can't get the tool to install | The person who asked can now do the thing, and the issue stays closed |
+| A product bet | A capability nobody has asked for yet, because you think that's where things are going | People adopt what you bet on, or you learn honestly that they don't |
+| An operational need | Load the system wasn't built for, an incident that keeps coming back, running in a customer's own cloud | Fewer pages and fewer workarounds: the team stops fighting the system |
+| A business goal | An enterprise deal, a cost target, a compliance requirement | The deal closes, the cost falls, the audit passes |
+
+Each of these is a real source of purpose. In practice they pile up. A customer's ask lands on top of last quarter's bet, an operational fix wraps around both, and every layer adds code and complexity. Over time the purpose gets muddled, and it gets harder to say what any one piece of work is for. It doesn't help that most of that last column lives outside engineering: support and product see first whether a customer can now do the thing, sales whether a deal closed, finance whether a cost fell. In that review of 120 metrics, the further a measure sits from day-to-day engineering, the rarer it is.
+
+Don't borrow another company's purpose, or its stage. This isn't new: large companies have always built for large-company problems. Facebook, now Meta, [built GraphQL in 2012](https://leebyron.com/introducing-the-graphql-foundation/) to serve News Feed to mobile apps that ship many versions at once. Google ran virtually everything on Borg for a decade before Kubernetes, which ["traces its lineage directly from Borg"](https://kubernetes.io/blog/2015/04/borg-predecessor-to-kubernetes/), made its ideas public. Anthropic's [new source control](https://www.anthropic.com/engineering/redesigning-source-control), which we wrote about in [our first post](https://graphify.com/blog/agents-took-over-your-sdlc), is just the latest; most teams don't need to keep pace with 30,000 changes a day. Adopted without the problem behind them, these designs bring the complexity without the payoff. Agents can make it seem like [the migration trap](https://www.youtube.com/watch?v=pLK4NNMq2Ww) is behind us: if rewriting is cheap, why not replace the system? But the rewrite was never what made migrations slow. The nuances and details are: the behavior the old system handles that nobody wrote down, the teams that depend on it, the edge cases you only find in production. Picking the right purpose is still the hard part.
+
+In the land of agents, everything is captured: tool calls, evals, transcripts, pull requests. Linear [followed 6,887 teams](https://linear.app/data) for two years and found those using coding agents opening about three times as many pull requests a week, then added: "We have no way of knowing whether this increased output led to positive business outcomes." The open question is how to line purpose up with outcomes well enough to decide the work, across many people and many agents.
+
+## How it went at Graphify
+
+We didn't start with any of this worked out. We started by listening.
+
+Graphify began with a post. Andrej Karpathy argued that AI should build persistent knowledge graphs instead of re-fetching retrieval chunks on every prompt. Safi read it that night, opened his terminal at 11 pm, and within 48 hours the first version was on GitHub trending. That's the story Safi tells in his book, [*The Memory Layer*](https://graphify.com/books), but those 48 hours rested on two years of work on ontologies and graph extraction that nobody had asked for. "The speed was borrowed from the slow work." So even the origin had two purposes in it: a problem someone named in public, and a bet already being worked on.
+
+What followed was listening as a full-time job. People told us what they were struggling with, on Reddit, on X and in GitHub issues, and we reacted as fast as we could. The repository's history shows it:
+
+|  | April | August | October |
+| --- | --- | --- | --- |
+| Commits | 240 | 301 | 672 |
+| Share written by Safi | 93% | 40% | 18% |
+| Outside contributors credited | 12 | 63 | 122 |
+| Releases | 72 | 22 | 26 |
+| Issues opened | 306 | 401 | 326 |
+| Median time to close an issue | about 5 hours | about 36 hours | about 24 hours |
+| Commits that cite an issue | 17% | 72% | 33% |
+
+*From the public [Graphify repository](https://github.com/Graphify-Labs/graphify): commit history to November 10, 2026; issue data from a public GitHub dataset. Themes are read from commit messages, so treat them as approximate.*
+
+In April, one person wrote nearly all the code, cut more than two releases a day and closed half the issues within about five hours. The work was what new users hit first: installing it, connecting their agent, making sense of the README. By August, nearly three in four commits pointed at an issue someone had filed, and dozens of people outside the team were contributing every month. The users were steering. By October, the community was carrying the breadth, adding language after language, while Safi's share of commits fell below a fifth. That wasn't a step back. His purpose had moved.
+
+Continuing to listen, we started building our [Cloud offering](https://docs.graphify.com/changelog/highlights) in mid-July and launched it publicly on August 19, while bringing on our first engineers. It started with what people asked for straight away: combining repositories into one graph, asking questions about the code, connecting any agent, signing in with GitLab, a free plan. Around the launch it went from one person to a team: shared GitHub organizations, pull request reviews. October went deep: memory for every repository, a readable wiki, a new overview of what needs attention. Then came distribution, a connector for Claude and Codex, and the biggest jump in signups we've had.
+
+Like the table in the last section, Graphify's purpose has come from all four places: product bets, customer asks, operational needs and evolving business goals. And the honest part: we're still building our outcome flow, figuring out the right metrics to track, pushing features, seeing where it moves the needle, and making sure we don't just follow the numbers. As the book put it: "This is not a story about GitHub stars."
+
+## Purpose is for people and for agents
+
+[Our first post](https://graphify.com/blog/agents-took-over-your-sdlc) highlighted comprehension debt, drawing on [the work](https://www.alphaxiv.org/abs/2603.22106) of Margaret-Anne Storey, who also happens to be one of the authors of SPACE. She has spent this year on the challenges agents bring, and in a [follow-up](https://margaretstorey.com/blog/2026/02/18/cognitive-debt-revisited/) to her post on [cognitive debt](https://margaretstorey.com/blog/2026/02/09/cognitive-debt/) she suggested that for the best teams, shared understanding may become the bottleneck. A common purpose is how understanding stays shared, whether it's a broader company goal or a single project. When the people and the agents doing the work know what it's for, they can follow what ships and tell whether it worked.
+
+For people, purpose is what makes everything else readable: the dashboards from the first section, the outcomes other teams own, the next piece of work to pick. It has to travel. Graphify's early months worked because the purpose arrived with the people asking, in issues and threads, and the work answered them within hours. As a company grows, that stops happening by itself, so the purpose has to be written where everyone, and every agent, can find it, next to the outcome it's meant to move.
+
+For agents, purpose is the job. A connector makes a tool available; "find everything this change touches before you edit it" gives the agent a reason to use it, and something to check its own work against. Without that, you get one of the futures a study of AI-native developers imagines, the ["clerical coder"](https://queue.acm.org/doi/10.1145/3807961): a person approving hundreds of agent changes a day that nobody can explain. Its authors put the choice plainly: "If we reward speed without craft, we will get volume without depth."
+
+More metrics won't tell you whether the work mattered. A stated purpose, traced to its outcome across the people and agents doing the work, will. The goal was always better software. Shipping is how you get there, not how you know you've arrived. So before the next release, the next agent run, the next number on the dashboard, ask the question again: what is this supposed to do, and did it do it?
