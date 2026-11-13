@@ -1,0 +1,180 @@
+---
+title: "Self-driving codebases: a map, agent memory and no code rot"
+description: "Self-driving codebases need code agents can see, agent memory that survives context rot, and a fix for code rot. Here's how Graphify builds all three."
+date: "2026-11-13"
+keyword: self-driving codebases
+imgThumb: thumb.png
+imgSocial: social.png
+authors:
+  - fahad
+categories:
+  - concepts
+  - product
+tags:
+  - agents
+  - mcp
+  - code-knowledge-graph
+  - code-review
+  - claude-code
+faq:
+  - question: "What is a self-driving codebase?"
+    answer: "A self-driving codebase is one where AI coding agents handle most of the low-level work, such as finding and fixing bugs, debugging production errors and cleaning up, without an engineer steering each change. People stay on the high-value work: product ideas and architecture."
+  - question: "What is agent memory?"
+    answer: "Agent memory is what lets an AI agent keep decisions, corrections and lessons from one session to the next, instead of starting from zero every time. For a codebase, the useful kind is shared: a correction given to one agent reaches every agent and reviewer that touches that code later."
+  - question: "How do you keep shared agent memory from turning into a context swamp?"
+    answer: "Tie every memory to the code it describes, rank recall by the files and symbols the agent is about to touch, flag memories when that code changes, hold back facts that contradict each other, and have a person keep a memory before it counts. That is how Graphify Memory works."
+  - question: "What is code rot?"
+    answer: "Code rot is the slow decay of a codebase as changes pile up: dead code nobody calls, several ways of doing the same thing, docs that describe code that has moved on, and a data model drifting away from the product. Agents writing code at high volume speed it up unless something cleans up after them."
+  - question: "Does Claude Code have memory across sessions?"
+    answer: "Yes. Claude Code loads CLAUDE.md files and its own auto memory at the start of every session, and auto memory is kept per repository on your machine. Graphify Memory works alongside it and adds memory shared by your whole workspace."
+  - question: "Does Graphify memory work across Claude Code, Codex and Cursor?"
+    answer: "Yes. Memory lives in your Graphify workspace behind the hosted MCP server, so every connected agent reads and writes the same memory through the recall and remember tools, whichever assistant it runs in."
+---
+
+A self-driving codebase is one where AI coding agents handle most of the low-level work, such as finding and fixing bugs, debugging production errors and cleaning up, without an engineer steering each change. Dan Robinson at Detail argues the blocker is the dev environment, not the model, and names three missing pieces: code agents can see, shared agent memory and code rot prevention. We agree, and we've been building all three.
+
+His essay, [Towards Self-Driving Codebases](https://blog.detail.dev/posts/towards-self-driving-codebases/), is one of the clearest explanations we've read of why agent loops have disappointed so many teams this year. If you haven't read it, start there. This post is our reply. It's less a counterpoint than a "yes, and here's what that looks like in practice."
+
+## What is a self-driving codebase?
+
+Dan's starting point is that the tokenmaxxing phase is over. Teams pointed armies of agents at their code, got a mountain of questionable changes back, and are now in the trough of the hype cycle working out what actually works. His view of the end state is one we share: engineers spend their time on good ideas and good architecture, and the rest, like catching bugs, fixing production errors, polishing the UI and keeping the design system consistent, moves to agents.
+
+To get there, he says the dev stack needs three new primitives:
+
+1. **Agent-legible dev environments.** Agents ship bugs in the places they can't see.
+2. **Global memory.** It's fine for an agent to make a mistake once. Making the same mistake over and over is the problem, so a correction should reach every agent and reviewer that touches that code later.
+3. **Codebase rot prevention.** Something has to deal with dead code, five ways of doing one thing, and a data model that drifts away from the product.
+
+Detail's plan for getting there is to mine codebases for bugs that matter, fix them, and use the traces from those fixes to measure how ready a repository is for agents. Their earlier post, [What kinds of bugs does AI generate?](https://blog.detail.dev/posts/ai-bug-types/), shows why. They clustered 1,000 fixed bugs from 99 customer codebases and found that 21 failure mechanisms explained 70% of them. Missing authorization checks topped the list. Most of these bugs fail silently instead of crashing, so nobody notices them when they smoke test a feature.
+
+We think that's right. Here's how we're building each primitive.
+
+## Why do AI coding agents ship bugs where they can't see?
+
+Detail mostly talks about the runtime side of visibility: third-party integrations agents can't exercise, frontends with no browser setup, and test data that doesn't look like production. That matters a lot. We'd add a second blind spot that sits right next to it: the structure of the code itself.
+
+Look at the bugs at the top of Detail's list. A missing auth check usually means a new route that skips the middleware every other route goes through. An incomplete state update is often Detail's own example of a bulk delete that doesn't touch the counter the single delete updates. Neither bug shows up in the file the agent is editing. Both are obvious once you can see who calls what, which paths go through which checks, and the [blast radius](/glossary/blast-radius) of a change.
+
+That's the gap Graphify fills.
+
+### How does Graphify make a codebase legible to agents?
+
+Graphify parses your repositories into a [code knowledge graph](/blog/what-is-a-code-knowledge-graph) of functions, classes, files, calls and imports. It [rebuilds on every push](https://docs.graphify.com/platform/keep-the-graph-fresh) to your default branch, processing only the files that changed, so agents read current code instead of a stale snapshot. Real systems span repositories, so you can [combine up to 100 repositories](https://docs.graphify.com/platform/graphs) into one graph and follow a change across service boundaries.
+
+Agents reach all of it through the hosted [MCP server](/glossary/mcp-server) at `api.graphify.com/mcp`. You sign in with OAuth, and there's no API key to paste. It works in [Claude](https://docs.graphify.com/integrations/claude-ai), [Claude Code](/integrations/claude-code), [Codex](/integrations/codex), [Cursor](/integrations/cursor), VS Code with Copilot, JetBrains, Gemini CLI, ChatGPT and [any other MCP client](https://docs.graphify.com/integrations/overview). The same graph shows up in every assistant your team uses, which also means [switching assistants](/blog/switch-ai-coding-assistants-without-starting-over) doesn't reset what they know.
+
+For the missing auth check, the agent asks the graph instead of guessing:
+
+```text
+Use graphify_callers on deleteRecords. Then use graphify_trace from each
+route handler that reaches it. Tell me which paths never pass through requireAdmin.
+```
+
+Before a change, `graphify_impact` with `include_risk` lists the callers and callees around a symbol and ranks hotspot files by how well tests cover them, and `graphify_tests_for` lists the tests linked to that code. The [capabilities page](https://docs.graphify.com/agents/capabilities) maps each job to its tool.
+
+### What about the context outside the code?
+
+Some of what an agent needs was never in the repository. That's what [connectors](https://docs.graphify.com/platform/connectors) are for:
+
+- **Google Drive.** Connect a folder and its documents show up next to your code in `list_repositories`, so the same tools search your specs and runbooks.
+- **Slack.** Graphify answers questions from your code graph, with sources, in DMs and in the channels you choose. It's on every plan, including Free.
+- **Sentry**, in early access. Start a fix from a Sentry issue and Graphify opens a draft pull request.
+- **Buildkite**, in early access. [Test selection](https://docs.graphify.com/integrations/buildkite) runs only the tests a pull request can affect.
+
+## How does agent memory work without becoming a context swamp?
+
+Detail's example is a good one. You tell an agent the audit log table is append-only and must never be updated in place. Fine. Then you have to tell the next agent, and the code review bot, and the one after that. Now you're back to doing low-level work by hand. Agent memory is supposed to fix that: decisions and corrections carry over from one session, and one agent, to the next.
+
+The [Hacker News thread](https://news.ycombinator.com/item?id=49743527) on the essay raised the obvious worry. Shared memory tends to rot too. Notes pile up, agents copy old workarounds forward long after they stopped mattering, and once the store is bigger than the context window, nobody can promise the one note that matters actually gets read. Stuffing more of it into the prompt doesn't help either. Chroma's research on [context rot](https://research.trychroma.com/context-rot) found that models get less reliable as their input grows, which is the same problem we covered in [context engineering for coding agents](/blog/context-engineering-for-coding-agents). Readers asked how a memory gets linked to the code it's about.
+
+That last question is the design. [Graphify Memory](https://docs.graphify.com/platform/memory) is built on the graph, so a memory points at code instead of floating in a pile of chat logs:
+
+- **Memories attach to code, not conversations.** Facts are grouped by the function, class or file they describe and anchored to that node in the graph. When an agent edits a function, it recalls what's known about that function.
+- **Recall is ranked by what the agent is touching.** The `recall` tool takes the paths and symbols the agent is about to edit, so notes about that code come first and the rest stays out of the context window.
+- **Merges are deterministic.** A model distills raw notes into candidate facts, but duplicates fold by rule, never by model.
+- **A person keeps what counts.** A fact saved with `remember` arrives as a suggestion, and a teammate keeps it, edits it or throws it out.
+- **Stale facts get flagged.** If the code a memory describes changes after it was saved, Graphify flags it and asks you to check it's still true.
+- **Contradictions are held back.** When two current versions of a fact disagree, agents use neither until someone says which is right.
+
+Graphify also records what happens in the repository on its own: reviews, formal verification results and merged pull requests become memories tied to the code they touched.
+
+Since memory sits behind the hosted MCP server, every connected agent shares it. A correction you give Claude Code on Monday is there for Codex on Thursday. Dan wrote that global memory may have to wait for an open standard or an all-in-one suite. We'd point out that MCP already is the open standard, and the memory lives behind it.
+
+Agents only use memory when their instructions tell them to, so add a block like this to `AGENTS.md` or `CLAUDE.md`:
+
+```md
+## Graphify memory
+
+Repository in Graphify: acme/web-app
+
+- Before you edit a file, call `recall` with a short question and pass
+  the paths in `paths` and any function or class names in `symbols`.
+- When the user makes a decision, or you learn a gotcha that isn't obvious
+  from the code, ask the user, then call `remember` with one sentence
+  that says why, not only what.
+```
+
+### How does this fit with Claude Code memory?
+
+Claude Code has [its own memory](https://code.claude.com/docs/en/memory): `CLAUDE.md` files you write and commit, plus auto memory, notes Claude keeps for itself in a folder per repository on your machine. Both load at the start of every session, and they're great for one developer's assistant. We wrote about [what belongs in CLAUDE.md and what belongs in a code graph](/blog/claude-md-vs-a-code-graph-what-belongs-where) earlier this year.
+
+Graphify Memory works alongside it. Your agent keeps its own preferences and session notes, and Graphify adds the shared layer: facts tied to your repositories that every teammate and every connected agent, in any assistant, can recall and inspect.
+
+### What about the code reviewer?
+
+Detail wants the review bot to know about the correction you gave the coding agent two weeks ago. Graphify's reviewer learns from your team directly. Reply on the pull request with `@graphify wrong <finding>`, `@graphify good <finding>` or `@graphify suppress <rule>`, and [Learning](https://docs.graphify.com/platform/learning) changes what future reviews flag. Feedback only counts from trusted members, dismissals carry less weight as they age, and none of it can change a formal verification verdict.
+
+## What is code rot, and how do you prevent it?
+
+Code rot is the slow decay of a codebase as changes pile up. Dan's checklist is a good description of what it looks like now: dead code, five ways to do one thing, an unintuitive type system, a data model drifting from the product. Agents make all of these worse when they write code faster than anyone cleans it up. We wrote about the human side of that in [comprehension debt](/blog/comprehension-debt). Here's what Graphify does about the code side.
+
+- **Dead and duplicate code.** **Code findings** on the Overview lists dead code (private symbols with no references across at least two indexed builds spanning 14 days or more) and duplicate code (function bodies that match exactly) across your repositories. Each finding has a **Copy task for my agent** button, and the [cleanup recipe](https://docs.graphify.com/cookbooks/read-your-graph) walks through it.
+- **Reviews with the whole graph in view.** [Pull request reviews](https://docs.graphify.com/platform/reviews) read the diff along with the callers and dependencies around it, which is why we built [AI PR review grounded in a code graph](/blog/ai-pr-review-grounded-in-a-code-graph). They can also flag risky patterns on new lines and docs that mention code the pull request changed. Graphify checks open pull requests against each other too, so you can see when two of them [collide](https://docs.graphify.com/concepts/colliding-pull-requests) and pick a merge order.
+- **Proof that a cleanup kept behavior.** [Formal verification](https://docs.graphify.com/platform/verification) checks every function a pull request changes against its previous version. It either proves the two behave the same or shows you an input where they differ. That's what makes collapsing five ways of doing something into one safe to hand to an agent. It runs on Python, JavaScript, TypeScript, Go, Java, C, C++, Rust and COBOL.
+- **Docs that keep up.** The [Wiki](https://docs.graphify.com/platform/wiki) is regenerated from each build of the graph, and every statement is labeled Verified, Inferred or Needs review. We covered how it works in [an auto generated codebase wiki](/blog/auto-generated-codebase-wiki). Agents and new teammates read docs that match the code, which is the problem behind [stale CLAUDE.md and AGENTS.md files](/blog/stale-claude-md-and-agents-md).
+- **One list across repositories.** [Insights](https://docs.graphify.com/platform/insights) brings review findings and repository-wide findings into one queue, with evidence, a priority and a team decision on each.
+
+## Where does this fit with Detail's path forward?
+
+Detail's plan is to mine bugs, fix them, and use what it took to fix them to make a codebase friendlier to agents. We like the idea of real, fixed bugs as the unit of progress a lot. It's grounded in the code, not in a survey.
+
+We come at the same goal from the other side: every fix should leave the codebase easier for the next agent to work in. In Graphify, the review and the merge become memories anchored to the code they touched. A correction on a pull request teaches the reviewer. The cleanup shows up in Code findings, and formal verification shows the behavior held. Over time, what agents learn stays attached to the code, and that's how a loop compounds instead of starting from zero every session. It's the same loop we described in [agents took over your SDLC](/blog/agents-took-over-your-sdlc).
+
+That's also why we don't think of Graphify as only a graph. The graph is the map. Memory, reviews, verification, the Wiki and connectors are what agents need to drive on it.
+
+## How do you try it?
+
+[Create a Graphify account](https://app.graphify.com/signup) for free, index a repository, and connect your agent from **Connectors**. The [5-minute quickstart](https://docs.graphify.com/platform/quickstart) covers each step, and the [Graphify MCP guide](https://docs.graphify.com/platform/graphify-mcp) has setup for each client. Then add the memory block above to your `AGENTS.md`.
+
+If you'd rather keep everything on your machine, open-source [Graphify CLI](https://github.com/Graphify-Labs/graphify) builds the graph locally:
+
+```bash
+uv tool install graphifyy
+graphify install --platform claude
+```
+
+## FAQ
+
+### What is a self-driving codebase?
+
+A self-driving codebase is one where AI coding agents handle most of the low-level work, such as finding and fixing bugs, debugging production errors and cleaning up, without an engineer steering each change. People stay on the high-value work: product ideas and architecture.
+
+### What is agent memory?
+
+Agent memory is what lets an AI agent keep decisions, corrections and lessons from one session to the next, instead of starting from zero every time. For a codebase, the useful kind is shared: a correction given to one agent reaches every agent and reviewer that touches that code later.
+
+### How do you keep shared agent memory from turning into a context swamp?
+
+Tie every memory to the code it describes, rank recall by the files and symbols the agent is about to touch, flag memories when that code changes, hold back facts that contradict each other, and have a person keep a memory before it counts. That is how Graphify Memory works.
+
+### What is code rot?
+
+Code rot is the slow decay of a codebase as changes pile up: dead code nobody calls, several ways of doing the same thing, docs that describe code that has moved on, and a data model drifting away from the product. Agents writing code at high volume speed it up unless something cleans up after them.
+
+### Does Claude Code have memory across sessions?
+
+Yes. Claude Code loads CLAUDE.md files and its own auto memory at the start of every session, and auto memory is kept per repository on your machine. Graphify Memory works alongside it and adds memory shared by your whole workspace.
+
+### Does Graphify memory work across Claude Code, Codex and Cursor?
+
+Yes. Memory lives in your Graphify workspace behind the hosted MCP server, so every connected agent reads and writes the same memory through the recall and remember tools, whichever assistant it runs in.
